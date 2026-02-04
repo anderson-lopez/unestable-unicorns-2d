@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://bv71nteacdd0q"]
+
+[ext_resource type="Script" uid="uid://b4gdc3tbe30ql" path="res://scenes/game/game_table.gd" id="1_wson1"]
+[ext_resource type="PackedScene" uid="uid://c054e5lt67t0v" path="res://scenes/cards/CardInfoPanel.tscn" id="2_1pv7v"]
+
+[node name="GameTable" type="Control" unique_id=459670352]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wson1")
+
+[node name="Background" type="ColorRect" parent="." unique_id=480030488]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1254902, 0.1254902, 0.1254902, 1)
+
+[node name="HandZone" type="VBoxContainer" parent="." unique_id=1587611239]
+custom_minimum_size = Vector2(300, 180)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+alignment = 1
+
+[node name="CardsContainer" type="HBoxContainer" parent="HandZone" unique_id=1792576497]
+layout_mode = 2
+theme_override_constants/separation = -10
+alignment = 1
+
+[node name="DebugUI" type="VBoxContainer" parent="." unique_id=762039372]
+layout_mode = 1
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="BtnAddRandom" type="Button" parent="DebugUI" unique_id=293906439]
+layout_mode = 2
+text = "Robar carta"
+
+[node name="BtnAddMagic" type="Button" parent="DebugUI" unique_id=819241419]
+layout_mode = 2
+text = "Obtener Carta Magica"
+
+[node name="BtnClear" type="Button" parent="DebugUI" unique_id=1875290698]
+layout_mode = 2
+text = "Limpiar mesa"
+
+[node name="UILayer" type="CanvasLayer" parent="." unique_id=297652038]
+
+[node name="CardInfoPanel" parent="UILayer" unique_id=1483242591 instance=ExtResource("2_1pv7v")]
+visible = false

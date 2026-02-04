@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://c054e5lt67t0v"]
+
+[ext_resource type="Script" uid="uid://dvtn5n7pvgrnv" path="res://scenes/cards/card_info_panel.gd" id="1_lpxiq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_76rls"]
+bg_color = Color(0.11119679, 0.11119687, 0.11119679, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_size = 10
+
+[sub_resource type="LabelSettings" id="LabelSettings_dpxbd"]
+font_size = 22
+outline_size = 10
+outline_color = Color(0.038397167, 0.038397167, 0.03839716, 1)
+
+[node name="CardInfoPanel" type="PanelContainer" unique_id=1483242591]
+custom_minimum_size = Vector2(600, 400)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -225.0
+offset_right = 350.0
+offset_bottom = 225.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_76rls")
+script = ExtResource("1_lpxiq")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=968497566]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer" unique_id=355708838]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="BigCardImage" type="TextureRect" parent="MarginContainer/HBoxContainer" unique_id=668898446]
+custom_minimum_size = Vector2(250, 350)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 1
+stretch_mode = 5
+
+[node name="VSeparator" type="VSeparator" parent="MarginContainer/HBoxContainer" unique_id=1243784824]
+layout_mode = 2
+
+[node name="InfoColumn" type="VBoxContainer" parent="MarginContainer/HBoxContainer" unique_id=668907516]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Header" type="HBoxContainer" parent="MarginContainer/HBoxContainer/InfoColumn" unique_id=1580614756]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/HBoxContainer/InfoColumn/Header" unique_id=1698781886]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "asdasd"
+label_settings = SubResource("LabelSettings_dpxbd")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="MarginContainer/HBoxContainer/InfoColumn/Header" unique_id=309343474]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "X"
+
+[node name="TypeLabel" type="Label" parent="MarginContainer/HBoxContainer/InfoColumn" unique_id=367361852]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/HBoxContainer/InfoColumn" unique_id=213504295]
+layout_mode = 2
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="MarginContainer/HBoxContainer/InfoColumn" unique_id=890719477]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+
+[node name="TagsLabel" type="Label" parent="MarginContainer/HBoxContainer/InfoColumn" unique_id=1378367239]
+layout_mode = 2

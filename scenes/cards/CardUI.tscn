@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://8shsd7vbbqru"]
+
+[ext_resource type="Script" uid="uid://bgvvjj50s30sf" path="res://scenes/cards/card_ui.gd" id="1_y5a6v"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sitqp"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+corner_radius_top_left = 15
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+corner_radius_bottom_left = 15
+shadow_size = 5
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pqoyv"]
+draw_center = false
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+
+[node name="CardUI" type="PanelContainer" unique_id=907476876]
+custom_minimum_size = Vector2(160, 220)
+offset_right = 250.0
+offset_bottom = 350.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_sitqp")
+script = ExtResource("1_y5a6v")
+
+[node name="CardTexture" type="TextureRect" parent="." unique_id=1940787940]
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HoverDetector" type="Control" parent="." unique_id=2094802990]
+layout_mode = 2
+
+[node name="Highlight" type="Panel" parent="." unique_id=426299390]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pqoyv")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=89109860]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoButton" type="Button" parent="MarginContainer" unique_id=363644431]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+text = "?"
+
+[node name="ActionButtons" type="HBoxContainer" parent="MarginContainer" unique_id=1851078508]
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+alignment = 1
+
+[node name="Play" type="Button" parent="MarginContainer/ActionButtons" unique_id=780504307]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Jugar Carta"
+
+[node name="Discard" type="Button" parent="MarginContainer/ActionButtons" unique_id=1284495510]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Descartar"
