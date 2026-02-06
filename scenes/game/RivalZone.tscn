@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://cx3tgl6utj8pw"]
+
+[ext_resource type="Script" uid="uid://c8ysa1nr7pjfj" path="res://scenes/game/rival_zone.gd" id="1_2qjff"]
+
+[node name="RivalZone" type="PanelContainer" unique_id=1243134215]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 27.0
+grow_horizontal = 2
+script = ExtResource("1_2qjff")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=129628359]
+layout_mode = 2
+
+[node name="TopInfo" type="VBoxContainer" parent="VBoxContainer" unique_id=417075902]
+layout_mode = 2
+size_flags_horizontal = 4
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="VBoxContainer/TopInfo" unique_id=1649826805]
+layout_mode = 2
+text = "Anderson"
+
+[node name="HandContainer" type="HBoxContainer" parent="VBoxContainer/TopInfo" unique_id=1486487382]
+layout_mode = 2
+
+[node name="StableContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1906414173]
+layout_mode = 2

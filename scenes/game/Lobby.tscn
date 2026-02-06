@@ -1,0 +1,277 @@
+[gd_scene format=3 uid="uid://ctrkxwibp02ws"]
+
+[ext_resource type="Script" uid="uid://can37nnrat2mk" path="res://scenes/game/lobby.gd" id="1_shpak"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.101961, 0.101961, 0.101961, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.168627, 0.168627, 0.168627, 1)
+corner_radius_top_left = 15
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+corner_radius_bottom_left = 15
+shadow_size = 5
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_host"]
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.878431, 0.556863, 0.47451, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_host_hover"]
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.95, 0.65, 0.55, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_join"]
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.47451, 0.878431, 0.760784, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_join_hover"]
+content_margin_top = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.6, 0.95, 0.85, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start"]
+content_margin_top = 15.0
+content_margin_bottom = 15.0
+bg_color = Color(0.639216, 0.878431, 0.47451, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="Lobby" type="Control" unique_id=600780691]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shpak")
+
+[node name="Background" type="Panel" parent="." unique_id=411463883]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="LoginPanel" type="CenterContainer" parent="." unique_id=384750293]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="LoginPanel" unique_id=380633478]
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="LoginPanel/PanelContainer" unique_id=1627580879]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="VBox" type="VBoxContainer" parent="LoginPanel/PanelContainer/Margin" unique_id=1384208643]
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="Title" type="Label" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=764718623]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Unstable Godot"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=982374]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+horizontal_alignment = 1
+
+[node name="NameInput" type="LineEdit" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=129384]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Tu Nombre"
+alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=1856442298]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="HostBtn" type="Button" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=583920]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_host")
+theme_override_styles/hover = SubResource("StyleBoxFlat_host_hover")
+text = "CREAR PARTIDA"
+
+[node name="OrLabel" type="Label" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=348294556]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "- O UNIRSE A UNA -"
+horizontal_alignment = 1
+
+[node name="IpInput" type="LineEdit" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=239485]
+unique_name_in_owner = true
+layout_mode = 2
+text = "127.0.0.1"
+placeholder_text = "IP del Host"
+alignment = 1
+
+[node name="JoinBtn" type="Button" parent="LoginPanel/PanelContainer/Margin/VBox" unique_id=482930]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_join")
+theme_override_styles/hover = SubResource("StyleBoxFlat_join_hover")
+text = "UNIRSE"
+
+[node name="LobbyPanel" type="HBoxContainer" parent="." unique_id=958302]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="LeftCol" type="CenterContainer" parent="LobbyPanel" unique_id=744945559]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlayerListPanel" type="PanelContainer" parent="LobbyPanel/LeftCol" unique_id=688137348]
+custom_minimum_size = Vector2(300, 400)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="LobbyPanel/LeftCol/PlayerListPanel" unique_id=1953430360]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="LobbyPanel/LeftCol/PlayerListPanel/Margin" unique_id=54750921]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="LobbyPanel/LeftCol/PlayerListPanel/Margin/VBox" unique_id=1249192884]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Jugadores Conectados"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="LobbyPanel/LeftCol/PlayerListPanel/Margin/VBox" unique_id=823644676]
+layout_mode = 2
+
+[node name="PlayerListContainer" type="VBoxContainer" parent="LobbyPanel/LeftCol/PlayerListPanel/Margin/VBox" unique_id=859302]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="RightCol" type="CenterContainer" parent="LobbyPanel" unique_id=1596448697]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RulesPanel" type="PanelContainer" parent="LobbyPanel/RightCol" unique_id=1419331799]
+custom_minimum_size = Vector2(300, 400)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="LobbyPanel/RightCol/RulesPanel" unique_id=708470268]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="LobbyPanel/RightCol/RulesPanel/Margin" unique_id=1771997210]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Label" type="Label" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox" unique_id=415560453]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Reglas de la Casa"
+horizontal_alignment = 1
+
+[node name="RulesContainer" type="VBoxContainer" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox" unique_id=102938]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HBox1" type="HBoxContainer" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox/RulesContainer" unique_id=774267835]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox/RulesContainer/HBox1" unique_id=270260526]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Unicornios para ganar:"
+
+[node name="SpinUnicorns" type="SpinBox" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox/RulesContainer/HBox1" unique_id=592039]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 10.0
+value = 7.0
+
+[node name="CheckNursery" type="CheckBox" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox/RulesContainer" unique_id=293847]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "Guardería segura (No matar bebés)"
+
+[node name="CheckDouble" type="CheckBox" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox/RulesContainer" unique_id=928374]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Modo Rápido (Jugar 2 cartas)"
+
+[node name="Spacer" type="Control" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox" unique_id=1879225778]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="WaitingLabel" type="Label" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox" unique_id=192837]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Esperando al anfitrión..."
+horizontal_alignment = 1
+
+[node name="StartGameBtn" type="Button" parent="LobbyPanel/RightCol/RulesPanel/Margin/VBox" unique_id=563829]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_start")
+text = "¡INICIAR PARTIDA!"

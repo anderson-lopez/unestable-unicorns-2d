@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://dfw86fqwhr6er"]
+
+[ext_resource type="Script" uid="uid://oj553a4d1u6r" path="res://scenes/ui/card_selector.gd" id="1_iobbn"]
+
+[node name="CardSelector" type="PanelContainer" unique_id=327334372]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_iobbn")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=514840291]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=849666590]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1465116022]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer" unique_id=854491842]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer/ScrollContainer" unique_id=2092750610]
+layout_mode = 2
+columns = 5

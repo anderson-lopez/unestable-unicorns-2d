@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b4gdc3tbe30ql" path="res://scenes/game/game_table.gd" id="1_wson1"]
 [ext_resource type="PackedScene" uid="uid://c054e5lt67t0v" path="res://scenes/cards/CardInfoPanel.tscn" id="2_1pv7v"]
+[ext_resource type="PackedScene" uid="uid://dfw86fqwhr6er" path="res://scenes/ui/CardSelector.tscn" id="3_1pv7v"]
 
 [node name="GameTable" type="Control" unique_id=459670352]
 layout_mode = 3
@@ -34,14 +35,51 @@ mouse_filter = 2
 alignment = 1
 
 [node name="CardsContainer" type="HBoxContainer" parent="HandZone" unique_id=1792576497]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = -10
 alignment = 1
 
+[node name="RivalsContainer" type="HBoxContainer" parent="." unique_id=561721397]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 180.0
+grow_horizontal = 2
+theme_override_constants/separation = -10
+alignment = 1
+
+[node name="MyStable" type="VBoxContainer" parent="." unique_id=2031328842]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="UpgradesRow" type="HBoxContainer" parent="MyStable" unique_id=512314525]
+layout_mode = 2
+alignment = 1
+
+[node name="UnicornsRow" type="HBoxContainer" parent="MyStable" unique_id=1060063165]
+layout_mode = 2
+alignment = 1
+
 [node name="DebugUI" type="VBoxContainer" parent="." unique_id=762039372]
 layout_mode = 1
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -50.5
+offset_right = 178.0
+offset_bottom = 50.5
+grow_vertical = 2
 
 [node name="BtnAddRandom" type="Button" parent="DebugUI" unique_id=293906439]
 layout_mode = 2
@@ -59,3 +97,5 @@ text = "Limpiar mesa"
 
 [node name="CardInfoPanel" parent="UILayer" unique_id=1483242591 instance=ExtResource("2_1pv7v")]
 visible = false
+
+[node name="CardSelector" parent="UILayer" unique_id=327334372 instance=ExtResource("3_1pv7v")]

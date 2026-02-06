@@ -16,7 +16,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-CardDatabase="*uid://8862bdxcfapl"
+CardDatabase="*uid://3qih4fil7ujq"
+GameManager="*uid://30hcw1oqx4kk"
 
 [physics]
 
