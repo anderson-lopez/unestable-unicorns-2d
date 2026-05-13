@@ -29,6 +29,8 @@ const ACTION_MAP = {
 	"shuffle_deck": GameEnums.Action.SHUFFLE_DECK,
 	"protect": GameEnums.Action.PROTECT,
 	"cancel": GameEnums.Action.CANCEL,
+	"skip_turn": GameEnums.Action.SKIP_TURN,
+	"extra_turn": GameEnums.Action.EXTRA_TURN,
 	"extra_action": GameEnums.Action.EXTRA_ACTION,
 	"none": GameEnums.Action.NONE
 }
@@ -39,6 +41,7 @@ const TRIGGER_MAP = {
 	"on_turn_start": GameEnums.Trigger.ON_TURN_START,
 	"on_destroy": GameEnums.Trigger.ON_DESTROY,
 	"on_sacrifice": GameEnums.Trigger.ON_SACRIFICE,
+	"on_card_played": GameEnums.Trigger.ON_CARD_PLAYED,
 	"passive": GameEnums.Trigger.PASSIVE,
 	"none": GameEnums.Trigger.NONE
 }
@@ -61,6 +64,7 @@ const FILTER_MAP = {
 const SCOPE_MAP = {
 	"self": GameEnums.Scope.SELF,
 	"chosen_opponent": GameEnums.Scope.CHOSEN_OPPONENT,
+	"all_opponents": GameEnums.Scope.ALL_OPPONENTS,
 	"all_players": GameEnums.Scope.ALL_PLAYERS,
 	"any_player": GameEnums.Scope.ANY_PLAYER,
 	"none": GameEnums.Scope.NONE
@@ -72,7 +76,47 @@ const ZONE_MAP = {
 	"stable": GameEnums.Zone.STABLE,
 	"discard_pile": GameEnums.Zone.DISCARD_PILE,
 	"nursery": GameEnums.Zone.NURSERY,
+	"void": GameEnums.Zone.VOID,
 	"none": GameEnums.Zone.NONE
+}
+
+const CONDITION_MAP = {
+	"none": GameEnums.Condition.NONE,
+	"always": GameEnums.Condition.ALWAYS,
+	"in_stable": GameEnums.Condition.IN_STABLE,
+
+	# Modificadores de trigger
+	"or_on_sacrifice": GameEnums.Condition.OR_ON_SACRIFICE,
+	"or_on_leave_stable": GameEnums.Condition.OR_ON_LEAVE_STABLE,
+
+	# Inmunidades
+	"immune_to_destroy": GameEnums.Condition.IMMUNE_TO_DESTROY,
+	"immune_to_magic_destroy": GameEnums.Condition.IMMUNE_TO_MAGIC_DESTROY,
+
+	# Bloqueos
+	"prevent_basic_entry": GameEnums.Condition.PREVENT_BASIC_ENTRY,
+	"prevent_play_neigh": GameEnums.Condition.PREVENT_PLAY_NEIGH,
+	"prevent_play_upgrade": GameEnums.Condition.PREVENT_PLAY_UPGRADE,
+	"prevent_neigh_on_owner": GameEnums.Condition.PREVENT_NEIGH_ON_OWNER,
+
+	# Transformaciones
+	"disable_unicorn_effects": GameEnums.Condition.DISABLE_UNICORN_EFFECTS,
+	"convert_unicorns_to_pandas": GameEnums.Condition.CONVERT_UNICORNS_TO_PANDAS,
+	"hand_visible": GameEnums.Condition.HAND_VISIBLE,
+	"counts_as_2_unicorns": GameEnums.Condition.COUNTS_AS_2_UNICORNS,
+
+	# Condicionales numéricos
+	"if_unicorn_count_exceeds_5": GameEnums.Condition.IF_UNICORN_COUNT_EXCEEDS_5,
+
+	# Modificadores de acción
+	"scry_3": GameEnums.Condition.SCRY_3,
+	"tag_narwhal": GameEnums.Condition.TAG_NARWHAL,
+	"random": GameEnums.Condition.RANDOM,
+	"choice_either": GameEnums.Condition.CHOICE_EITHER,
+	"move_unicorn_to_opponent": GameEnums.Condition.MOVE_UNICORN_TO_OPPONENT,
+	"retarget_upgrade_downgrade": GameEnums.Condition.RETARGET_UPGRADE_DOWNGRADE,
+	"cannot_be_neighed": GameEnums.Condition.CANNOT_BE_NEIGHED,
+	"replace_target_unicorn": GameEnums.Condition.REPLACE_TARGET_UNICORN
 }
 
 # Funciones estáticas seguras (si el string no existe, devuelve NONE/UNDEFINED)
@@ -94,9 +138,18 @@ static func parse_trigger(key: String) -> GameEnums.Trigger:
 
 static func parse_filter(key: String) -> GameEnums.Filter:
 	return FILTER_MAP.get(key, GameEnums.Filter.NONE)
-	
+
 static func parse_scope(key: String) -> GameEnums.Scope:
 	return SCOPE_MAP.get(key, GameEnums.Scope.NONE)
 
 static func parse_zone(key: String) -> GameEnums.Zone:
 	return ZONE_MAP.get(key, GameEnums.Zone.NONE)
+
+static func parse_condition(key: String) -> GameEnums.Condition:
+	if key == null or key == "":
+		return GameEnums.Condition.NONE
+	var result = CONDITION_MAP.get(key, -1)
+	if result == -1:
+		printerr("DataParser: condition desconocida -> '", key, "'. Usando NONE.")
+		return GameEnums.Condition.NONE
+	return result

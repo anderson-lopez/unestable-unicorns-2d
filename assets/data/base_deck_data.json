@@ -6,17 +6,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/1_queen_bee_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Reina Del Baile",
-		"en": "Queen Bee Unicorn"
-	  },
+	  "name": {"es": "Unicornio Reina Del Baile", "en": "Queen Bee Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["queen", "bee", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Los Unicornios básicos no pueden entrar en ningún Establo que no sea el tuyo.",
-		"en": "2nd Edition: Basic Unicorn cards cannot enter any player's Stable except yours.\nSecond Print: Basic Unicorn cards cannot enter any other player's Stable.\nOriginal Text: As long as this card is in your Stables, no other player can play Basic Unicorns"
+		"en": "2nd Edition: Basic Unicorn cards cannot enter any player's Stable except yours."
 	  }
 	},
 	"gameplay": {
@@ -27,17 +24,8 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "prevent_basic_entry",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "protect",
-			"target_scope": "self",
-			"target_filter": "basic_unicorn"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "target_scope": "all_opponents", "target_filter": "basic_unicorn"},
 		  "secondary_action": null
 		}
 	  ]
@@ -50,17 +38,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/2_baby_unicorn_death.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Death)",
-		"en": "Baby Unicorn (Death)"
-	  },
+	  "name": {"es": "Baby Unicorn (Death)", "en": "Baby Unicorn (Death)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(death)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -71,19 +56,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -96,17 +70,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/3_unicorn_poison.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Veneno De Unicornio",
-		"en": "Unicorn Poison"
-	  },
+	  "name": {"es": "Veneno De Unicornio", "en": "Unicorn Poison"},
 	  "type": "magic_spell",
 	  "tags": ["unicorn", "poison"]
 	},
 	"visual": {
 	  "description": {
 		"es": "DESTRUYE una carta de Unicornio.",
-		"en": "Second Print / 2nd Edition: DESTROY a Unicorn card.\nOriginal Text: DESTROY a Unicorn."
+		"en": "DESTROY a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -117,19 +88,8 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -142,17 +102,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/4_extremely_destructive_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Extremadamente Destructivo",
-		"en": "Extremely Destructive Unicorn"
-	  },
+	  "name": {"es": "Unicornio Extremadamente Destructivo", "en": "Extremely Destructive Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["extremely", "destructive", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo cada jugador (también tú) debe SACRIFICAR una carta de Unicornio.",
-		"en": "2nd Edition: When this card enters your Stable, each player (including you) must SACRIFICE a Unicorn card.\nSecond Print: When this card enters your Stable, each player must SACRIFICE a Unicorn card.\nOriginal Text: When this card enters your Stable, each player must SACRIFICE a Unicorn."
+		"en": "When this card enters your Stable, each player (including you) must SACRIFICE a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -163,19 +120,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "sacrifice",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "sacrifice", "amount": 1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -188,17 +134,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/5_good_deal.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Ganga",
-		"en": "Good Deal"
-	  },
+	  "name": {"es": "Ganga", "en": "Good Deal"},
 	  "type": "magic_spell",
 	  "tags": ["good", "deal"]
 	},
 	"visual": {
 	  "description": {
 		"es": "ROBA 3 cartas y DESCARTA una carta.",
-		"en": "Second Print / 2nd Edition: DRAW 3 cards and DISCARD a card.\nOriginal Text: DRAW three cards, then DISCARD a card."
+		"en": "DRAW 3 cards and DISCARD a card."
 	  }
 	},
 	"gameplay": {
@@ -209,20 +152,9 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "draw",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "any"
-		  },
-		  "secondary_action": null
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "draw", "amount": 3, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "secondary_action": {"type": "discard", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -234,17 +166,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/6_baby_unicorn_brown.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Brown)",
-		"en": "Baby Unicorn (Brown)"
-	  },
+	  "name": {"es": "Baby Unicorn (Brown)", "en": "Baby Unicorn (Brown)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(brown)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -255,19 +184,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -280,24 +198,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/7_basic_unicorn_yellow.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Básico (Amarillo)",
-		"en": "Basic Unicorn (Yellow)"
-	  },
+	  "name": {"es": "Unicornio Básico (Amarillo)", "en": "Basic Unicorn (Yellow)"},
 	  "type": "basic_unicorn",
 	  "tags": ["basic", "unicorn", "(yellow)"]
 	},
 	"visual": {
-	  "description": {
-		"es": "Baila como si estuvieras sola",
-		"en": "Flavor Text: Dance like nobody's watching."
-	  }
+	  "description": {"es": "Baila como si estuvieras sola", "en": "Dance like nobody's watching."}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -306,17 +214,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/8_magical_kittencorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Gaticornio Mágico",
-		"en": "Magical Kittencorn"
-	  },
+	  "name": {"es": "Gaticornio Mágico", "en": "Magical Kittencorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["magical", "kittencorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Esta carta no puede ser destruida por cartas de Magia.",
-		"en": "2nd Edition: This card cannot be destroyed by Magic cards.\nSecond Print: This card cannot be destroyed or otherwise affected by Magic Cards.\nOriginal Text / First Print: As long as this card is in your Stable, it cannot be destroyed or affected by Magic Cards."
+		"en": "This card cannot be destroyed by Magic cards."
 	  }
 	},
 	"gameplay": {
@@ -325,21 +230,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_destroy",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "trigger": "passive",
+		  "condition": "immune_to_magic_destroy",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "target_scope": "self", "target_filter": "magic_spell"},
 		  "secondary_action": null
 		}
 	  ]
@@ -352,17 +246,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/9_sadistic_ritual.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Ritual Sádico",
-		"en": "Sadistic Ritual"
-	  },
+	  "name": {"es": "Ritual Sádico", "en": "Sadistic Ritual"},
 	  "type": "downgrade",
 	  "tags": ["sadistic", "ritual"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, SACRIFICA una carta de Unicornio y, a continuación, ROBA una carta.",
-		"en": "Second Print / 2nd Edition: If this card is in your Stable at the beginning of your turn, SACRIFICE a Unicorn card, then DRAW a card.\nOriginal Text: If this card is in your Stable at the beginning of your turn, SACRIFICE a Unicorn, then DRAW an extra card."
+		"en": "If this card is in your Stable at the beginning of your turn, SACRIFICE a Unicorn card, then DRAW a card."
 	  }
 	},
 	"gameplay": {
@@ -372,20 +263,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_turn_start",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "draw",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "any"
-		  },
+		  "condition": "in_stable",
+		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "unicorn_card"},
+		  "primary_action": {"type": "draw", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -398,17 +278,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/10_targeted_destruction.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Destrucción Selectiva",
-		"en": "Targeted Destruction"
-	  },
+	  "name": {"es": "Destrucción Selectiva", "en": "Targeted Destruction"},
 	  "type": "magic_spell",
 	  "tags": ["targeted", "destruction"]
 	},
 	"visual": {
 	  "description": {
 		"es": "DESTRUYE una carta de Ventaja o SACRIFICA una carta de Desventaja.",
-		"en": "2nd Edition: DESTROY an Upgrade card or SACRIFICE a Downgrade card.\nOriginal Text: SACRIFICE or DESTROY an Upgrade or Downgrade card."
+		"en": "DESTROY an Upgrade card or SACRIFICE a Downgrade card."
 	  }
 	},
 	"gameplay": {
@@ -418,21 +295,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_play",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "upgrade_card"
-		  },
-		  "secondary_action": null
+		  "condition": "choice_either",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "upgrade_card"},
+		  "secondary_action": {"type": "sacrifice", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "downgrade_card"}
 		}
 	  ]
 	}
@@ -444,17 +310,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/11_unfair_bargain.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Trato Injusto",
-		"en": "Unfair Bargain"
-	  },
+	  "name": {"es": "Trato Injusto", "en": "Unfair Bargain"},
 	  "type": "magic_spell",
 	  "tags": ["unfair", "bargain"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Intercambia todas las cartas de tu mano con las de otro jugador.",
-		"en": "Second Print / 2nd Edition: Trade hands with any other player.\nOriginal Text: Trade hands with any player."
+		"en": "Trade hands with any other player."
 	  }
 	},
 	"gameplay": {
@@ -465,16 +328,8 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "swap_hands",
-			"target_scope": "chosen_opponent"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "swap_hands", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -487,17 +342,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/12_seductive_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Seductor",
-		"en": "Seductive Unicorn"
-	  },
+	  "name": {"es": "Unicornio Seductor", "en": "Seductive Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["seductive", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo puedes DESCARTAR una carta para, a continuación, HURTAR una carta de Unicornio.",
-		"en": "2nd Edition: When this card enters your Stable, you may DISCARD a card, then STEAL a Unicorn card.\nSecond Print: When this card enters your Stable, STEAL a Unicorn card. If this card leaves your Stable, return that Unicorn card to the Stable from which you stole it.\nOriginal Text: When this card enters your Stable, you may move a Unicorn from any player's Stable to your Stable. If this card leaves your Stable, move the Unicorn back to its original Stable."
+		"en": "When this card enters your Stable, you may DISCARD a card, then STEAL a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -508,19 +360,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "steal",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": true, "action": "discard", "amount": 1, "target_type": "any"},
+		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -533,17 +374,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/13_baby_unicorn_orange.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Orange)",
-		"en": "Baby Unicorn (Orange)"
-	  },
+	  "name": {"es": "Baby Unicorn (Orange)", "en": "Baby Unicorn (Orange)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(orange)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -554,19 +392,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -579,24 +406,17 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/14_basic_unicorn_purple.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Básico (Púrpura)",
-		"en": "Basic Unicorn (Purple)"
-	  },
+	  "name": {"es": "Unicornio Básico (Púrpura)", "en": "Basic Unicorn (Purple)"},
 	  "type": "basic_unicorn",
 	  "tags": ["basic", "unicorn", "(purple)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "#nomakeup #nofilter #gafasdesol #sincomplejos #selfi #unicornio #TGIF #estaesmicrin",
-		"en": "Flavor Text: #nomakeup #nofilter #sunnies #shameless #selfie #basic #TGIF # unicornhairdontcare"
+		"en": "#nomakeup #nofilter #sunnies #shameless #selfie #basic #TGIF #unicornhairdontcare"
 	  }
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -605,17 +425,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/15_shabby_the_narwhal.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Narval Dick",
-		"en": "Shabby the Narwhal"
-	  },
+	  "name": {"es": "Narval Dick", "en": "Shabby the Narwhal"},
 	  "type": "magical_unicorn",
 	  "tags": ["shabby", "the", "narwhal"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo puedes buscar una carta de Desventaja en el mazo de robo y ponerla en tu mano; a continuación, baraja el mazo de robo.",
-		"en": "2nd Edition: When this card enters your  Stable, you may  search  the  deck  for a  Downgrade card  and add it to your  hand, then  shuffle  the  deck.\nSecond Print: When this card enters your  Stable, you may  search  the  deck  for a  Downgrade card  and add it to your  hand. Shuffle  the  deck.\nOriginal Text: When this card enters your  Stable, you may  search  the  deck  for a  Downgrade card  add it to your hand, then  shuffle  the  deck."
+		"en": "When this card enters your Stable, you may search the deck for a Downgrade card and add it to your hand, then shuffle the deck."
 	  }
 	},
 	"gameplay": {
@@ -626,20 +443,9 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "search_deck",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "downgrade_card"
-		  },
-		  "secondary_action": null
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "downgrade_card"},
+		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -651,17 +457,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/16_black_knight_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Caballero Negro",
-		"en": "Black Knight Unicorn"
-	  },
+	  "name": {"es": "Unicornio Caballero Negro", "en": "Black Knight Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["black", "knight", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Puedes SACRIFICAR esta carta en lugar de destruir una carta de Unicornio en tu Establo.",
-		"en": "Second Edition: If a Unicorn card in your Stable would be destroyed, you may SACRIFICE this card instead.\nSecond Print: If 1 of your Unicorn cards would be destroyed, you may SACRIFICE this card instead.\nOriginal Text: If one of your Unicorns would be destroyed, you may SACRIFICE this card instead."
+		"en": "If a Unicorn card in your Stable would be destroyed, you may SACRIFICE this card instead."
 	  }
 	},
 	"gameplay": {
@@ -671,20 +474,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_destroy",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "replace_target_unicorn",
+		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "self"},
+		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -697,17 +489,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/17_greedy_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Volador Codicioso",
-		"en": "Greedy Flying Unicorn"
-	  },
+	  "name": {"es": "Unicornio Volador Codicioso", "en": "Greedy Flying Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["greedy", "flying", "unicorn"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
-		"en": "2nd Edition: When this card enters your Stable, DRAW a card. If this card is sacrificed or destroyed, return it to your hand.\nSecond Print: When this card enters your Stable, DRAW a card. If this card would be sacrificed or destroyed, return it to your hand instead.\nOriginal Text: When this card enters your Stable, DRAW a card. If this card is sacrificed or destroyed, return it to your hand."
+		"es": "Cuando esta carta entra en tu Establo, ROBA una carta. Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
+		"en": "When this card enters your Stable, DRAW a card. If this card is sacrificed or destroyed, return it to your hand."
 	  }
 	},
 	"gameplay": {
@@ -717,37 +506,17 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "draw",
-			"amount": 1,
-			"target_scope": "self",
-			"target_filter": "any"
-		  },
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "draw", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -760,17 +529,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/18_unicorn_oracle.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Oráculo",
-		"en": "Unicorn Oracle"
-	  },
+	  "name": {"es": "Unicornio Oráculo", "en": "Unicorn Oracle"},
 	  "type": "magical_unicorn",
 	  "tags": ["unicorn", "oracle"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entre en tu Establo, mira las 3 cartas superiores del mazo de robo, elige una y aňádela a tu mano. A continuación, devuelve las 2 cartas restantes a la parte superior del mazo de robo en el orden que desees.",
-		"en": "2nd Edition: When this card enters your Stable, look at the top 3 cards of the deck and add one of them to your hand, then return the other two to the top of the deck in any order."
+		"en": "When this card enters your Stable, look at the top 3 cards of the deck and add one of them to your hand, then return the other two to the top of the deck in any order."
 	  }
 	},
 	"gameplay": {
@@ -780,20 +546,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "scry_3",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -806,17 +561,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/19_baby_unicorn_purple.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Purple)",
-		"en": "Baby Unicorn (Purple)"
-	  },
+	  "name": {"es": "Baby Unicorn (Purple)", "en": "Baby Unicorn (Purple)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(purple)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -827,19 +579,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -852,24 +593,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/20_basic_unicorn_green.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Básico (Verde)",
-		"en": "Basic Unicorn (Green)"
-	  },
+	  "name": {"es": "Unicornio Básico (Verde)", "en": "Basic Unicorn (Green)"},
 	  "type": "basic_unicorn",
 	  "tags": ["basic", "unicorn", "(green)"]
 	},
 	"visual": {
-	  "description": {
-		"es": "Solo escucho discos de vinilo y cintas de casete.",
-		"en": "Flavor Text: Vinyl records and mixtapes only."
-	  }
+	  "description": {"es": "Solo escucho discos de vinilo y cintas de casete.", "en": "Vinyl records and mixtapes only."}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -878,17 +609,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/21_the_great_narwhal.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "El Gran Narval",
-		"en": "The Great Narwhal"
-	  },
+	  "name": {"es": "El Gran Narval", "en": "The Great Narwhal"},
 	  "type": "magical_unicorn",
 	  "tags": ["the", "great", "narwhal"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo puedes buscar una carta que contenga la palabra Narval en su título y ponerla en tu mano; a continuación, baraja el mazo de robo.",
-		"en": "2nd Edition: When this card enters your Stable, you may search the deck for a card with \"Narwhal\" in its name and add it to your hand, then shuffle the deck.\nSecond Print: When this card enters your Stable, you may search the deck for a card with \"Narwhal\" in its name and add it to your hand. Shuffle the deck.\nOriginal Text: When this card enters your Stable, you may search the deck for a card with \"Narwhal\" in its name. Add it to your hand, then shuffle the deck."
+		"en": "When this card enters your Stable, you may search the deck for a card with 'Narwhal' in its name and add it to your hand, then shuffle the deck."
 	  }
 	},
 	"gameplay": {
@@ -898,21 +626,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "search_deck",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "any"
-		  },
-		  "secondary_action": null
+		  "condition": "tag_narwhal",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -924,17 +641,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/22_glitter_bomb.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Bomba de Purpurina",
-		"en": "Glitter Bomb"
-	  },
+	  "name": {"es": "Bomba de Purpurina", "en": "Glitter Bomb"},
 	  "type": "upgrade",
 	  "tags": ["glitter", "bomb"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, puedes SACRIFICAR una carta para, a continuación, DESTRUIR una carta.",
-		"en": "2nd Edition: If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card, then DESTROY a card.\nSecond Print: If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card. If you do, DESTROY a card.\nOriginal Text: If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card, then DESTROY a card."
+		"en": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card, then DESTROY a card."
 	  }
 	},
 	"gameplay": {
@@ -944,20 +658,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_turn_start",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "in_stable",
+		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "any"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -970,17 +673,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/23_rainbow_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Arcoíris",
-		"en": "Rainbow Unicorn"
-	  },
+	  "name": {"es": "Unicornio Arcoíris", "en": "Rainbow Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["rainbow", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo también puedes poner una carta de Unicornio básico de tu mano en tu Establo.",
-		"en": "2nd Edition: When this card enters your Stable, you may bring a Basic Unicorn card from your hand into your Stable.\nSecond Print: When this card enters your Stable, you may bring a Basic Unicorn card from your hand directly into your Stable.\nOriginal Text: When this card enters your Stable, you may also bring a Basic Unicorn directly into your Stable from your hand."
+		"en": "When this card enters your Stable, you may bring a Basic Unicorn card from your hand into your Stable."
 	  }
 	},
 	"gameplay": {
@@ -991,18 +691,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "summon",
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "basic_unicorn"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "summon", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "basic_unicorn"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1015,17 +705,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/24_barbed_wire.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Alambre De Púas",
-		"en": "Barbed Wire"
-	  },
+	  "name": {"es": "Alambre De Púas", "en": "Barbed Wire"},
 	  "type": "downgrade",
 	  "tags": ["barbed", "wire"]
 	},
 	"visual": {
 	  "description": {
 		"es": "DESCARTA una carta cada vez que una carta de Unicornio entra en tu Establo o abandona tu Establo.",
-		"en": "Second Print / 2nd Edition: Each time a Unicorn card enters or leaves your Stable, DISCARD a card.\nOriginal Text: As long as this card is in your Stable, you must DISCARD a card each time a Unicorn enters or leaves your Stable."
+		"en": "Each time a Unicorn card enters or leaves your Stable, DISCARD a card."
 	  }
 	},
 	"gameplay": {
@@ -1035,20 +722,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
+		  "condition": "or_on_leave_stable",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1061,17 +737,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/25_dark_angel_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Ángel Oscuro",
-		"en": "Dark Angel Unicorn"
-	  },
+	  "name": {"es": "Unicornio Ángel Oscuro", "en": "Dark Angel Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["dark", "angel", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo puedes SACRIFICAR una carta de Unicornio para, a continuación, buscar una carta de Unicornio en la pila de descartes y ponerla en tu Establo.",
-		"en": "Cuando esta carta entra en tu Establo puedes SACRIFICAR una carta de Unicornio para, a continuación, buscar una carta de Unicornio en la pila de descartes y ponerla en tu Establo."
+		"en": "When this card enters your Stable, you may SACRIFICE a Unicorn card, then bring a Unicorn card from the discard pile into your Stable."
 	  }
 	},
 	"gameplay": {
@@ -1080,19 +753,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_turn_start",
+		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": true,
-			"action": "sacrifice",
-			"amount": 1,
-			"target_type": "any"
-		  },
-		  "primary_action": {
-			"type": "revive",
-			"target_zone": "discard_pile",
-			"target_filter": "unicorn_card"
-		  },
+		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "unicorn_card"},
+		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1105,17 +769,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/26_ginormous_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Gordicornio",
-		"en": "Ginormous Unicorn"
-	  },
+	  "name": {"es": "Gordicornio", "en": "Ginormous Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["ginormous", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Esta carta cuenta como 2 cartas de Unicornio. No puedes jugar carta Relincho de ningún tipo.",
-		"en": "2nd Edition: This card counts for 2 Unicorns. You cannot play any Neigh cards.\nSecond Print: This card counts for 2 Unicorns. You cannot play any Instant cards.\nOriginal Text: This card counts for two Unicorns in your Stable. As long as this card is in your Stable, you cannot play any instant cards."
+		"en": "This card counts for 2 Unicorns. You cannot play any Neigh cards."
 	  }
 	},
 	"gameplay": {
@@ -1125,20 +786,17 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "cancel",
-			"amount": 1,
-			"target_scope": "any_player",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "counts_as_2_unicorns",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "amount": 2, "target_scope": "self", "target_zone": "stable", "target_filter": "self"},
+		  "secondary_action": null
+		},
+		{
+		  "order": 2,
+		  "trigger": "passive",
+		  "condition": "prevent_play_neigh",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "instant"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1151,17 +809,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/27_classy_narwhal.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Narval Con Clase",
-		"en": "Classy Narwhal"
-	  },
+	  "name": {"es": "Narval Con Clase", "en": "Classy Narwhal"},
 	  "type": "magical_unicorn",
 	  "tags": ["classy", "narwhal"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo puedes buscar una carta de Ventaja en el mazo de robo y ponerla en tu mano; a continuación, baraja el mazo de robo.",
-		"en": "Second Edition: When this card enters your Stable, you may search the deck for an Upgrade card and add it to your hand, then shuffle the deck.\nSecond Print: When this card enters your Stable, you may search the deck for an Upgrade card and add it to your hand. Shuffle the deck.\nOriginal Text: When this card enters your Stable, you may search the deck for an Upgrade card. Add it to your hand, then shuffle the deck."
+		"en": "When this card enters your Stable, you may search the deck for an Upgrade card and add it to your hand, then shuffle the deck."
 	  }
 	},
 	"gameplay": {
@@ -1172,20 +827,9 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "search_deck",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "upgrade_card"
-		  },
-		  "secondary_action": null
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "upgrade_card"},
+		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -1197,17 +841,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/28_slowdown.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Ralentización",
-		"en": "Slowdown"
-	  },
+	  "name": {"es": "Ralentización", "en": "Slowdown"},
 	  "type": "downgrade",
 	  "tags": ["slowdown"]
 	},
 	"visual": {
 	  "description": {
 		"es": "No puedes jugar cartas Relincho.",
-		"en": "2nd Edition: You cannot play Neigh cards.\nSecond Print: You cannot play Instant cards.\nOriginal Text: As long as this card is in your Stable, you cannot play Instant cards."
+		"en": "You cannot play Neigh cards."
 	  }
 	},
 	"gameplay": {
@@ -1217,20 +858,9 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "cancel",
-			"amount": 1,
-			"target_scope": "any_player",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "prevent_play_neigh",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "instant"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1243,17 +873,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/29_necromancer_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Nigromante",
-		"en": "Necromancer Unicorn"
-	  },
+	  "name": {"es": "Unicornio Nigromante", "en": "Necromancer Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["necromancer", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo también puedes DESCARTAR 2 cartas de Unicornio para, a continuación, poner una carta de Unicornio de la pila de descartes en tu Establo.",
-		"en": "2nd Edition: When this card enters your Stable, you may DISCARD 2 Unicorn cards, then bring a Unicorn card from the discard pile into your Stable."
+		"en": "When this card enters your Stable, you may DISCARD 2 Unicorn cards, then bring a Unicorn card from the discard pile into your Stable."
 	  }
 	},
 	"gameplay": {
@@ -1263,19 +890,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "cost": {
-			"required": false,
-			"action": "discard",
-			"amount": 2,
-			"target_type": "unicorn_card"
-		  },
-		  "primary_action": {
-			"type": "revive",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "stable",
-			"target_filter": "unicorn_card"
-		  }
+		  "condition": "none",
+		  "cost": {"required": true, "action": "discard", "amount": 2, "target_type": "unicorn_card"},
+		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "secondary_action": null
 		}
 	  ]
 	}
@@ -1287,17 +905,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/30_unicorn_on_the_cob.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unizorca",
-		"en": "Unicorn on the Cob"
-	  },
+	  "name": {"es": "Unizorca", "en": "Unicorn on the Cob"},
 	  "type": "magical_unicorn",
 	  "tags": ["unicorn", "on", "the", "cob"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entre en tu Establo, ROBA 2 cartas y DESCARTA una carta.",
-		"en": "Second Print / 2nd Edition: When this card enters your Stable, DRAW 2 cards and DISCARD a card.\nOriginal Text: When this card enters your Stable, DRAW two cards then DISCARD a card."
+		"en": "When this card enters your Stable, DRAW 2 cards and DISCARD a card."
 	  }
 	},
 	"gameplay": {
@@ -1308,20 +923,9 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "draw",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "any"
-		  },
-		  "secondary_action": null
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "draw", "amount": 2, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "secondary_action": {"type": "discard", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -1333,17 +937,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/31_baby_unicorn_white.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (White)",
-		"en": "Baby Unicorn (White)"
-	  },
+	  "name": {"es": "Baby Unicorn (White)", "en": "Baby Unicorn (White)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(white)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -1354,19 +955,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1379,17 +969,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/32_narwhal_torpedo.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Narval Torpedo",
-		"en": "Narwhal Torpedo"
-	  },
+	  "name": {"es": "Narval Torpedo", "en": "Narwhal Torpedo"},
 	  "type": "magical_unicorn",
 	  "tags": ["narwhal", "torpedo"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entre en tu Establo, SACRIFICA todas las cartas de Desventaja que tengas en tu Establo.",
-		"en": "2nd Edition: When this card enters your Stable, SACRIFICE all Downgrade cards in your Stable.\nSecond Print: When this card enters your Stable, SACRIFICE all Downgrade cards.\nOriginal Text: When this card enters your Stable, SACRIFICE all Downgrade cards in your Stable."
+		"en": "When this card enters your Stable, SACRIFICE all Downgrade cards in your Stable."
 	  }
 	},
 	"gameplay": {
@@ -1399,13 +986,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "primary_action": {
-			"type": "sacrifice",
-			"amount": -1,
-			"target_scope": "self",
-			"target_zone": "stable",
-			"target_filter": "downgrade_card"
-		  }
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "sacrifice", "amount": -1, "target_scope": "self", "target_zone": "stable", "target_filter": "downgrade_card"},
+		  "secondary_action": null
 		}
 	  ]
 	}
@@ -1417,17 +1001,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/33_baby_unicorn_pink.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Pink)",
-		"en": "Baby Unicorn (Pink)"
-	  },
+	  "name": {"es": "Baby Unicorn (Pink)", "en": "Baby Unicorn (Pink)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(pink)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -1438,19 +1019,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1463,17 +1033,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/34_neigh.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Relincho",
-		"en": "Neigh"
-	  },
+	  "name": {"es": "Relincho", "en": "Neigh"},
 	  "type": "instant",
 	  "tags": ["neigh"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Juega esta carta cuando otro jugador intente jugar una carta. Ese jugador no podrá jugar su carta y deberá dejarla en la pila de descartes.",
-		"en": "2nd Edition: Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile.\nSecond Print: Play this card when any other player tries to play a card. Stop that player's card from being played and send it to the discard pile.\nOriginal Text: Play this card when any playertries to play a card. Stop that player's card from coming into play and send it to the discard pile instead."
+		"en": "Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile."
 	  }
 	},
 	"gameplay": {
@@ -1482,21 +1049,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_play",
+		  "trigger": "on_card_played",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1509,17 +1065,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/35_blinding_light.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Luz Cegadora",
-		"en": "Blinding Light"
-	  },
+	  "name": {"es": "Luz Cegadora", "en": "Blinding Light"},
 	  "type": "downgrade",
 	  "tags": ["blinding", "light"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Todas tus cartas de Unicornio son ahora cartas de Unicornio Básico sin efectos.",
-		"en": "2nd Edition: All of your Unicorn cards are considered Basic Unicorns with no effects.\nSecond Print: Triggered effects of your Unicorn cards do not activate.\nOriginal Text: As long as this card is in your Stable, your Unicorn card effects cannot be activated."
+		"en": "All of your Unicorn cards are considered Basic Unicorns with no effects."
 	  }
 	},
 	"gameplay": {
@@ -1529,17 +1082,9 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "protect",
-			"target_scope": "self"
-		  },
+		  "condition": "disable_unicorn_effects",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1552,17 +1097,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/36_baby_unicorn_rainbow.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Rainbow)",
-		"en": "Baby Unicorn (Rainbow)"
-	  },
+	  "name": {"es": "Baby Unicorn (Rainbow)", "en": "Baby Unicorn (Rainbow)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(rainbow)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -1573,19 +1115,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1598,17 +1129,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/37_rainbow_aura.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Aura Irisada",
-		"en": "Rainbow Aura"
-	  },
+	  "name": {"es": "Aura Irisada", "en": "Rainbow Aura"},
 	  "type": "upgrade",
 	  "tags": ["rainbow", "aura"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Tus cartas de Unicornio no pueden ser destruidas.",
-		"en": "Second Print / 2nd Edition: Your Unicorn cards cannot be destroyed.\nOriginal Text: As long as this card is in your Stable, your Unicorns cannot be destroyed."
+		"en": "Your Unicorn cards cannot be destroyed."
 	  }
 	},
 	"gameplay": {
@@ -1617,21 +1145,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_destroy",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "trigger": "passive",
+		  "condition": "immune_to_destroy",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1644,24 +1161,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/38_basic_unicorn_red.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Básico (Rojo)",
-		"en": "Basic Unicorn (Red)"
-	  },
+	  "name": {"es": "Unicornio Básico (Rojo)", "en": "Basic Unicorn (Red)"},
 	  "type": "basic_unicorn",
 	  "tags": ["basic", "unicorn", "(red)"]
 	},
 	"visual": {
-	  "description": {
-		"es": "Las barbas están súper en tendencia.",
-		"en": "Flavor Text: Beards are like, so hot."
-	  }
+	  "description": {"es": "Las barbas están súper en tendencia.", "en": "Beards are like, so hot."}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -1670,17 +1177,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/39_nanny_cam.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Cámara Espia",
-		"en": "Nanny Cam"
-	  },
+	  "name": {"es": "Cámara Espia", "en": "Nanny Cam"},
 	  "type": "downgrade",
 	  "tags": ["nanny", "cam"]
 	},
 	"visual": {
 	  "description": {
-		"es": "2da Edición: Tu mano debe ser visible para todos los jugadores.\nSegunda impresión: tu mano debe estar visible para todos los jugadores en todo momento.\nTexto original: Mientras esta carta esté en tu establo, debes jugar con tu mano visible para todos los jugadores.",
-		"en": "2nd Edition: Your hand must be visible to all players.\nSecond Print: Your hand must be visible to all player at all times.\nOriginal Text: As long as this card if in your Stable, you must play with your hand visible to all players."
+		"es": "Tu mano debe ser visible para todos los jugadores.",
+		"en": "Your hand must be visible to all players."
 	  }
 	},
 	"gameplay": {
@@ -1690,17 +1194,9 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "protect",
-			"target_scope": "self"
-		  },
+		  "condition": "hand_visible",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1713,17 +1209,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/40_mother_goose_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Mamá Ganso",
-		"en": "Mother Goose Unicorn"
-	  },
+	  "name": {"es": "Unicornio Mamá Ganso", "en": "Mother Goose Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["mother", "goose", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta entra en tu Establo también puedes poner un Bebé unicornio de la Guardería en tu Establo.",
-		"en": "2nd Edition: When this card enters your Stable, you may bring a Baby Unicorn card from the Nursery into your Stable."
+		"en": "When this card enters your Stable, you may bring a Baby Unicorn card from the Nursery into your Stable."
 	  }
 	},
 	"gameplay": {
@@ -1734,17 +1227,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "summon",
-			"target_zone": "nursery",
-			"target_filter": "baby_unicorn"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "summon", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "baby_unicorn"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1757,17 +1241,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/41_stable_artillery.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Artillería En El Establo",
-		"en": "Stable Artillery"
-	  },
+	  "name": {"es": "Artillería En El Establo", "en": "Stable Artillery"},
 	  "type": "upgrade",
 	  "tags": ["stable", "artillery"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, puedes DESCARTAR 2 cartas para, a continuación, DESTRUIR una carta de Unicornio.",
-		"en": "2nd Edition: If this card is in your Stable at the beginning of your turn, you may DISCARD 2 cards, then DESTROY a Unicorn card."
+		"en": "If this card is in your Stable at the beginning of your turn, you may DISCARD 2 cards, then DESTROY a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -1777,20 +1258,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_turn_start",
-		  "condition": "none",
-		  "cost": {
-			"required": true,
-			"action": "discard",
-			"amount": 2,
-			"target_type": "any"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "in_stable",
+		  "cost": {"required": true, "action": "discard", "amount": 2, "target_type": "any"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1803,17 +1273,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/42_reset_button.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Botón De Reinicio",
-		"en": "Reset Button"
-	  },
+	  "name": {"es": "Botón De Reinicio", "en": "Reset Button"},
 	  "type": "magic_spell",
 	  "tags": ["reset", "button"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Todos los jugadores (también tú) deben SACRIFICAR todas las cartas de Ventaja y de Desventaja que tengan en su Establo. Pon en el mazo de robo las cartas de la pila de descartes y baraja el mazo de robo.",
-		"en": "2nd Edition: Each player (including you) must SACRIFICE all Upgrade and Downgrade cards in their Stable. Shuffle the discard pile into the deck.\nSecond Print: Each player must SACRIFICE all Upgrade and Downgrade cards. Shuffle the discard pile into the deck.\nOriginal Text: Each player must SACRIFICE all of their Upgrade and Downgrade cards. Shuffle the discard pile back into the deck."
+		"en": "Each player (including you) must SACRIFICE all Upgrade and Downgrade cards in their Stable. Shuffle the discard pile into the deck."
 	  }
 	},
 	"gameplay": {
@@ -1824,19 +1291,16 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "upgrade_card"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "sacrifice", "amount": -1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "upgrade_card"},
+		  "secondary_action": {"type": "sacrifice", "amount": -1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "downgrade_card"}
+		},
+		{
+		  "order": 2,
+		  "trigger": "on_play",
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "discard_pile", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1849,17 +1313,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/43_caffeine_overload.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Hasta Las Cejas De Cafeína",
-		"en": "Caffeine Overload"
-	  },
+	  "name": {"es": "Hasta Las Cejas De Cafeína", "en": "Caffeine Overload"},
 	  "type": "upgrade",
 	  "tags": ["caffeine", "overload"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, puedes SACRIFICAR una carta para, a continuación, ROBAR 2 cartas.",
-		"en": "2nd Edition: If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card, then DRAW 2 cards."
+		"en": "If this card is in your Stable at the beginning of your turn, you may SACRIFICE a card, then DRAW 2 cards."
 	  }
 	},
 	"gameplay": {
@@ -1869,20 +1330,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_turn_start",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "draw",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "any"
-		  },
+		  "condition": "in_stable",
+		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "any"},
+		  "primary_action": {"type": "draw", "amount": 2, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1895,17 +1345,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/44_rainbow_lasso.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Lazo Del Arcoíris",
-		"en": "Rainbow Lasso"
-	  },
+	  "name": {"es": "Lazo Del Arcoíris", "en": "Rainbow Lasso"},
 	  "type": "upgrade",
 	  "tags": ["rainbow", "lasso"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, puedes DESCARTAR 3 cartas para, a continuación, HURTAR una carta de Unicornio.",
-		"en": "2nd Edition: If this card is in your Stable at the beginning of your turn, you may DISCARD 3 cards, then STEAL a Unicorn card."
+		"en": "If this card is in your Stable at the beginning of your turn, you may DISCARD 3 cards, then STEAL a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -1915,20 +1362,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_turn_start",
-		  "condition": "none",
-		  "cost": {
-			"required": true,
-			"action": "discard",
-			"amount": 3,
-			"target_type": "any"
-		  },
-		  "primary_action": {
-			"type": "steal",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "in_stable",
+		  "cost": {"required": true, "action": "discard", "amount": 3, "target_type": "any"},
+		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1941,17 +1377,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/45_kiss_of_life.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Beso De Amor Verdadero",
-		"en": "Kiss of Life"
-	  },
+	  "name": {"es": "Beso De Amor Verdadero", "en": "Kiss of Life"},
 	  "type": "magic_spell",
 	  "tags": ["kiss", "of", "life"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Busca una carta de Unicornio en la pila de descartes y ponla en tu Establo.",
-		"en": "Second Edition: Bring a Unicorn card from the discard pile into your Stable."
+		"en": "Bring a Unicorn card from the discard pile into your Stable."
 	  }
 	},
 	"gameplay": {
@@ -1962,19 +1395,8 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -1987,17 +1409,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/46_yay.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "¡Hurra!",
-		"en": "Yay"
-	  },
+	  "name": {"es": "¡Hurra!", "en": "Yay"},
 	  "type": "upgrade",
 	  "tags": ["yay"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Nadie puede anular tus cartas.",
-		"en": "2nd Edition: Cards you play cannot be Neigh'd.\nFirst Print / Second Print: Cards you play cannot be Neigh'd.\nOriginal Text: As long as this card is in your Stable, cards you play cannot be Neigh'd."
+		"en": "Cards you play cannot be Neigh'd."
 	  }
 	},
 	"gameplay": {
@@ -2007,20 +1426,9 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "cancel",
-			"amount": 1,
-			"target_scope": "any_player",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "prevent_neigh_on_owner",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2033,17 +1441,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/47_blatant_thievery.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Robo Descarado",
-		"en": "Blatant Thievery"
-	  },
+	  "name": {"es": "Robo Descarado", "en": "Blatant Thievery"},
 	  "type": "magic_spell",
 	  "tags": ["blatant", "thievery"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Mira las cartas que tenga otro jugador en su mano. Elige una carta y quédatela.",
-		"en": "2nd Edition: Look at another player's hand. Choose a card and add it to your hand.\nSecond Print: Choose any player and look at that player's hand. Choose a card from that player's hand and add it to your hand.\nOriginal Text: Look at any player's hand. Take a card of your choice and add it to your hand."
+		"en": "Look at another player's hand. Choose a card and add it to your hand."
 	  }
 	},
 	"gameplay": {
@@ -2054,18 +1459,8 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "pull",
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"amount": 1
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "pull", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2078,17 +1473,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/48_tiny_stable.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Establo Diminuto",
-		"en": "Tiny Stable"
-	  },
+	  "name": {"es": "Establo Diminuto", "en": "Tiny Stable"},
 	  "type": "downgrade",
 	  "tags": ["tiny", "stable"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si en algún momento tienes más de 5 Unicornios en tu Establo, SACRIFICA una carta de Unicornio.",
-		"en": "Second Print / 2nd Edition: If at any time you have more than 5 Unicorns in your Stable, SACRIFICE a Unicorn card.\nOriginal Text: As long as this card is in your Stable, you can only have five Unicorns in your Stable."
+		"en": "If at any time you have more than 5 Unicorns in your Stable, SACRIFICE a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -2098,20 +1490,9 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "sacrifice",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "condition": "if_unicorn_count_exceeds_5",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "sacrifice", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2124,17 +1505,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/49_chainsaw_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio De Texas",
-		"en": "Chainsaw Unicorn"
-	  },
+	  "name": {"es": "Unicornio De Texas", "en": "Chainsaw Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["chainsaw", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo puedes DESTRUIR una carta de Ventaja o SACRIFICAR una carta de Desventaja.",
-		"en": "2nd Edition: When this card enters your Stable, you may DESTROY an Upgrade card or SACRIFICE a Downgrade card.\nOriginal Text/Second Print: When this card enters your Stable, you may SACRIFICE or DESTROY an Upgrade or Downgrade card."
+		"en": "When this card enters your Stable, you may DESTROY an Upgrade card or SACRIFICE a Downgrade card."
 	  }
 	},
 	"gameplay": {
@@ -2144,21 +1522,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "upgrade_card"
-		  },
-		  "secondary_action": null
+		  "condition": "choice_either",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "upgrade_card"},
+		  "secondary_action": {"type": "sacrifice", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "downgrade_card"}
 		}
 	  ]
 	}
@@ -2170,17 +1537,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/50_change_of_luck.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Golpe De Suerte",
-		"en": "Change of Luck"
-	  },
+	  "name": {"es": "Golpe De Suerte", "en": "Change of Luck"},
 	  "type": "magic_spell",
 	  "tags": ["change", "of", "luck"]
 	},
 	"visual": {
 	  "description": {
 		"es": "ROBA 2 cartas y DESCARTA 3 cartas para, a continuación, jugar otro turno.",
-		"en": "Second Print / 2nd Edition: DRAW 2 cards and DISCARD 3 cards, then take another turn.\nOriginal Text: DRAW two cards, DISCARD three cards, then take another turn."
+		"en": "DRAW 2 cards and DISCARD 3 cards, then take another turn."
 	  }
 	},
 	"gameplay": {
@@ -2191,19 +1555,16 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": true,
-			"action": "discard",
-			"amount": 1,
-			"target_type": "any"
-		  },
-		  "primary_action": {
-			"type": "draw",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "draw", "amount": 2, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "secondary_action": {"type": "discard", "amount": 3, "target_scope": "self", "target_zone": "hand", "target_filter": "any"}
+		},
+		{
+		  "order": 2,
+		  "trigger": "on_play",
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "extra_turn", "amount": 1, "target_scope": "self", "target_zone": "none", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2216,17 +1577,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/51_stabby_the_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Acuchillador",
-		"en": "Stabby the Unicorn"
-	  },
+	  "name": {"es": "Unicornio Acuchillador", "en": "Stabby the Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["stabby", "the", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada o destruida, puedes DESTRUIR una carta de Unicornio.",
-		"en": "Second Print / 2nd Edition: If this card is sacrificed or destroyed, you may DESTROY a Unicorn card.\nOriginal Text: If this card is sacrificed or destroyed, you may DESTROY a Unicorn."
+		"en": "If this card is sacrificed or destroyed, you may DESTROY a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -2235,21 +1593,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_sacrifice",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "trigger": "on_destroy",
+		  "condition": "or_on_sacrifice",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2262,17 +1609,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/52_broken_stable.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Establo En Obras",
-		"en": "Broken Stable"
-	  },
+	  "name": {"es": "Establo En Obras", "en": "Broken Stable"},
 	  "type": "downgrade",
 	  "tags": ["broken", "stable"]
 	},
 	"visual": {
 	  "description": {
 		"es": "No puedes jugar cartas de Ventaja.",
-		"en": "Second Print / 2nd Edition: You cannot play Upgrade cards.\nOriginal Text: As long as this card is in your Stable, you cannot play Upgrade cards."
+		"en": "You cannot play Upgrade cards."
 	  }
 	},
 	"gameplay": {
@@ -2282,17 +1626,9 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "protect",
-			"target_scope": "self"
-		  },
+		  "condition": "prevent_play_upgrade",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "upgrade_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2305,17 +1641,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/53_baby_unicorn_blue.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Blue)",
-		"en": "Baby Unicorn (Blue)"
-	  },
+	  "name": {"es": "Baby Unicorn (Blue)", "en": "Baby Unicorn (Blue)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(blue)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -2326,19 +1659,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2351,24 +1673,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/54_narwhal.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Narval",
-		"en": "Narwhal"
-	  },
+	  "name": {"es": "Narval", "en": "Narwhal"},
 	  "type": "magical_unicorn",
 	  "tags": ["narwhal"]
 	},
 	"visual": {
-	  "description": {
-		"es": "Esta carta no tiene poderes especiales, pero ¡es tan mona...!",
-		"en": "Flavor Text: This card has no special powers, but it sure is cute!"
-	  }
+	  "description": {"es": "Esta carta no tiene poderes especiales, pero ¡es tan mona...!", "en": "This card has no special powers, but it sure is cute!"}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -2377,24 +1689,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/55_basic_unicorn_indigo.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Básico (Índigo)",
-		"en": "Basic Unicorn (Indigo)"
-	  },
+	  "name": {"es": "Unicornio Básico (Índigo)", "en": "Basic Unicorn (Indigo)"},
 	  "type": "basic_unicorn",
 	  "tags": ["basic", "unicorn", "(indigo)"]
 	},
 	"visual": {
-	  "description": {
-		"es": "Carta da Unicornio Básico",
-		"en": "Flavor Text: 💖🙌💅🙌💖💁💁😂😂😂"
-	  }
+	  "description": {"es": "Carta da Unicornio Básico", "en": "Basic Unicorn card"}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -2403,17 +1705,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/56_americorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Americornio",
-		"en": "Americorn"
-	  },
+	  "name": {"es": "Americornio", "en": "Americorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["americorn"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Cuadno esta carta entra en tu Establo puedes quitar una carta al azar de la mano de otro jugador.",
-		"en": "Second Edition: When this card enters your Stable, you may pull a card at random from another player's hand.\nSecond Print: When this card enters your Stable, choose any player. Pull a card from that player's hand.\nOriginal Text: When this card enters your Stable, you may take a card at random from any player's hand and add it to your hand."
+		"es": "Cuando esta carta entra en tu Establo puedes quitar una carta al azar de la mano de otro jugador.",
+		"en": "When this card enters your Stable, you may pull a card at random from another player's hand."
 	  }
 	},
 	"gameplay": {
@@ -2423,19 +1722,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "pull",
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"amount": 1
-		  },
+		  "condition": "random",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "pull", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2448,17 +1737,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/57_magical_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Magicornio Volador",
-		"en": "Magical Flying Unicorn"
-	  },
+	  "name": {"es": "Magicornio Volador", "en": "Magical Flying Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["magical", "flying", "unicorn"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
-		"en": "2nd Edition: When this card enters your Stable, you may add a Magic card from the discard pile to your hand.\nSecond Print: When this card enters your Stable, you may choose a Magic card from the discard pile and add it to your hand. If this card would be sacrificed or destroyed, return it to your hand instead.\nOriginal Text: When this card enters your Stable, you may choose a Magic card from the discard pile and add it to your hand. If this card is sacrificed or destroyed, return it to your hand."
+		"es": "Cuando esta carta entra en tu Establo, puedes añadir una carta de Magia de la pila de descartes a tu mano. Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
+		"en": "When this card enters your Stable, you may add a Magic card from the discard pile to your hand. If this card is sacrificed or destroyed, return it to your hand."
 	  }
 	},
 	"gameplay": {
@@ -2468,38 +1754,17 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "revive",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "magic_spell"
-		  },
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "magic_spell"},
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2512,17 +1777,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/58_two-for-one.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Dos por uno",
-		"en": "Two-For-One"
-	  },
+	  "name": {"es": "Dos por uno", "en": "Two-For-One"},
 	  "type": "magic_spell",
 	  "tags": ["two-for-one"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Segunda impresión / 2.ª edición: SACRIFICAR una carta y luego DESTRUIR 2 cartas.\nTexto original: SACRIFICAR una carta, luego DESTRUIR dos cartas.",
-		"en": "Second Print / 2nd Edition: SACRIFICE a card, then DESTROY 2 cards.\nOriginal Text: SACRIFICE a card, then DESTROY two cards."
+		"es": "SACRIFICA una carta y luego DESTRUYE 2 cartas.",
+		"en": "SACRIFICE a card, then DESTROY 2 cards."
 	  }
 	},
 	"gameplay": {
@@ -2533,19 +1795,8 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "any"},
+		  "primary_action": {"type": "destroy", "amount": 2, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2558,24 +1809,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/59_basic_unicorn_blue.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Básico (Azul)",
-		"en": "Basic Unicorn (Blue)"
-	  },
+	  "name": {"es": "Unicornio Básico (Azul)", "en": "Basic Unicorn (Blue)"},
 	  "type": "basic_unicorn",
 	  "tags": ["basic", "unicorn", "(blue)"]
 	},
 	"visual": {
-	  "description": {
-		"es": "Los cuellos alzados son solo para las citas.",
-		"en": "Flavor Text: Popped collars are for date nights only."
-	  }
+	  "description": {"es": "Los cuellos alzados son solo para las citas.", "en": "Popped collars are for date nights only."}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -2584,17 +1825,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/60_baby_narwhal.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Narwhal",
-		"en": "Baby Narwhal"
-	  },
+	  "name": {"es": "Baby Narwhal", "en": "Baby Narwhal"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "narwhal"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -2605,19 +1843,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2630,24 +1857,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/61_base_deck_rule_card.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Tarjeta de Reglas",
-		"en": "Base Deck Rule Card"
-	  },
+	  "name": {"es": "Tarjeta de Reglas", "en": "Base Deck Rule Card"},
 	  "type": "reference",
 	  "tags": ["rule_card"]
 	},
 	"visual": {
-	  "description": {
-		"es": "Lista de referencias de reglas.",
-		"en": "Rule reference list."
-	  }
+	  "description": {"es": "Lista de referencias de reglas.", "en": "Rule reference list."}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -2656,17 +1873,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/62_back_kick.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Coz",
-		"en": "Back Kick"
-	  },
+	  "name": {"es": "Coz", "en": "Back Kick"},
 	  "type": "magic_spell",
 	  "tags": ["back", "kick"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Devuelve una carta que se encuentre en el Establo de otro jugador a su mano. Ese jugador debe DESCARTAR una carta.",
-		"en": "2nd Edition: Return a card in another player's Stable to their hand. That player must DISCARD a card.\nSecond Print: Choose any player. Return a card in that player's Stable to their hand. That player must DISCARD a card.\nOriginal Text: Return a card in any player's Stable to that player's hand. That player must then DISCARD a card."
+		"en": "Return a card in another player's Stable to their hand. That player must DISCARD a card."
 	  }
 	},
 	"gameplay": {
@@ -2677,20 +1891,9 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
-		  "secondary_action": null
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
+		  "secondary_action": {"type": "discard", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -2702,17 +1905,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/63_baby_unicorn_green.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Green)",
-		"en": "Baby Unicorn (Green)"
-	  },
+	  "name": {"es": "Baby Unicorn (Green)", "en": "Baby Unicorn (Green)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(green)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -2723,19 +1923,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2748,17 +1937,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/64_glitter_tornado.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Tornado De Purpurina",
-		"en": "Glitter Tornado"
-	  },
+	  "name": {"es": "Tornado De Purpurina", "en": "Glitter Tornado"},
 	  "type": "magic_spell",
 	  "tags": ["glitter", "tornado"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cada jugador (también tú) devuelve a su mano una carta que se encuentre en su Establo.",
-		"en": "2nd Edition: Return a card in each player's Stable (including yours) to their hand.\nOriginal Text: Return a card in each player's Stable to that player's hand."
+		"en": "Return a card in each player's Stable (including yours) to their hand."
 	  }
 	},
 	"gameplay": {
@@ -2769,19 +1955,8 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2794,17 +1969,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/65_alluring_narwhal.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Narval Cautivadora",
-		"en": "Alluring Narwhal"
-	  },
+	  "name": {"es": "Narval Cautivadora", "en": "Alluring Narwhal"},
 	  "type": "magical_unicorn",
 	  "tags": ["alluring", "narwhal"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo puedes HURTAR una carta de Ventaja.",
-		"en": "Second Print / 2nd Edition: When this card enters your Stable, you may STEAL an Upgrade card.\nOriginal Text: When this card enters your Stable, you may move an Upgrade card from any player's Stable to your Stable."
+		"en": "When this card enters your Stable, you may STEAL an Upgrade card."
 	  }
 	},
 	"gameplay": {
@@ -2815,19 +1987,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "steal",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "upgrade_card"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "upgrade_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2840,17 +2001,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/66_swift_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Velocicornio Volador",
-		"en": "Swift Flying Unicorn"
-	  },
+	  "name": {"es": "Velocicornio Volador", "en": "Swift Flying Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["swift", "flying", "unicorn"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
-		"en": "2nd Edition: When this card enters your Stable, you may add a Neigh card from the discard pile to your hand.If this card is sacrificed or destroyed, return it to your hand.\nSecond Print: When this card enters your Stable, you may choose an Instant card from the discard pile and add it to your hand. If this card would be sacrificed or destroyed, return it to your hand instead.\nOriginal Text: When this card enters your Stable, you may choose an Instant card from the discard pile and add it to your hand. If this card is sacrificed or destroyed, return it to your hand."
+		"es": "Cuando esta carta entra en tu Establo, puedes añadir una carta de Relincho de la pila de descartes a tu mano. Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
+		"en": "When this card enters your Stable, you may add a Neigh card from the discard pile to your hand. If this card is sacrificed or destroyed, return it to your hand."
 	  }
 	},
 	"gameplay": {
@@ -2860,38 +2018,17 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "revive",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "instant"
-		  },
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "instant"},
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -2904,17 +2041,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/67_mystical_vortex.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Vórtice Místico",
-		"en": "Mystical Vortex"
-	  },
+	  "name": {"es": "Vórtice Místico", "en": "Mystical Vortex"},
 	  "type": "magic_spell",
 	  "tags": ["mystical", "vortex"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Cada jugador (también tú) debe DESCARTAR una carta. Despueés pon en el mazo de robo las cartas de la pila de descartes y baraja el mazo de robo.",
-		"en": "2nd Edition: Each player (including you) must DISCARD a card. Shuffle the discard pile into the deck.\nSecond Print: Each player must DISCARD a card. Shuffle the discard pile into the deck.\nOriginal Text: Each player must DISCARD  a card. Shuffle the discard pile back into the deck."
+		"es": "Cada jugador (también tú) debe DESCARTAR una carta. Después pon en el mazo de robo las cartas de la pila de descartes y baraja el mazo de robo.",
+		"en": "Each player (including you) must DISCARD a card. Shuffle the discard pile into the deck."
 	  }
 	},
 	"gameplay": {
@@ -2925,20 +2059,9 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
-		  "secondary_action": null
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "all_players", "target_zone": "hand", "target_filter": "any"},
+		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "discard_pile", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -2950,17 +2073,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/68_annoying_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Plastacornio Volador",
-		"en": "Annoying Flying Unicorn"
-	  },
+	  "name": {"es": "Plastacornio Volador", "en": "Annoying Flying Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["annoying", "flying", "unicorn"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
-		"en": "2nd Edition: When this card enters your Stable, you may force another player to DISCARD a card.If this card is sacrificed or destroyed, return it to your hand.\nSecond Print: When this card enters your Stable, you may choose any player. That player must DISCARD a card. If this card would be sacrificed or destroyed, return it to your hand instead.\nOriginal Text: When this card enters your Stable, you may choose a player. That player must DISCARD a card. If this card is sacrificed or destroyed, return it to your hand."
+		"es": "Cuando esta carta entra en tu Establo, puedes obligar a otro jugador a DESCARTAR una carta. Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
+		"en": "When this card enters your Stable, you may force another player to DISCARD a card. If this card is sacrificed or destroyed, return it to your hand."
 	  }
 	},
 	"gameplay": {
@@ -2970,38 +2090,17 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3014,24 +2113,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/69_basic_unicorn_orange.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Básico (Naranja)",
-		"en": "Basic Unicorn (Orange)"
-	  },
+	  "name": {"es": "Unicornio Básico (Naranja)", "en": "Basic Unicorn (Orange)"},
 	  "type": "basic_unicorn",
 	  "tags": ["basic", "unicorn", "(orange)"]
 	},
 	"visual": {
-	  "description": {
-		"es": "es la esencia de la vida.",
-		"en": "Flavor Text: Pumpkin spice is the pumpkin spice of life."
-	  }
+	  "description": {"es": "es la esencia de la vida.", "en": "Pumpkin spice is the pumpkin spice of life."}
 	},
-	"gameplay": {
-	  "is_nursery": false,
-	  "deck_location": "main_deck",
-	  "effects": []
-	}
+	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
   },
   {
 	"meta": {
@@ -3040,17 +2129,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/70_super_neigh.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Súperrelincho",
-		"en": "Super Neigh"
-	  },
+	  "name": {"es": "Súperrelincho", "en": "Super Neigh"},
 	  "type": "instant",
 	  "tags": ["super", "neigh"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Juega esta carta cuando otro jugador intente jugar una carta. Ese jugador no podrá jugar su carta y deberá dejarla en la pila de descartes. Esta carta no puede anularse.",
-		"en": "2nd Edition: Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile. This card cannot be Neigh'd.\nSecond Print: Play this card when any other player tries to play a card. Stop that player's card from being played and send it to the discard pile. This card cannot be Neigh'd.\nOriginal Text: Play this card when any player tries to play a card. Stop that player's card from coming into play and send it to the discard pile instead. This card cannot be Neigh'd"
+		"en": "Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile. This card cannot be Neigh'd."
 	  }
 	},
 	"gameplay": {
@@ -3059,21 +2145,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_play",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
+		  "trigger": "on_card_played",
+		  "condition": "cannot_be_neighed",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3086,17 +2161,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/71_claw_machine.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Tragamonedas",
-		"en": "Claw Machine"
-	  },
+	  "name": {"es": "Tragamonedas", "en": "Claw Machine"},
 	  "type": "upgrade",
 	  "tags": ["claw", "machine"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, puedes DESCARTAR una carta para, a continuación, ROBAR una carta.",
-		"en": "2nd Edition: If this card is in your Stable at the beginning of your turn, you may DISCARD a card, then DRAW a card."
+		"en": "If this card is in your Stable at the beginning of your turn, you may DISCARD a card, then DRAW a card."
 	  }
 	},
 	"gameplay": {
@@ -3106,20 +2178,9 @@
 		{
 		  "order": 1,
 		  "trigger": "on_turn_start",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "draw",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "any"
-		  },
+		  "condition": "in_stable",
+		  "cost": {"required": true, "action": "discard", "amount": 1, "target_type": "any"},
+		  "primary_action": {"type": "draw", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3132,17 +2193,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/72_unicorn_swap.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Intercambio De Unicornios",
-		"en": "Unicorn Swap"
-	  },
+	  "name": {"es": "Intercambio De Unicornios", "en": "Unicorn Swap"},
 	  "type": "magic_spell",
 	  "tags": ["unicorn", "swap"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Mueve una carta de Unicornio de tu Establo a otro para, continuación, HURTAR una carta de Unicornio de ese último Establo.",
-		"en": "2nd Edition / Second Print: Move a Unicorn card in your Stable to any other player's Stable, then STEAL a Unicorn card from that player's Stable.\nOriginal Text: Trade a Unicorn in your Stable for a Unicorn in any player's Stable."
+		"es": "Mueve una carta de Unicornio de tu Establo a otro para, a continuación, HURTAR una carta de Unicornio de ese último Establo.",
+		"en": "Move a Unicorn card in your Stable to any other player's Stable, then STEAL a Unicorn card from that player's Stable."
 	  }
 	},
 	"gameplay": {
@@ -3151,21 +2209,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "steal",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "trigger": "on_play",
+		  "condition": "move_unicorn_to_opponent",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3178,17 +2225,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/73_re-target.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Cambio De Objetivo",
-		"en": "Re-Target"
-	  },
+	  "name": {"es": "Cambio De Objetivo", "en": "Re-Target"},
 	  "type": "magic_spell",
 	  "tags": ["re-target"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Mueve una carta de Ventaja o de Desventaja de un Establo a otro.",
-		"en": "Second Print / Second Edition: Move an Upgrade or Downgrade card from any player's Stable to any other player's Stable.\nOriginal Text: Move an Upgrade or Downgrade card from any player's Stable to another player's Stable."
+		"en": "Move an Upgrade or Downgrade card from any player's Stable to any other player's Stable."
 	  }
 	},
 	"gameplay": {
@@ -3198,19 +2242,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_play",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "steal",
-			"target_scope": "chosen_opponent",
-			"target_filter": "upgrade_card"
-		  },
-		  "secondary_action": null
+		  "condition": "retarget_upgrade_downgrade",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "any_player", "target_zone": "stable", "target_filter": "upgrade_card"},
+		  "secondary_action": {"type": "steal", "amount": 1, "target_scope": "any_player", "target_zone": "stable", "target_filter": "downgrade_card"}
 		}
 	  ]
 	}
@@ -3222,17 +2257,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/74_baby_unicorn_black.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Black)",
-		"en": "Baby Unicorn (Black)"
-	  },
+	  "name": {"es": "Baby Unicorn (Black)", "en": "Baby Unicorn (Black)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(black)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -3243,19 +2275,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3268,17 +2289,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/75_shark_with_a_horn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Tiburón Cornudo",
-		"en": "Shark With a Horn"
-	  },
+	  "name": {"es": "Tiburón Cornudo", "en": "Shark With a Horn"},
 	  "type": "magical_unicorn",
 	  "tags": ["shark", "with", "a", "horn"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Cuando esta carta entra en tu Establo puedes SACRIFICARLA para, a continuación, DESTRUIR un carta de Unicornio.",
-		"en": "2nd Edition: When this card enters your Stable, you may SACRIFICE this card, then DESTROY a Unicorn card.\nSecond Print: When this card enters your Stable, you may SACRIFICE this card. If you do, DESTROY a Unicorn card.\nOriginal Text: When this card enters your Stable, you may DESTROY a Unicorn. If you do, SACRIFICE this card."
+		"es": "Cuando esta carta entra en tu Establo puedes SACRIFICARLA para, a continuación, DESTRUIR una carta de Unicornio.",
+		"en": "When this card enters your Stable, you may SACRIFICE this card, then DESTROY a Unicorn card."
 	  }
 	},
 	"gameplay": {
@@ -3289,19 +2307,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "self"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3314,17 +2321,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/76_unicorn_phoenix.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Fénix",
-		"en": "Unicorn Phoenix"
-	  },
+	  "name": {"es": "Unicornio Fénix", "en": "Unicorn Phoenix"},
 	  "type": "magical_unicorn",
 	  "tags": ["unicorn", "phoenix"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada o destruida, puedes DESCARTAR una carta en su lugar.",
-		"en": "2nd Edition: If this card would be sacrificed or destroyed, you may DISCARD a card instead.\nSecond Print: When this card enters your Stable, DISCARD a card. If this card is sacrificed or destroyed, bring it directly back into your Stable if you have at least 1 card in your hand.\nOriginal Text: When this card enters your Stable, DISCARD a card. If this card is sacrificed or destroyed, bring it directly back into your Stable. If you are unable to DISCARD a card, this card is destroyed."
+		"en": "If this card would be sacrificed or destroyed, you may DISCARD a card instead."
 	  }
 	},
 	"gameplay": {
@@ -3333,21 +2337,10 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_enter_stable",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "trigger": "on_destroy",
+		  "condition": "or_on_sacrifice",
+		  "cost": {"required": true, "action": "discard", "amount": 1, "target_type": "any"},
+		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3360,17 +2353,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/77_mermaid_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unicornio Sirena",
-		"en": "Mermaid Unicorn"
-	  },
+	  "name": {"es": "Unicornio Sirena", "en": "Mermaid Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["mermaid", "unicorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entre en tu Establo, devuelve una carta que se encuentre en el Establo de otro jugador a su mano.",
-		"en": "2nd Edition: When this card enters your Stable, return a card in another player's Stable to their hand.\nSecond Print: When this card enters your Stable, you may choose any player. Return a card in that player's Stable to their hand.\nOriginal Text: When this card enters your Stable, you may return a card in any player's Stable to that player's hand."
+		"en": "When this card enters your Stable, return a card in another player's Stable to their hand."
 	  }
 	},
 	"gameplay": {
@@ -3381,19 +2371,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3406,17 +2385,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/78_shake_up.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Agitar",
-		"en": "Shake Up"
-	  },
+	  "name": {"es": "Agitar", "en": "Shake Up"},
 	  "type": "magic_spell",
 	  "tags": ["shake", "up"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Pon en el mazo de robo esta carta, las cartas de tu mano y las cartas de la pila de descartes y baraja el mazo de robo. ROBA 5 cartas.",
-		"en": "Second Print / 2nd Edition: Shuffle this card, your hand, and the discard pile into the deck. DRAW 5 cards.\nOriginal Text: Shuffle this card, your hand, and the discard pile back into the deck, then DRAW five cards."
+		"en": "Shuffle this card, your hand, and the discard pile into the deck. DRAW 5 cards."
 	  }
 	},
 	"gameplay": {
@@ -3426,18 +2402,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_play",
-		  "primary_action": {
-			"type": "shuffle_deck",
-			"amount": 0,
-			"target_scope": "self",
-			"target_zone": "deck",
-			"target_filter": "hand_and_discard"
-		  },
-		  "secondary_action": {
-			"type": "draw",
-			"amount": 5,
-			"target_scope": "self"
-		  }
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "hand_and_discard"},
+		  "secondary_action": {"type": "draw", "amount": 5, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
 		}
 	  ]
 	}
@@ -3449,17 +2417,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/79_baby_unicorn_red.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Red)",
-		"en": "Baby Unicorn (Red)"
-	  },
+	  "name": {"es": "Baby Unicorn (Red)", "en": "Baby Unicorn (Red)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(red)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -3470,19 +2435,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3495,17 +2449,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/80_pandamonium.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Pandamonio",
-		"en": "Pandamonium"
-	  },
+	  "name": {"es": "Pandamonio", "en": "Pandamonium"},
 	  "type": "downgrade",
 	  "tags": ["pandamonium"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Todos tus Unicornios son ahora Pandas. Las cartas que afectan a los Unicornios no afectan a tus Pandas.",
-		"en": "Second Print / 2nd Edition: All of your Unicorns are considered Pandas. Cards that affect Unicorn cards do not affect your Pandas.\nOriginal Text: As long as this card is in your Stable, all of your Unicorns are considered Pandas and NOT Unicorns. Cards that affect Unicorns do not affect Pandas."
+		"en": "All of your Unicorns are considered Pandas. Cards that affect Unicorn cards do not affect your Pandas."
 	  }
 	},
 	"gameplay": {
@@ -3515,17 +2466,9 @@
 		{
 		  "order": 1,
 		  "trigger": "passive",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "protect",
-			"target_scope": "self"
-		  },
+		  "condition": "convert_unicorns_to_pandas",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3538,17 +2481,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/81_majestic_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Majestucornio Volador",
-		"en": "Majestic Flying Unicorn"
-	  },
+	  "name": {"es": "Majestucornio Volador", "en": "Majestic Flying Unicorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["majestic", "flying", "unicorn"]
 	},
 	"visual": {
 	  "description": {
-		"es": "Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
-		"en": "2nd Edition: When this card enters your Stable, you may add a Unicorn card from the discard pile to your hand.If this card is sacrificed or destroyed, return it to your hand.\nSecond Print: When this card enters your Stable, you may choose a Unicorn card from the discard pile and add it to your hand. If this card would be sacrificed or destroyed, return it to your hand instead.\nOriginal Text: When this card enters your Stable, you may choose a Unicorn from the discard pile and add it to your hand. If this card is sacrificed or destroyed, return it to your hand."
+		"es": "Cuando esta carta entra en tu Establo, puedes añadir una carta de Unicornio de la pila de descartes a tu mano. Si esta carta es sacrificada o destruida, devuélvela a tu mano.",
+		"en": "When this card enters your Stable, you may add a Unicorn card from the discard pile to your hand. If this card is sacrificed or destroyed, return it to your hand."
 	  }
 	},
 	"gameplay": {
@@ -3558,38 +2498,17 @@
 		{
 		  "order": 1,
 		  "trigger": "on_enter_stable",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "revive",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "unicorn_card"
-		  },
+		  "condition": "none",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "unicorn_card"},
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_hand",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "hand",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3602,17 +2521,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/82_llamacorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Unipaca",
-		"en": "Llamacorn"
-	  },
+	  "name": {"es": "Unipaca", "en": "Llamacorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["llamacorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Cuando esta carta entra en tu Establo cada jugador (también tú) debe DESCARTAR una carta.",
-		"en": "2nd Edition: When this card enters your Stable, each player (including you) must DISCARD a card.\nOriginal Text/First Print/Second Print: When this card enters your Stable, each player must DISCARD a card. Shuffle the discard pile back into the deck."
+		"en": "When this card enters your Stable, each player (including you) must DISCARD a card."
 	  }
 	},
 	"gameplay": {
@@ -3623,19 +2539,8 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "discard",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "hand",
-			"target_filter": "any"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "all_players", "target_zone": "hand", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3648,17 +2553,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/83_double_dutch.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Comba Doble",
-		"en": "Double Dutch"
-	  },
+	  "name": {"es": "Comba Doble", "en": "Double Dutch"},
 	  "type": "upgrade",
 	  "tags": ["double", "dutch"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, puedes jugar 2 cartas durante tu Fase de Acción.",
-		"en": "Second Print / 2nd Edition: If this card is in your Stable at the beginning of your turn, you may play 2 cards during your Action phase.\nOriginal Text: If this card is in your Stable at the beginning of your turn, you may play two cards during your turn instead of one."
+		"en": "If this card is in your Stable at the beginning of your turn, you may play 2 cards during your Action phase."
 	  }
 	},
 	"gameplay": {
@@ -3669,16 +2571,8 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "extra_action",
-			"amount": 2
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "extra_action", "amount": 2, "target_scope": "self", "target_zone": "none", "target_filter": "any"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3691,17 +2585,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/84_baby_unicorn_yellow.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Baby Unicorn (Yellow)",
-		"en": "Baby Unicorn (Yellow)"
-	  },
+	  "name": {"es": "Baby Unicorn (Yellow)", "en": "Baby Unicorn (Yellow)"},
 	  "type": "baby_unicorn",
 	  "tags": ["baby", "unicorn", "(yellow)"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta es sacrificada, destruida o devuelta a tu mano, déjala en la Guardería.",
-		"en": "Original Text / First Print / Second Print / 2nd Edition: If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
+		"en": "If this card would be sacrificed, destroyed, or returned to your hand, return it to the Nursery instead."
 	  }
 	},
 	"gameplay": {
@@ -3712,19 +2603,8 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "return_to_nursery",
-			"amount": 1,
-			"target_scope": "self",
-			"target_zone": "nursery",
-			"target_filter": "self"
-		  },
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
 		  "secondary_action": null
 		}
 	  ]
@@ -3737,17 +2617,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/85_rhinocorn.png"
 	},
 	"identity": {
-	  "name": {
-		"es": "Uniceronte",
-		"en": "Rhinocorn"
-	  },
+	  "name": {"es": "Uniceronte", "en": "Rhinocorn"},
 	  "type": "magical_unicorn",
 	  "tags": ["rhinocorn"]
 	},
 	"visual": {
 	  "description": {
 		"es": "Si esta carta se encuentra en tu Establo al inicio de tu turno, puedes DESTRUIR una carta de Unicornio. Si lo haces, tu turno termina de inmediato.",
-		"en": "2nd Edition: If this card is in your Stable at the beginning of your turn, you may DESTROY a Unicorn card. If you do, immediately end your turn.\nSecond Print: If this card is in your Stable at the beginning of your turn, you may DESTROY a Unicorn, then end your turn immediately.\nOriginal Text: If this card is in your Stable at the beginning of your turn, you may DESTROY a Unicorn card. If you do, immediately skip to your End of Turn phase."
+		"en": "If this card is in your Stable at the beginning of your turn, you may DESTROY a Unicorn card. If you do, immediately end your turn."
 	  }
 	},
 	"gameplay": {
@@ -3757,21 +2634,10 @@
 		{
 		  "order": 1,
 		  "trigger": "on_turn_start",
-		  "condition": "none",
-		  "cost": {
-			"required": false,
-			"action": "none",
-			"amount": 0,
-			"target_type": "none"
-		  },
-		  "primary_action": {
-			"type": "destroy",
-			"amount": 1,
-			"target_scope": "chosen_opponent",
-			"target_zone": "stable",
-			"target_filter": "any"
-		  },
-		  "secondary_action": null
+		  "condition": "in_stable",
+		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
+		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "secondary_action": {"type": "skip_turn", "amount": 1, "target_scope": "self", "target_zone": "none", "target_filter": "any"}
 		}
 	  ]
 	}
