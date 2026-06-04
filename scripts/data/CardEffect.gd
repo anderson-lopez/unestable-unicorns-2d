@@ -26,8 +26,16 @@ var secondary_scope: GameEnums.Scope = GameEnums.Scope.NONE
 var secondary_zone: GameEnums.Zone = GameEnums.Zone.NONE
 var secondary_filter: GameEnums.Filter = GameEnums.Filter.NONE
 
+# ¿Este efecto tiene un coste que pagar?
+# OJO: 'cost_required' NO indica si hay coste, sino si es OBLIGATORIO.
+#   - has_cost()  -> hay una acción de coste (sacrificar/descartar)
+#   - cost_required == false -> el jugador PUEDE declinar (efecto se cancela)
+#   - cost_required == true  -> el jugador DEBE pagar
 func has_cost() -> bool:
-	return cost_required and cost_action != GameEnums.Action.NONE
+	return cost_action != GameEnums.Action.NONE
+
+func is_cost_optional() -> bool:
+	return has_cost() and not cost_required
 
 func _to_string() -> String:
 	return "Effect(Trigger: %s | Action: %s | Cond: %s)" % [

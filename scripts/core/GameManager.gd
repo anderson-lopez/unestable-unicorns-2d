@@ -10,7 +10,9 @@ signal turn_changed(player_id: int)
 signal phase_changed(new_phase: TurnPhase)
 signal actions_changed(remaining: int)
 signal game_won(winner_id: int, winner_name: String)
+@warning_ignore("unused_signal")
 signal hand_size_changed(player_id: int, new_size: int)
+@warning_ignore("unused_signal")
 signal stable_changed(player_id: int)
 
 # --- VARIABLES DE ESTADO ---
@@ -32,6 +34,16 @@ var actions_remaining: int = 1
 
 enum TurnPhase { START, DRAW, ACTION, END }
 var current_phase: TurnPhase = TurnPhase.START
+
+# Lock: true mientras un efecto se está resolviendo (esperando inputs de UI).
+# Evita que el jugador juegue otra carta a la mitad de una resolución (desync).
+var is_resolving: bool = false
+
+# Referencia global a la mesa de juego (la setea game_table en su _ready)
+var game_table: Node = null
+
+# Cola de turnos extra (Change of Luck etc.)
+var extra_turn_queue: Array[int] = []
 
 # Configuración de Red
 const PORT = 7777
@@ -80,18 +92,41 @@ func setup_turn_order():
 
 func _server_start_turn(player_id: int):
 	if not multiplayer.is_server(): return
+
+	# Si el jugador no existe (se desconectó), pasar al siguiente
+	if not players.has(player_id):
+		print("Servidor: jugador ", player_id, " ya no existe, saltando turno")
+		turn_order.erase(player_id)
+		extra_turn_queue.erase(player_id)
+		if turn_order.is_empty():
+			print("Servidor: no quedan jugadores"); return
+		current_turn_index = current_turn_index % turn_order.size()
+		_server_start_turn(turn_order[current_turn_index])
+		return
+
 	active_player_id = player_id
 	actions_remaining = 1
 
 	print("Servidor: --- TURNO de ", players[player_id].name, " ---")
 
-	# Fase START: dispara efectos on_turn_start (placeholder Fase 2)
+	# Fase START
 	rpc("sync_turn_state", player_id, TurnPhase.START, actions_remaining)
-	# TODO Fase 2: EffectProcessor.trigger_on_turn_start(player_id)
+	# Cámara Espía: refrescar manos visibles al inicio de cada turno
+	if game_table:
+		game_table.server_refresh_visible_hands()
+	# Dispara efectos on_turn_start del establo (recurrentes)
+	await EffectProcessor.resolve_on_turn_start(player_id)
 
+	if not is_game_active: return
 	await get_tree().create_timer(0.4).timeout
 	if not is_game_active: return
 	_server_advance_to_draw_phase()
+
+# Encola un turno extra (Change of Luck): después del END del turno actual,
+# en vez de pasar al siguiente, el mismo jugador juega otra vez.
+func queue_extra_turn(player_id: int) -> void:
+	if not multiplayer.is_server(): return
+	extra_turn_queue.append(player_id)
 
 func _server_advance_to_draw_phase():
 	if not multiplayer.is_server(): return
@@ -105,12 +140,13 @@ func _server_advance_to_draw_phase():
 			var card_data = CardDatabase.get_card_data(card_id)
 			players[active_player_id].hand.append(card_data)
 			# Enviar al dueño
-			rpc_id(active_player_id, "client_receive_drawn_card", card_id)
-			# Notificar tamaño a los demás
-			var new_size = players[active_player_id].hand.size()
-			for p in players:
-				if p != active_player_id:
-					rpc_id(p, "client_update_rival_hand", active_player_id, new_size)
+			if game_table:
+				game_table.rpc_id(active_player_id, "client_receive_drawn_batch", [card_id])
+				var new_size = players[active_player_id].hand.size()
+				for p in players:
+					if p != active_player_id:
+						game_table.rpc_id(p, "client_sync_hand_size", active_player_id, new_size)
+				game_table.rpc("client_sync_deck_counters", deck.size(), discard_pile.size(), nursery_deck.size())
 
 	await get_tree().create_timer(0.3).timeout
 	if not is_game_active: return
@@ -130,24 +166,30 @@ func request_end_turn():
 	if current_phase != TurnPhase.ACTION:
 		printerr("Servidor: Solicitud de Fin de Turno fuera de fase ACTION")
 		return
+	if is_resolving:
+		printerr("Servidor: no puedes terminar turno con un efecto en curso")
+		return
 	_server_advance_to_end_phase()
 
 func _server_advance_to_end_phase():
 	if not multiplayer.is_server(): return
 	rpc("sync_turn_state", active_player_id, TurnPhase.END, 0)
 
-	# Aplicar límite de mano (descarte forzado por el final del FIFO por ahora)
+	# Aplicar límite de mano
 	var player: PlayerData = players.get(active_player_id)
 	if player:
 		var limit = current_rules.hand_limit
 		while player.hand.size() > limit:
 			var card: CardData = player.hand.pop_front()
 			discard_pile.append(card.id)
-			rpc_id(active_player_id, "client_force_discard", card.id)
+			if game_table:
+				game_table.rpc_id(active_player_id, "client_force_discard", card.id)
 		var new_size = player.hand.size()
-		for p in players:
-			if p != active_player_id:
-				rpc_id(p, "client_update_rival_hand", active_player_id, new_size)
+		if game_table:
+			for p in players:
+				if p != active_player_id:
+					game_table.rpc_id(p, "client_sync_hand_size", active_player_id, new_size)
+			game_table.rpc("client_sync_deck_counters", deck.size(), discard_pile.size(), nursery_deck.size())
 
 	await get_tree().create_timer(0.4).timeout
 	if not is_game_active: return
@@ -156,6 +198,13 @@ func _server_advance_to_end_phase():
 func _server_next_turn():
 	if not multiplayer.is_server(): return
 	if turn_order.is_empty(): return
+
+	# ¿Hay un turno extra encolado?
+	if not extra_turn_queue.is_empty():
+		var extra_player = extra_turn_queue.pop_front()
+		print("Servidor: Turno EXTRA para ", players[extra_player].name)
+		_server_start_turn(extra_player)
+		return
 
 	current_turn_index = (current_turn_index + 1) % turn_order.size()
 	_server_start_turn(turn_order[current_turn_index])
@@ -188,6 +237,23 @@ func sync_actions_remaining(actions: int):
 	actions_remaining = actions
 	actions_changed.emit(actions)
 
+# Reinicia el estado para una nueva partida (revancha) manteniendo a los jugadores.
+func reset_for_new_match():
+	if not multiplayer.is_server(): return
+	deck.clear()
+	discard_pile.clear()
+	nursery_deck.clear()
+	turn_order.clear()
+	current_turn_index = 0
+	active_player_id = 0
+	extra_turn_queue.clear()
+	is_resolving = false
+	current_phase = TurnPhase.START
+	for pid in players:
+		players[pid].hand.clear()
+		players[pid].stable.clear()
+	is_game_active = true
+
 # --- Mazo / Descarte ---
 
 func draw_cards(amount: int) -> Array[int]:
@@ -215,6 +281,9 @@ func check_win_condition() -> bool:
 	if not is_game_active: return false
 
 	for p_id in players:
+		# Pandamonio: tus unicornios cuentan como pandas → NO cuentan para ganar
+		if EffectProcessor.passives.unicorns_are_pandas(p_id):
+			continue
 		var unicorn_count = 0
 		for card in players[p_id].stable:
 			unicorn_count += card.unicorn_count_value()

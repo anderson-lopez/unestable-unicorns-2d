@@ -1,7 +1,9 @@
 # Unstable Unicorns 2D — Handoff de Contexto
 
-> Documento maestro para continuar el desarrollo en otra sesión de Claude Code.
-> Última actualización: 2026-05-13 · Sesión previa: Fase 1 completada.
+> Documento maestro (detalle técnico) para continuar en otra sesión de Claude Code.
+> 👉 Para la CRÓNICA completa de lo trabajado, lee primero **HISTORIAL.md**.
+> Estado: jugable de punta a punta. 85 cartas, 84 efectos, 0 gaps. 216 tests OK. 0 errores de compilación.
+> Pendiente: pulido (sonido, animación de movimiento real, migrar UI a escenas).
 
 ---
 
@@ -10,17 +12,17 @@
 Copia y pega esto al iniciar una nueva sesión de Claude Code en este proyecto:
 
 ```
-Estoy continuando el desarrollo de Unstable Unicorns 2D en Godot 4.6. 
-Lee el archivo HANDOFF.md en la raíz del proyecto que contiene TODO el 
-contexto: arquitectura, lo que está hecho, lo que falta, decisiones de 
-diseño y el roadmap. 
+Estoy continuando el desarrollo de Unstable Unicorns 2D en Godot 4.6.
+Lee el archivo HANDOFF.md en la raíz del proyecto que contiene TODO el
+contexto: arquitectura, lo que está hecho, lo que falta, decisiones de
+diseño y el roadmap.
 
-Después de leerlo, dime un resumen breve de en qué fase estamos y 
-pregúntame por dónde quiero continuar. NO empieces a programar todavía 
+Después de leerlo, dime un resumen breve de en qué fase estamos y
+pregúntame por dónde quiero continuar. NO empieces a programar todavía
 hasta que confirmemos el siguiente paso.
 
-Importante: cuando haya que tocar nodos/escenas en el editor visual, 
-guíame paso a paso para que yo lo haga (estoy aprendiendo Godot). 
+Importante: cuando haya que tocar nodos/escenas en el editor visual,
+guíame paso a paso para que yo lo haga (estoy aprendiendo Godot).
 Para scripts puros podés editarlos directamente.
 ```
 
@@ -32,9 +34,15 @@ Para scripts puros podés editarlos directamente.
 
 **Stack:** Godot 4.6.2 · GDScript · ENet multiplayer · GL Compatibility renderer.
 
-**Estado:** Fase 1 completada (bucle de turno funcional). Próximo: Fase 2 (EffectProcessor).
+**Estado actual:**
+- ✅ Fase 0: Red, lobby, carga JSON, selección de bebé
+- ✅ Fase 1: Bucle de turno (START→DRAW→ACTION→END), HUD, victoria, Downgrades hacia oponente
+- ✅ Fase 2: EffectProcessor con todas las acciones (DRAW, DISCARD, DESTROY, SACRIFICE, STEAL, PULL, SWAP, RETURN, REVIVE, SUMMON, SEARCH, SHUFFLE, EXTRA_TURN, EXTRA_ACTION, SKIP_TURN)
+- ✅ Fase 3: Sistema de pickers/targeting (card, stable, player, binary choice, cost pay) — UI construida por código
+- ✅ Fase 4: Ventana Neigh con stacking (Neigh → Super-Neigh) + CANNOT_BE_NEIGHED + PREVENT_NEIGH_ON_OWNER (Yay) + PREVENT_PLAY_NEIGH (Slowdown/Ginormous)
+- ⚠️ Fase 5: Pulido pendiente (animaciones, sonidos, log de jugadas, escenas .tscn para pickers)
 
-**Mecánica core:** Cada jugador acumula unicornios en su establo. Gana quien llegue primero a 7 (configurable). Las cartas permiten robar, destruir, sacrificar, hurtar, etc.
+**Mecánica core:** Cada jugador acumula unicornios en su establo. Gana quien llegue primero a 7 (configurable). Las cartas permiten robar, destruir, sacrificar, hurtar, etc., con ventana Neigh para cancelar jugadas.
 
 ---
 
@@ -49,37 +57,84 @@ unestable-unicorns-2d/
 ├── scripts/
 │   ├── core/
 │   │   ├── CardDatabase.gd            ← Autoload: carga JSON, get_card_data()
-│   │   ├── GameManager.gd             ← Autoload: red, turnos, fases, victoria
+│   │   ├── GameManager.gd             ← Autoload: red, turnos, fases, victoria, ref a game_table
+│   │   ├── EffectProcessor.gd         ← Autoload: ejecuta efectos, manejadores de acción, pickers
+│   │   ├── NeighManager.gd            ← Autoload: ventana Neigh con stacking
+│   │   ├── PassiveRegistry.gd         ← RefCounted: tracker de pasivos activos
+│   │   ├── TargetResolver.gd          ← RefCounted: utilidad scope/zone/filter → candidatos
 │   │   ├── GameEnums.gd               ← Todos los enums (Type, Action, Condition...)
-│   │   ├── EffectProcessor.gd         ← STUB vacío (Fase 2)
-│   │   ├── GameRules.gd               ← Resource serializable (Reglas configurables)
+│   │   ├── GameRules.gd               ← Resource serializable
 │   │   └── PlayerData.gd              ← RefCounted (hand, stable, name, id)
 │   ├── data/
-│   │   ├── CardData.gd                ← Datos de carta + helpers (is_unicorn, matches_filter...)
-│   │   └── CardEffect.gd              ← Estructura de efecto (trigger, condition, cost, primary, secondary)
+│   │   ├── CardData.gd                ← Datos + helpers (is_unicorn, matches_filter...)
+│   │   └── CardEffect.gd              ← Estructura de efecto
 │   ├── utils/
 │   │   └── DataParser.gd              ← Strings JSON → Enums
 │   └── tests/
 │       └── TestLoader.gd              ← 11 tests de integridad
 ├── scenes/
 │   ├── cards/
-│   │   ├── CardUI.tscn + card_ui.gd                ← Carta interactiva
-│   │   └── CardInfoPanel.tscn + card_info_panel.gd ← Panel de detalle
+│   │   ├── CardUI.tscn + card_ui.gd
+│   │   └── CardInfoPanel.tscn + card_info_panel.gd
 │   ├── game/
-│   │   ├── Lobby.tscn + lobby.gd                    ← Pantalla de lobby
-│   │   ├── GameTable.tscn + game_table.gd           ← Mesa de juego (con HUD por código)
-│   │   └── RivalZone.tscn + rival_zone.gd           ← Zona visual de cada rival
+│   │   ├── Lobby.tscn + lobby.gd
+│   │   ├── GameTable.tscn + game_table.gd ← HUD y pickers construidos por código
+│   │   └── RivalZone.tscn + rival_zone.gd
 │   └── ui/
-│       └── CardSelector.tscn + card_selector.gd     ← Modal para elegir 1 carta de N
-├── project.godot                                     ← Autoloads: CardDatabase, GameManager
-└── HANDOFF.md                                        ← Este archivo
+│       └── CardSelector.tscn + card_selector.gd ← Modal de bebé inicial
+├── project.godot                       ← Autoloads: CardDatabase, GameManager, EffectProcessor, NeighManager
+└── HANDOFF.md                          ← Este archivo
 ```
 
 ### Autoloads (singletons globales)
 
 Configurados en `project.godot`:
-- `CardDatabase` — Carga `base_deck_data.json` al iniciar. Acceso por `CardDatabase.get_card_data(id)`.
-- `GameManager` — Estado global: jugadores, mazos, turnos, fases, victoria. RPC backbone.
+- `CardDatabase` — Carga `base_deck_data.json` al iniciar.
+- `GameManager` — Red, jugadores, mazos, turnos, fases. Mantiene `game_table` reference.
+- `EffectProcessor` — Ejecuta efectos. Tiene su propio `PassiveRegistry`.
+- `NeighManager` — Ventana de Relinchos.
+- `TestLoader` — Suite de tests (puede desactivarse en producción).
+
+---
+
+## 🌐 Arquitectura de RPCs
+
+### Patrón general
+**Servidor authoritative.** Todos los efectos se resuelven server-side. Los clientes solo:
+1. Envían intenciones (`server_play_card`, `server_pick_response`)
+2. Reciben actualizaciones visuales (`client_card_entered_stable_visual`, `client_sync_hand_size`)
+
+### Tabla de RPCs principales
+
+| RPC | Definida en | Dirección | Propósito |
+|---|---|---|---|
+| `server_play_card(card_id, target_id)` | game_table | Cliente → Server | Jugar carta de mano |
+| `server_discard_card(card_id)` | game_table | Cliente → Server | Descartar voluntariamente |
+| `request_end_turn` | GameManager | Cliente → Server | Pasar turno |
+| `server_pick_response(a, b)` | EffectProcessor | Cliente → Server | Respuesta de picker (genérico) |
+| `server_cost_response(success, ids)` | EffectProcessor | Cliente → Server | Pagar coste de efecto |
+| `server_receive_neigh_rpc(card_id)` | NeighManager | Cliente → Server | Jugar un Neigh durante ventana |
+| `sync_turn_state(player, phase, actions)` | GameManager | Server → All | Sincronizar estado de turno |
+| `client_card_entered_stable_visual` | game_table | Server → All | Visual de carta entrando al establo |
+| `client_card_left_stable` | game_table | Server → All | Visual de carta saliendo |
+| `client_card_left_hand` | game_table | Server → All | Visual de descarte |
+| `client_receive_drawn_batch(ids)` | game_table | Server → Owner | Recibir cartas robadas |
+| `client_sync_hand_size(pid, n)` | game_table | Server → All | Actualizar tamaño visual de mano rival |
+| `client_sync_deck_counters(d, dp)` | game_table | Server → All | Actualizar contador HUD |
+| `client_replace_hand(ids)` | game_table | Server → Target | Reemplazar mano (swap_hands) |
+| `client_open_card_pick(ids, prompt, cancel)` | game_table | Server → Target | Abrir modal genérico de cartas |
+| `client_open_stable_target_pick(cands, prompt)` | game_table | Server → Target | Abrir picker de carta en establo |
+| `client_open_player_pick(ids, prompt)` | game_table | Server → Target | Abrir picker de jugador |
+| `client_open_binary_choice(labels)` | game_table | Server → Target | Abrir choice A/B (CHOICE_EITHER) |
+| `client_open_cost_pay(action, amt, fil, msg, opt)` | game_table | Server → Target | Abrir picker de pago de coste |
+| `client_open_neigh_window(card, player, secs)` | game_table | Server → Eligible | Abrir ventana Neigh |
+| `client_close_neigh_window` | game_table | Server → All | Cerrar ventana |
+| `client_announce_neigh(...)` | game_table | Server → All | Toast "X Neigh'd Y" |
+| `announce_winner(id, name)` | GameManager | Server → All | Mostrar panel de victoria |
+
+### Wrappers `_table_rpc` / `_table_rpc_id`
+
+EffectProcessor y NeighManager tienen métodos `_table_rpc()` y `_table_rpc_id()` que enrutan las llamadas RPC a través de `GameManager.game_table` (la referencia se registra en `game_table._ready()`). Esto evita que EffectProcessor tenga que conocer cómo encontrar la escena.
 
 ---
 
@@ -89,19 +144,13 @@ Configurados en `project.godot`:
 
 ```json
 {
-  "meta": {
-    "id": 3,
-    "version": "base_set_2nd_edition",
-    "image_path": "res://assets/textures/cards/cartas_base/3_unicorn_poison.png"
-  },
+  "meta": {"id": 3, "version": "...", "image_path": "..."},
   "identity": {
-    "name": {"es": "Veneno De Unicornio", "en": "Unicorn Poison"},
+    "name": {"es": "...", "en": "..."},
     "type": "magic_spell",
     "tags": ["unicorn", "poison"]
   },
-  "visual": {
-    "description": {"es": "DESTRUYE una carta de Unicornio.", "en": "..."}
-  },
+  "visual": {"description": {"es": "...", "en": "..."}},
   "gameplay": {
     "is_nursery": false,
     "deck_location": "main_deck",
@@ -130,195 +179,154 @@ Configurados en `project.godot`:
 - **CardType:** BABY_UNICORN, BASIC_UNICORN, MAGICAL_UNICORN, MAGIC_SPELL, INSTANT, UPGRADE, DOWNGRADE, REFERENCE
 - **Trigger:** ON_PLAY, ON_ENTER_STABLE, ON_TURN_START, ON_DESTROY, ON_SACRIFICE, PASSIVE, ON_CARD_PLAYED
 - **Action:** DRAW, DISCARD, DESTROY, SACRIFICE, STEAL, PULL, SWAP_HANDS, RETURN_TO_HAND, RETURN_TO_NURSERY, REVIVE, SUMMON, SEARCH_DECK, SHUFFLE_DECK, PROTECT, CANCEL, SKIP_TURN, EXTRA_TURN, EXTRA_ACTION
-- **Filter:** ANY, SELF, UNICORN_CARD, BABY_UNICORN, BASIC_UNICORN, MAGICAL_UNICORN, UPGRADE_CARD, DOWNGRADE_CARD, MAGIC_SPELL, INSTANT, HAND_AND_DISCARD
+- **Filter:** ANY, SELF, UNICORN_CARD, BABY/BASIC/MAGICAL_UNICORN, UPGRADE/DOWNGRADE_CARD, MAGIC_SPELL, INSTANT, HAND_AND_DISCARD
 - **Zone:** DECK, HAND, STABLE, DISCARD_PILE, NURSERY, VOID
 - **Scope:** SELF, CHOSEN_OPPONENT, ALL_OPPONENTS, ALL_PLAYERS, ANY_PLAYER
-- **Condition:** 24 valores semánticos (ver `GameEnums.gd` para lista completa con comentarios)
+- **Condition:** 24 valores semánticos — ver `GameEnums.gd` para lista completa
 
-### Condiciones especiales (Condition enum)
+### Conditions especiales — manejo actual (TODAS implementadas ✅)
 
-Las conditions modifican el comportamiento del effect. El EffectProcessor (Fase 2) las debe interpretar:
+| Condition | Maneja | Estado |
+|---|---|---|
+| `ALWAYS` | EffectProcessor (siempre dispara) | ✅ |
+| `IN_STABLE` | EffectProcessor.resolve_on_turn_start | ✅ |
+| `OR_ON_SACRIFICE` | EffectProcessor.resolve_on_destroy | ✅ |
+| `OR_ON_LEAVE_STABLE` (Barbed Wire) | `_remove_from_stable` → `_on_unicorn_stable_changed` | ✅ |
+| `IMMUNE_TO_DESTROY` (Rainbow Aura) | `_request_stable_target` filtra | ✅ |
+| `IMMUNE_TO_MAGIC_DESTROY` (Kittencorn) | `_current_source.is_magic_spell()` en `_request_stable_target` | ✅ |
+| `PREVENT_BASIC_ENTRY` (Queen Bee) | `server_play_card` rechaza + `_act_summon` filtra | ✅ |
+| `PREVENT_PLAY_NEIGH` | PassiveRegistry → bloquea en `server_play_card` | ✅ |
+| `PREVENT_PLAY_UPGRADE` | PassiveRegistry → bloquea en `server_play_card` | ✅ |
+| `PREVENT_NEIGH_ON_OWNER` (Yay) | NeighManager skip window | ✅ |
+| `DISABLE_UNICORN_EFFECTS` (Blinding Light) | resolve_* saltan efectos de unicornios | ✅ |
+| `CONVERT_UNICORNS_TO_PANDAS` (Pandamonium) | filtro de targeting + win condition | ✅ |
+| `HAND_VISIBLE` (Nanny Cam) | `server_refresh_visible_hands` + `reveal_hand` | ✅ |
+| `COUNTS_AS_2_UNICORNS` | CardData.unicorn_count_value | ✅ |
+| `IF_UNICORN_COUNT_EXCEEDS_5` (Tiny Stable) | `_enforce_tiny_stable` tras entrar unicornio | ✅ |
+| `SCRY_3` | EffectProcessor.\_act_search_deck | ✅ |
+| `TAG_NARWHAL` | EffectProcessor.\_act_search_deck | ✅ |
+| `RANDOM` | `_act_pull` (randi) | ✅ |
+| `CHOICE_EITHER` | EffectProcessor.\_execute_effect | ✅ |
+| `MOVE_UNICORN_TO_OPPONENT` (Unicorn Swap) | `_custom_unicorn_swap` | ✅ |
+| `RETARGET_UPGRADE_DOWNGRADE` (Re-Target) | `_custom_retarget` | ✅ |
+| `CANNOT_BE_NEIGHED` | NeighManager.\_handle_neigh_chain | ✅ |
+| `REPLACE_TARGET_UNICORN` (Black Knight) | `_remove_from_stable` confirm + sacrifica el Caballero | ✅ |
 
-| Categoría | Conditions |
-|---|---|
-| **Trigger modifiers** | `ALWAYS`, `IN_STABLE`, `OR_ON_SACRIFICE`, `OR_ON_LEAVE_STABLE` |
-| **Inmunidades** | `IMMUNE_TO_DESTROY`, `IMMUNE_TO_MAGIC_DESTROY` |
-| **Bloqueos** | `PREVENT_BASIC_ENTRY`, `PREVENT_PLAY_NEIGH`, `PREVENT_PLAY_UPGRADE`, `PREVENT_NEIGH_ON_OWNER` |
-| **Transformaciones** | `DISABLE_UNICORN_EFFECTS`, `CONVERT_UNICORNS_TO_PANDAS`, `HAND_VISIBLE`, `COUNTS_AS_2_UNICORNS` |
-| **Numéricas** | `IF_UNICORN_COUNT_EXCEEDS_5` |
-| **Acción** | `SCRY_3`, `TAG_NARWHAL`, `RANDOM`, `CHOICE_EITHER`, `MOVE_UNICORN_TO_OPPONENT`, `RETARGET_UPGRADE_DOWNGRADE`, `CANNOT_BE_NEIGHED`, `REPLACE_TARGET_UNICORN` |
+**Costes opcionales vs obligatorios:** `cost_required: false` = el jugador puede declinar
+(botón "No pagar"); `true` = obligatorio. `has_cost()` detecta el coste por `cost_action != NONE`.
+Solo Ritual Sádico (9) y Dos por Uno (58) son obligatorios.
+
+**Acción secundaria dependiente:** si la acción primaria de targeting se cancela,
+la secundaria NO corre (modela "haz X. Si lo haces, haz Y").
 
 ---
 
 ## ✅ Lo que está COMPLETO
 
-### Fase 0 — Base (preexistente)
-- Red ENet (host/join, max 4 jugadores, puerto 7777)
-- Handshake de jugadores, sincronización de reglas
-- Carga de JSON (85 cartas) a objetos GDScript tipados
-- Lobby UI con configuración de reglas
-- Selección de bebé inicial (modal CardSelector)
-- Reparto inicial de mano (5 cartas)
-- Orden de turnos sincronizado por RPC
-- Sistema de zonas visuales: mano propia, establo propio (con fila para unicornios y otra para upgrades/downgrades), zonas rivales
+### Fase 0 — Base preexistente
+Red ENet, handshake, lobby, JSON loader (85 cartas), selección de bebé, reparto inicial, orden de turnos.
 
-### Sesión actual — Trabajo realizado
+### Sesión previa: Correcciones JSON + Fase 1
+42 cartas con errores corregidas. Sistema de tipos consolidado con enum `Condition`. Bucle de turno completo con HUD, validación, victoria, Downgrades hacia oponente.
 
-#### 1. JSON corregido (42 cartas con errores arreglados)
+### Sesión actual: Fases 2-4 — Motor de juego
 
-Errores que existían y se corrigieron:
-- **Scopes incorrectos:** "Each player" estaba como `self` → ahora `all_players` (IDs 4, 24, 42, 64, 67, 82)
-- **Cantidades erróneas:** Good Deal robaba 1 en vez de 3 (ID 5), Unicorn on the Cob igual (ID 30)
-- **Costes faltantes:** Glitter Bomb, Caffeine Overload, Rainbow Lasso, Necromancer, Phoenix, etc. (IDs 9, 12, 22, 25, 29, 41, 43, 58, 71, 75, 76)
-- **Efectos pasivos mal modelados:** Magical Kittencorn tenía acción `destroy` en vez de `protect`; Rainbow Aura igual; Blinding Light/Nanny Cam/Yay/Pandamonium todos con condition apropiada (IDs 8, 26, 28, 35, 37, 39, 46, 52, 76, 80)
-- **Triggers erróneos:** Neigh era `on_play` debería ser `on_card_played` (IDs 25, 34, 70, 72)
-- **Efectos OR (choice_either):** Targeted Destruction, Chainsaw Unicorn, Re-Target (IDs 10, 49, 73)
-- **Efectos completamente erróneos reemplazados:** Black Knight, Unicorn Oracle, Neigh, Kiss of Life, Back Kick, Super Neigh (IDs 16, 18, 34, 45, 62, 70)
-- **Acciones secundarias añadidas:** Shabby/Classy Narwhal/Mystical Vortex/Reset Button (IDs 15, 17, 21, 27, 42, 50, 51, 66, 67, 81, 85)
+#### Fase 2 — EffectProcessor
+Implementadas TODAS las acciones del enum:
+- DRAW (self con sync), DISCARD (con picker), DESTROY (con picker + inmunidad Rainbow Aura), SACRIFICE (con AMOUNT_ALL para "todas")
+- STEAL (carta → mi establo), PULL (carta random rival → mi mano), SWAP_HANDS (intercambio)
+- RETURN_TO_HAND (con regreso a nursery si es bebé), REVIVE (descarte → mano o establo), SUMMON (mano/nursery → establo con chain de on_enter), SEARCH_DECK (incluye SCRY_3 y TAG_NARWHAL)
+- SHUFFLE_DECK (con HAND_AND_DISCARD para Shake Up)
+- SKIP_TURN, EXTRA_TURN (con cola), EXTRA_ACTION (suma al contador)
+- PROTECT/CANCEL son no-ops (manejados como pasivos / en NeighManager)
 
-Resultado: **85 cartas válidas, validadas contra todos los maps de DataParser**.
+Triggers integrados:
+- ON_PLAY: dispara para magias/instants antes del descarte
+- ON_ENTER_STABLE: dispara cuando un permanente toca el establo (registra pasivos)
+- ON_TURN_START: recorre el establo del activo en fase START
+- ON_DESTROY: dispara cuando se quita una carta del establo (incluye OR_ON_SACRIFICE)
 
-#### 2. Sistema de tipos consolidado
+Costes:
+- Si `cost_required=true`, abre picker de cost pay con cartas válidas según filter
+- Si `cost_required=false` pero `cost_action!=none`, el coste es opcional (Skip button)
 
-- **`GameEnums.gd`**: añadido enum `Condition` con 24 valores documentados.
-- **`DataParser.gd`**: nuevo `CONDITION_MAP` + `parse_condition()`. Maps existentes ampliados con `extra_turn`, `skip_turn`, `on_card_played`, `all_opponents`, `void`.
-- **`CardEffect.gd`**: `condition: String` → `condition: GameEnums.Condition` (type-safe). Helper `has_cost()`.
-- **`CardData.gd`**: añadidos helpers: `is_unicorn()`, `is_baby_unicorn()`, `is_basic_unicorn()`, `is_magical_unicorn()`, `is_upgrade()`, `is_downgrade()`, `is_magic_spell()`, `is_instant()`, `is_permanent()`, `matches_filter(filter)`, `has_tag(tag)`, `unicorn_count_value()` (devuelve 2 para Ginormous).
-- **`CardDatabase.gd`**: parseo defensivo con `.get()`. Helpers `get_cards_by_type(type)`, `get_cards_by_tag(tag)`.
-- **`TestLoader.gd`**: 11 tests con assert_eq cubriendo correcciones específicas.
+Bebés inmortales: cuando un baby unicorn sería destruido/sacrificado/devuelto, vuelve a `nursery_deck` si `nursery_is_safe_zone` (default true).
 
-#### 3. Fase 1 — Bucle de turno completo
+#### Fase 3 — Sistema de Pickers (UI por código)
+Todos los modales se construyen dinámicamente en `game_table.gd`:
+- `_show_card_picker(ids, prompt, allow_cancel, callback)` — elegir 1 de N cartas
+- `_show_stable_picker(candidates, prompt)` — elegir carta de establo (muestra dueño)
+- `_show_player_picker(player_ids, prompt)` — elegir jugador
+- `_show_binary_choice(labels)` — choice A/B para CHOICE_EITHER
+- `_show_cost_picker(action, amount, filter, msg, optional)` — pagar coste con multi-select
 
-**`GameManager.gd`** ahora maneja flujo authorative:
+Layer: `modal_layer` (CanvasLayer.layer=10), encima del HUD (layer=5).
 
-```
-_server_start_turn(player_id)
-  ↓ phase = START (placeholder para on_turn_start effects)
-  ↓ wait 0.4s
-_server_advance_to_draw_phase()
-  ↓ phase = DRAW
-  ↓ auto-draw 1 carta, RPC al dueño + tamaño a rivales
-  ↓ wait 0.3s
-_server_advance_to_action_phase()
-  ↓ phase = ACTION, actions_remaining = 1
-  ↓ (esperar a que el jugador juegue carta o haga End Turn)
-[evento: consume_action o request_end_turn]
-_server_advance_to_end_phase()
-  ↓ phase = END
-  ↓ enforce hand_limit (descarte forzado por ahora desde el front)
-  ↓ wait 0.4s
-_server_next_turn() → loop
-```
+Comunicación: server envía RPC `client_open_*`, cliente muestra modal, click envía `server_pick_response(value_a, value_b)` que el `EffectProcessor` espera con `await target_picked`.
 
-Nuevas señales en GameManager:
-- `actions_changed(remaining: int)`
-- `game_won(winner_id, winner_name)`
-- `hand_size_changed(player_id, new_size)`
-- `stable_changed(player_id)`
+#### Fase 4 — NeighManager
+Ventana de Relincho con stacking real:
+1. `NeighManager.open_window(card_id, playing_player_id)` se llama en `server_play_card` después de quitar la carta de la mano y antes de resolver efectos
+2. Se chequean los eligibles: tienen un instant en mano AND `can_play_instant(pid)` (no tienen Slowdown)
+3. Si el dueño tiene `PREVENT_NEIGH_ON_OWNER` (Yay), la ventana se salta
+4. Se envía RPC `client_open_neigh_window` a los eligibles con timer N segundos
+5. Si alguien responde con `server_receive_neigh_rpc`, se descarta su Neigh y se abre OTRA ventana (super-neigh)
+6. Si la carta jugada tiene `CANNOT_BE_NEIGHED` (Super Neigh), la cadena se corta
+7. La función retorna `true` si la carta original fue cancelada
 
-Nuevos métodos:
-- `consume_action()` — el jugador gastó 1 acción
-- `grant_extra_action(amount)` — Double Dutch dará +1 en Fase 2
-- `check_win_condition()` — usa `unicorn_count_value()` (Ginormous cuenta 2)
-- `request_end_turn` RPC — validado contra turno y fase
-- `get_opponents_of(player_id)` — helper
-
-**`game_table.gd`** ahora tiene:
-- **HUD por código** (CanvasLayer dinámico en `_build_hud()`): Turno, Fase, Acciones, contador Mazo/Descarte, botón "Finalizar Turno"
-- **Panel de victoria** modal (`_show_winner_panel`)
-- **Validación server-side** completa en `server_play_card`: turno activo, fase ACTION, acciones > 0, posesión de la carta
-- **Downgrades** van al establo del oponente (auto-target al primero — picker pendiente Fase 3)
-- **Cartas en mano se deshabilitan** automáticamente fuera de tu turno/fase (`_refresh_hand_interactivity()`)
-- **Predicción optimista** al jugar carta (tween local)
+Constante `WINDOW_SECONDS = 5.0` (modificable).
 
 ---
 
-## ❌ Lo que FALTA — Roadmap
+## ❌ Lo que FALTA — Pendiente
 
-### Fase 2 — EffectProcessor (siguiente prioridad)
-**Archivo:** `scripts/core/EffectProcessor.gd` (actualmente vacío).
+### Bugs/incompletos importantes
+- **`OR_ON_LEAVE_STABLE`** (Barbed Wire): no se llama el efecto cuando una carta sale del establo. Hay que añadir un hook en `EffectProcessor._remove_from_stable`.
+- **`IMMUNE_TO_MAGIC_DESTROY`** (Magical Kittencorn): el filtro de inmunidad necesita saber si la fuente es una magia. Habría que pasar `source_card` a `_request_stable_target`.
+- **`PREVENT_BASIC_ENTRY`** (Queen Bee): el check está parcial — no se aplica realmente al jugar el básico.
+- **`DISABLE_UNICORN_EFFECTS`** (Blinding Light): no se respeta. El EffectProcessor debería filtrar los effects de unicornios cuando este pasivo está activo.
+- **`IF_UNICORN_COUNT_EXCEEDS_5`** (Tiny Stable): debería disparar tras cada `stable_changed` para sacrificar.
+- **`MOVE_UNICORN_TO_OPPONENT`** (Unicorn Swap): la mecánica de "das un unicornio y te llevas otro" no está modelada propiamente.
+- **`RETARGET_UPGRADE_DOWNGRADE`** (Re-Target): similar.
+- **`REPLACE_TARGET_UNICORN`** (Black Knight): debería interceptar destroys sobre unicornios del dueño.
 
-Necesita implementar:
+### UX/Polish (Fase 5)
+- **HUD migrar a escena `.tscn`** — actualmente construido por código en `_build_hud()`. Migrar a `scenes/ui/HUD.tscn` para enseñar nodos al usuario.
+- **Pickers a escenas** — `_show_*` funciones podrían migrar a escenas reutilizables (`scenes/ui/CardPicker.tscn`, etc.)
+- **Animaciones** — mover cartas (mano → establo) con tween en vez de pop/queue_free
+- **Sonidos** — shuffle, jugar, Neigh
+- **Log de jugadas** — chat lateral con historial de acciones
+- **Pila de descarte visible** — clickeable para revisar
+- **Discard picker en hand limit** — actualmente auto-saca del front; debería ser elección del jugador
+- **Reconexión** — si un jugador se desconecta, partida queda colgada
+- **Pantalla de game over** — botón "Nueva partida"
+- **`RivalZone.remove_card_from_stable(card_id)`** — el método no existe; las cartas destruidas en establos rivales no se ven removidas. Pendiente añadir.
 
-```
-EffectProcessor.resolve_card_play(card_data, playing_player_id)
-  → para cada effect en card.effects:
-    → if trigger matches ON_PLAY or ON_ENTER_STABLE:
-      → check condition (puede prevenir o modificar)
-      → if cost.required: pedir al jugador pagar (Fase 3 con UI)
-      → execute_action(primary_action, context)
-      → if has_secondary: execute_action(secondary_action, context)
-```
-
-Acciones a implementar (orden recomendado de complejidad):
-1. **Fácil sin UI:** DRAW (self), DISCARD (self), SHUFFLE_DECK, RETURN_TO_NURSERY
-2. **Necesita target picker (depende Fase 3):** DESTROY, SACRIFICE, STEAL, PULL, RETURN_TO_HAND, REVIVE
-3. **Complejas:** SUMMON (de hand/nursery a stable), SEARCH_DECK (con scry_3), SWAP_HANDS
-4. **Meta-acciones:** SKIP_TURN, EXTRA_TURN, EXTRA_ACTION (este ya tiene gancho con `grant_extra_action`)
-5. **Pasivos:** PROTECT con todas sus condiciones (prevent_basic_entry, immune_to_destroy, etc.)
-
-Sistema de **PassiveRegistry** sugerido: mantener un diccionario de pasivos activos `{player_id: {condition: [card_ids]}}` que se consulta antes de cada acción que pudiera ser bloqueada.
-
-### Fase 3 — Sistema de Targeting (UI)
-**Aquí entra el aprendizaje de nodos del usuario.**
-
-Nuevo archivo `scenes/ui/TargetSelector.tscn` + `target_selector.gd`:
-- Resaltar cartas válidas en el establo del scope correcto
-- Esperar click del jugador activo
-- Cancelar con ESC
-
-RPCs coordinados:
-- Server: `rpc_id(active_player, "open_target_selection", filter, scope, zone)`
-- Client: muestra UI, espera elección
-- Client: `rpc_id(1, "server_target_chosen", card_id, owner_id)`
-
-### Fase 4 — Ventana Neigh
-Mecánica crítica de Unstable Unicorns. Cuando alguien juega una carta, se abre una **ventana de respuesta** de N segundos donde cualquier jugador puede jugar un Relincho.
-
-```
-[Server] Recibe play_card
-  → ¿hay alguien con Neigh + cards permite jugar Neigh?
-  → rpc("open_neigh_window", card_id, original_player)
-  → timer 5s
-  → ¿alguien jugó Neigh? → cancela carta original, abre OTRA ventana (super-neigh)
-  → ¿nadie? → resolver carta original
-```
-
-Cuidado con condition `PREVENT_NEIGH_ON_OWNER` (Yay) y `CANNOT_BE_NEIGHED` (Super Neigh).
-
-### Fase 5 — Pulido
-- Animaciones de movimiento de carta (mano → establo, etc.)
-- Sonidos (shuffle, jugar, Neigh)
-- Pantalla de game over con botón "Nueva partida"
-- Log de jugadas en chat lateral
-- Pila de descarte visible y clickeable
-- Reemplazar HUD por código con HUD en escena (`scenes/ui/HUD.tscn`)
+### Tests
+- **No hay tests E2E** de un juego completo. Solo TestLoader de integridad de datos.
+- **NeighManager** no tiene tests de stacking — verificar manualmente.
 
 ---
 
 ## 🧠 Decisiones de diseño importantes
 
 ### Server-authoritative
-**Toda la lógica vive en el servidor.** Los clientes solo:
-- Envían intenciones (`server_play_card`)
-- Reciben estados sincronizados (`sync_turn_state`, `client_card_entered_stable`)
-
-Esto previene cheating y desyncs. El "host" es también el servidor y un cliente más (peer ID 1).
+**Toda la lógica vive en el servidor.** Los clientes solo envían intenciones y reciben estados sincronizados. Esto previene cheating y desyncs.
 
 ### Cartas viajan como IDs por red
-Solo se envían `int` IDs por RPC. Los objetos `CardData` se reconstruyen localmente desde el `CardDatabase` autoload. Esto:
-- Ahorra ancho de banda
-- Garantiza que todos vean los mismos datos
-- Evita serialización compleja
+Solo `int` IDs cruzan la red. Los objetos `CardData` se reconstruyen localmente desde `CardDatabase`. Ahorra ancho de banda y garantiza consistencia.
 
-### Condition como enum en vez de string
-Decisión hecha en esta sesión: `CardEffect.condition` ahora es `GameEnums.Condition`. Ventaja: el switch en EffectProcessor estará type-safe y el IDE autocompleta.
+### `EffectProcessor.passives` como única fuente de verdad
+El `PassiveRegistry` server-side mantiene los pasivos activos. Se actualiza en cada `on_card_entered_stable` y `on_card_left_stable`. Cualquier check (puedo jugar Neigh? este unicornio es inmune?) consulta aquí.
 
-### Helpers en CardData en vez de duplicar
-`is_permanent()`, `matches_filter()`, etc. viven en CardData. Cualquier script que necesite saber "¿esta carta es un upgrade?" usa `card.is_upgrade()` en vez de comparar enums manualmente.
+### Pickers con await en server
+El server llama `await _request_stable_target(...)` y se duerme hasta que el cliente responde con `server_pick_response`. Esto permite escribir el EffectProcessor como código secuencial sin callbacks.
 
-### HUD por código vs por escena
-Fase 1 lo construyó por código (`_build_hud()` en game_table.gd) para no requerir tocar el .tscn. **Fase 3 lo vamos a refactorizar a una escena dedicada para enseñar nodos.**
+### `_table_rpc` wrappers
+EffectProcessor y NeighManager NO definen RPCs visuales. Los enrutan vía `GameManager.game_table.rpc(...)`. Esto desacopla la lógica del juego de la UI.
+
+### Game table se registra a sí misma
+En `game_table._ready()`: `GameManager.game_table = self`. Forma simple de tener un singleton de UI sin patrón Service Locator.
 
 ---
 
@@ -326,151 +334,196 @@ Fase 1 lo construyó por código (`_build_hud()` en game_table.gd) para no reque
 
 ### Estructura de turno
 ```
-1. INICIO    → disparar efectos on_turn_start (de tus upgrades/downgrades)
-2. ROBO      → robar 1 carta del mazo
+1. INICIO    → disparar efectos on_turn_start de upgrades/downgrades en establo
+2. ROBO      → robar 1 carta del mazo automáticamente
 3. ACCIÓN    → elegir 1 acción:
-               a) Jugar 1 carta de tu mano
-               b) No hacer nada (pasar)
+               a) Jugar 1 carta de tu mano (con posible Neigh window)
+               b) Finalizar Turno (botón)
 4. FIN       → si tienes >7 cartas, descartar al límite
 ```
 
-### Dónde van las cartas al jugarse
-- **Unicornios** (Baby/Basic/Magical) → tu establo
-- **Upgrades** → tu establo (fila separada)
-- **Downgrades** → establo de un oponente (fila separada)
-- **Magic Spells** → al descarte tras resolver efecto
-- **Instants (Neighs)** → al descarte; se juegan fuera de turno como respuesta
-
-### Acciones del juego
-- **DRAW** — robar del mazo
-- **DISCARD** — descartar de tu mano al descarte
-- **DESTROY** — eliminar carta del establo de OTRO (al descarte)
-- **SACRIFICE** — eliminar carta de TU establo (al descarte)
-- **STEAL** — mover carta del establo rival → tu establo
-- **PULL** — mover carta de mano rival → tu mano
-- **SWAP HANDS** — intercambiar manos con un rival
-- **RETURN TO HAND** — establo → mano del dueño
-- **NEIGH (cancel)** — cancelar la carta que está jugando alguien
+### Cartas al jugarse
+- **Unicornios** → tu establo (con `on_enter_stable` triggers)
+- **Upgrades** → tu establo, fila separada (con `on_enter_stable`)
+- **Downgrades** → establo de un oponente, fila separada
+- **Magic Spells** → resolver `on_play` → descarte
+- **Instants (Neighs)** → respuesta fuera de turno → descarte
 
 ### Condición de victoria
-Primer jugador en tener **7 unicornios en su establo** gana. Ginormous Unicorn cuenta como 2.
+**7 unicornios en establo** (configurable). Ginormous Unicorn cuenta como 2.
 
 ### Bebés (Baby Unicorns)
-- Son **inmortales** en la práctica: si serían destruidos/sacrificados/devueltos, vuelven a la Guardería.
-- Cada jugador empieza con 1 bebé elegido en setup.
+Inmortales: si serían destruidos/sacrificados/devueltos, vuelven a la Guardería. Cada jugador empieza con 1 elegido en setup.
 
 ### Neigh (Relincho)
-- Se juega **fuera de turno** como respuesta a cualquier carta jugada.
-- Cancela la carta y la envía al descarte.
-- Después de un Neigh hay otra ventana para que alguien lo Super-Neigh.
-- **Super Neigh** no puede ser Relinchado.
+Cancela una carta que se está jugando. Ventana de 5s. Después de un Neigh hay otra ventana para Super-Neigh. Super-Neigh no puede ser cancelado. Yay impide que tus cartas sean Relinchadas. Slowdown/Ginormous impiden que el dueño juegue Relinchos.
 
 ---
 
-## 🚦 Estado de pruebas del usuario
+## 🧪 Suite de tests automatizada
 
-Al cierre de esta sesión, el usuario iba a probar Fase 1 con esta checklist:
+**Archivo:** `scripts/tests/GameLogicTest.gd` + `scenes/GameLogicTest.tscn`
 
-### A. Setup inicial
-- [ ] HUD arriba muestra Turno/Fase/Acciones
-- [ ] Contador Mazo/Descarte arriba a la derecha
-- [ ] Botón "Finalizar Turno" abajo a la derecha (deshabilitado al inicio)
-- [ ] Botón viejo "Robar carta" invisible
+Ejecutar: abrir `GameLogicTest.tscn` y F6 (o `godot --headless res://scenes/GameLogicTest.tscn`).
+Última corrida: **209 OK, 0 fallos.**
 
-### B. Flujo de turno automático
-- [ ] Fase: Inicio → Robo (recibe carta auto) → Acción
-- [ ] Texto "Turno: [Nombre] (TÚ)" en amarillo cuando es tu turno
+Cubre: integridad JSON, helpers de CardData (85 cartas), DataParser, PassiveRegistry,
+supresión de Luz Cegadora, conteo de victoria (pandas/ginormous), TargetResolver, y
+flujos de efectos con un **auto-respondedor** que simula los clicks del jugador en los
+pickers (robar, destruir, devolver, sacrificar, mover) — sin necesidad de red ni UI.
 
-### C. Turno del rival
-- [ ] Cartas grises (deshabilitadas)
-- [ ] Botón Finalizar Turno deshabilitado
+Para correr headless rápido (Windows, Godot de Steam):
+```
+"C:/Program Files (x86)/Steam/steamapps/common/Godot Engine/godot.windows.opt.tools.64.exe" \
+  --headless --path . res://scenes/GameLogicTest.tscn --quit-after 300
+```
 
-### D. Jugar cartas
-- [ ] Unicornio → fila de unicornios, turno pasa
-- [ ] Upgrade → fila de upgrades, turno pasa
-- [ ] Downgrade → establo del RIVAL, turno pasa
-- [ ] Magia → al descarte, turno pasa
+### Bugs encontrados y corregidos en el barrido de QA
+- **STEAL duplicaba cartas:** robar usaba `_remove_from_stable` (que mandaba la carta al
+  descarte) y además la añadía a tu establo → carta en descarte Y establo. Además disparaba
+  `on_destroy` por error (robar a Stabby gatillaba su efecto de muerte). Fix: nuevo
+  `_extract_from_stable` que saca sin destruir ni descartar.
+- **RETURN_TO_HAND duplicaba:** misma causa — la carta acababa en la mano Y en el descarte.
+- **Bebé devuelto a mano duplicaba en Guardería** (doble append). Fix con `_extract_from_stable`.
+- **`await` faltantes** en sacrificio de coste y movimientos → secuenciación incorrecta.
+- **Luz Cegadora** no anulaba pasivos de unicornios (Reina, Gordicornio). Fix en
+  `PassiveRegistry.player_has` con supresión de fuentes-unicornio.
+- **Unicornios Voladores (17,57,66,68,81) no volvían a la mano al morir:** el efecto
+  `return_to_hand` con filter SELF no encontraba la carta (ya removida + SELF no matchea).
+  Fix: se trata como ENRUTAMIENTO de destino en `_remove_from_stable` (como bebé→guardería).
+- **Robo Descarado (47) robaba al azar en vez de dejar elegir:** `_act_pull` siempre tomaba
+  carta aleatoria. Fix: si `condition == RANDOM` (Americornio) es al azar; si no, abre picker
+  con la mano rival para elegir.
 
-### E. Botón Finalizar Turno
-- [ ] Pasa al rival sin jugar nada
+Tests: **216 OK, 0 fallos** (H7=volador a mano, H8=robo con elección, H9=robo al azar).
 
-### F. Victoria
-- [ ] Panel central "🏆 ¡VICTORIA!" cuando llegas a 7 unicornios
-- [ ] Turnos se detienen
+### Pilas visibles + visor (UI)
+- 3 botones en el lado izquierdo: **Mazo** (no clicable, secreto), **Descarte** y **Guardería** (clicables).
+- Click en Descarte/Guardería → pide al servidor (`server_request_pile`) y abre un visor
+  (`client_open_pile_view`) con las cartas en scroll horizontal (solo lectura + info).
+- Contadores unificados: `client_sync_deck_counters(deck, discard, nursery)`.
+- **Beso de Amor / invocaciones sin candidatos** ahora avisan con toast (`client_toast` +
+  `EffectProcessor._notify`) en vez de no hacer nada silenciosamente.
+- **Animaciones:** cartas entran al establo con "pop" (TRANS_BACK); las pilas pulsan al cambiar.
 
-### G. Lo que NO funciona aún (correcto, Fase 2)
-- ❌ Efectos de cartas
-- ❌ Pasivos
-- ❌ Neighs
-- ❌ Costes
+### Fin de partida + votación + reglas
+- **Botones debug eliminados** (DebugUI oculto).
+- **Visor de pila era global → ahora local** del que lo pidió (el host hacía `rpc_id(0)`=broadcast;
+  ahora abre directo local y los clientes piden por RPC dirigido).
+- **Votación de fin de partida:** al ganar, panel con "🔄 Revancha" y "🚪 Ir al Lobby" + contador
+  de votos. Si TODOS votan revancha → `reset_for_new_match` + recarga GameTable. Si alguien vota
+  lobby → todos vuelven al Lobby (que detecta conexión activa y muestra la sala de espera, sin
+  re-login). RPCs: `server_cast_vote`, `client_update_vote_tally`, `client_go_to_lobby`.
+- **Reglas en vivo:** lobby conecta `value_changed`/`toggled` → broadcast; cliente escucha
+  `rules_updated` → actualiza su UI. La meta de unicornios ahora se muestra en el HUD
+  ("Meta: N 🦄") para ambos jugadores.
+
+## 🔍 Análisis estático (Python)
+Scripts de verificación usados (se pueden re-correr): aridad de llamadas RPC vs firmas,
+métodos inexistentes sobre autoloads, cobertura JSON↔motor. Todos limpios.
+
+## 🧪 Plan de pruebas manual
+
+### Sanity check inmediato
+1. Iniciar 2 instancias, host + join, Start
+2. Cada jugador elige bebé → aparecen en establos
+3. Verificar HUD arriba (Turno/Fase/Acciones)
+4. En tu turno: la carta robada aparece automáticamente
+5. Jugar un Unicornio → va a tu establo, turno pasa
+6. Jugar Veneno de Unicornio (ID 3) → abre picker de establo del rival → seleccionas su unicornio → destruido
+7. Jugar Ganga (ID 5) → debería robar 3 y abrir picker para descartar 1
+8. Jugar Bomba de Purpurina como Upgrade y al inicio del siguiente turno → abre cost picker (sacrificar) → si pagas, abre picker para destruir
+9. Si tienes un Neigh, ver ventana al jugar el rival una magia → click "¡Relincho!" → cancela
+
+### Casos críticos
+- **Magia destruye unicornio inmune (Rainbow Aura activo)** → no aparece en el picker
+- **Super Neigh tras Neigh** → la carta original NO se cancela (Super cancela el Neigh)
+- **7º unicornio** → panel victoria → turnos se detienen
+- **Hand limit > 7 al fin de turno** → descarta automáticamente del front (sub-óptimo, pendiente)
 
 ---
 
-## 🎓 Aprendizaje de Godot — Plan pedagógico
+## 🎓 Plan pedagógico — aprender Godot
 
-El usuario está aprendiendo Godot. **A partir de la Fase 3 (cuando haya UI nueva)**, los pasos serán:
-
-1. **Claude escribe** los `.gd` (scripts puros)
-2. **Claude da instrucciones paso a paso** para tocar el editor:
+El usuario está aprendiendo Godot. **A partir de Fase 5**, los pasos serán:
+1. Claude escribe los `.gd` (scripts puros)
+2. Claude da instrucciones paso a paso del editor:
    ```
    📂 Abre escena X
    🌳 Añade nodo Y como hijo de Z
-   ⚙️ Configura propiedades en el Inspector
+   ⚙️ Configura propiedades en Inspector
    🔌 Conecta señal A → B
    ```
-3. **El usuario hace clic** en el editor siguiendo las instrucciones
+3. Usuario hace clic en el editor
 
-### Conceptos Godot que se irán cubriendo
-- Scene tree y composición de nodos
-- Control vs Node2D vs Node
-- Anchors, offsets, margins (layout responsivo)
-- Signals (forma "Godot" de comunicar nodos)
+Conceptos pendientes de cubrir cuando se migren HUD/pickers a escenas:
+- Scene tree y composición
+- Control vs Node2D
+- Anchors, offsets, margins
+- Signals y connections en el editor
 - Instancing (escenas como prefabs)
-- Autoloads (singletons globales)
-- Scripts adjuntos a nodos
+- CanvasLayer y orden de render
 
 ---
 
-## 🐛 Issues conocidos / TODOs menores
+## 🐛 Issues conocidos
 
-- **Hand limit auto-descarte:** actualmente saca cartas del frente (FIFO) — debería ser elección del jugador (pendiente Fase 2 con UI)
-- **Downgrade target auto:** elige al primer oponente — debería pickear con UI (Fase 3)
-- **Predicción optimista al jugar carta:** si el servidor rechaza, la carta visual ya se destruyó (causaría desync) — no es problema en happy path pero requiere reconciliation futura
-- **HUD por código:** funciona pero debería migrarse a escena (`scenes/ui/HUD.tscn`) en Fase 5
-- **No hay reconexión:** si un jugador se desconecta, la partida queda colgada
-- **Puerto y MAX_CLIENTS hardcoded** en GameManager (7777, 4)
+1. **Pickers no migrados a escenas** — construidos por código (funcionan pero menos visual).
+2. **Hand limit FIFO** — descarte forzado sin elección.
+3. **Predicción optimista al jugar carta** — si el server rechaza, la carta visual ya se destruyó.
+4. **Animaciones pop básicas** — no hay tween de movimiento.
+5. **Re-Target / Unicorn Swap** — efectos especiales no completamente implementados.
+6. **Sin chat ni log de jugadas** — los eventos solo aparecen en consola.
+7. **Reconexión no manejada**.
+8. **Puerto y MAX_CLIENTS hardcoded** (7777, 4).
 
 ---
 
 ## 📁 Archivos críticos para releer al retomar
 
-Si quieres ponerte al día rápido, lee en este orden:
-
+Orden recomendado:
 1. `HANDOFF.md` — este archivo
 2. `scripts/core/GameEnums.gd` — todos los enums (especialmente Condition)
-3. `scripts/core/GameManager.gd` — flujo de turno y red
-4. `scripts/data/CardData.gd` y `scripts/data/CardEffect.gd` — modelo
-5. `scripts/core/CardDatabase.gd` — cómo se carga el JSON
-6. `assets/data/base_deck_data.json` — vistazo a 2-3 cartas (e.g. ID 1, ID 26, ID 34)
-7. `scenes/game/game_table.gd` — UI principal + RPCs de juego
-8. `scripts/core/EffectProcessor.gd` — está vacío, ahí va Fase 2
+3. `scripts/core/EffectProcessor.gd` — el motor de efectos
+4. `scripts/core/NeighManager.gd` — ventana Neigh
+5. `scripts/core/PassiveRegistry.gd` + `TargetResolver.gd` — helpers del motor
+6. `scripts/core/GameManager.gd` — flujo de turno y red
+7. `scenes/game/game_table.gd` — UI principal, RPCs visuales, pickers
+8. `scripts/data/CardData.gd` y `scripts/data/CardEffect.gd` — modelo
+9. `assets/data/base_deck_data.json` — vistazo a 2-3 cartas (IDs 1, 26, 34)
 
 ---
 
 ## ✍️ Convenciones del código
 
-- **Naming:** clases en PascalCase (`CardData`), variables en snake_case (`active_player_id`), constantes en SCREAMING_SNAKE (`MAX_CLIENTS`).
-- **RPCs server-side:** prefijo `server_*` (e.g., `server_play_card`)
-- **RPCs client-side:** prefijo `client_*` (e.g., `client_card_entered_stable`)
-- **Funciones server-only privadas:** prefijo `_server_*` (e.g., `_server_advance_to_draw_phase`)
-- **Idioma:** comentarios y print en español, identificadores en inglés.
-- **No emojis en código** salvo prints/labels de UI.
+- **Naming:** clases en PascalCase, variables/funciones en snake_case, constantes en SCREAMING_SNAKE
+- **RPCs server-side:** prefijo `server_*`
+- **RPCs client-side:** prefijo `client_*`
+- **Funciones server-only privadas:** prefijo `_server_*`
+- **Wrappers RPC visuales:** `_table_rpc()` / `_table_rpc_id()` en EffectProcessor/NeighManager
+- **Idioma:** comentarios y print en español, identificadores en inglés
+- **No emojis en código** salvo prints/labels de UI
+
+---
+
+## 🚀 Próximos pasos sugeridos (en orden)
+
+1. **Probar el juego end-to-end** con dos clientes. Documentar bugs en este archivo.
+2. **Arreglar `OR_ON_LEAVE_STABLE`** y `IMMUNE_TO_MAGIC_DESTROY` — son one-liners.
+3. **Migrar HUD a escena** `scenes/ui/HUD.tscn` (oportunidad pedagógica).
+4. **Migrar Pickers a escena** reutilizable.
+5. **Animaciones de movimiento** de carta con tween.
+6. **Log de jugadas** en sidebar.
+7. **Implementar conditions faltantes** (Re-Target, Unicorn Swap, Black Knight).
+8. **Sonido**.
+9. **Pantalla de victoria con "Nueva partida"**.
+10. **Persistencia de partida** (save/load) — opcional.
 
 ---
 
 ## 🔗 Referencias
 
-- **Reglas oficiales Unstable Unicorns:** https://teeturtle.com/products/unstable-unicorns
+- **Reglas Unstable Unicorns:** https://teeturtle.com/products/unstable-unicorns
 - **Godot 4 docs:** https://docs.godotengine.org/en/stable/
 - **GDScript RPC:** https://docs.godotengine.org/en/stable/tutorials/networking/high_level_multiplayer.html
 

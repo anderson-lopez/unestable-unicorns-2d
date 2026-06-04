@@ -56,22 +56,24 @@ func setup_card(data: CardData):
 # --- LÓGICA DE INTERACCIÓN (CORE) ---
 
 func _on_mouse_entered():
-	if is_disabled: return
-	
+	# Permitimos hover SIEMPRE para que se pueda ver el botón de Info,
+	# pero los botones de Play/Discard se desactivan internamente cuando is_disabled.
+
 	# Si otra carta está abierta, la cerramos
 	if active_card and active_card != self:
 		active_card._force_close()
-	
+
 	active_card = self
 	is_hovered = true
 	card_hovered.emit(self)
-	
-	# Visuales
-	z_index = 10 
+
+	# Visuales: z_index alto para asegurar que la carta hovered queda encima
+	z_index = 10
 	highlight.show()
-	
+
 	var tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.1)
+	var hover_scale = 1.1 if not is_disabled else 1.05
+	tween.tween_property(self, "scale", Vector2(hover_scale, hover_scale), 0.1)
 	tween.tween_property(ui_container, "modulate:a", 1.0, 0.1)
 
 func _on_mouse_exited():
@@ -133,11 +135,25 @@ func _on_discard_pressed():
 	discard_requested.emit(self)
 
 # --- EXTRA: DESHABILITAR CARTA ---
+# El "disabled" significa "no puedes jugarla/descartarla" — pero SÍ puedes verla.
+# Cuando está disabled solo se muestra el botón Info (Play/Discard se ocultan).
 func set_disabled(value: bool):
 	is_disabled = value
+	# Asegurar que el hover funciona aunque la carta esté disabled
+	hover_detector.mouse_filter = Control.MOUSE_FILTER_PASS
+	# Info siempre activo y visible (para leer descripción de cualquier carta)
+	if info_button:
+		info_button.disabled = false
+		info_button.visible = true
+	# Play y Discard se OCULTAN cuando la carta no se puede jugar
+	if play_button:
+		play_button.visible = not is_disabled
+		play_button.disabled = is_disabled
+	if discard_button:
+		discard_button.visible = not is_disabled
+		discard_button.disabled = is_disabled
+	# Tinte sutil para indicar visualmente que no se puede jugar
 	if is_disabled:
-		modulate = Color(0.6, 0.6, 0.6)
-		hover_detector.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		modulate = Color(0.85, 0.85, 0.85)
 	else:
 		modulate = Color.WHITE
-		hover_detector.mouse_filter = Control.MOUSE_FILTER_PASS

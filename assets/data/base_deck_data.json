@@ -6,9 +6,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/1_queen_bee_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Reina Del Baile", "en": "Queen Bee Unicorn"},
+	  "name": {
+		"es": "Unicornio Reina Del Baile",
+		"en": "Queen Bee Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["queen", "bee", "unicorn"]
+	  "tags": [
+		"queen",
+		"bee",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -24,8 +31,17 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "prevent_basic_entry",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "target_scope": "all_opponents", "target_filter": "basic_unicorn"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"target_scope": "all_opponents",
+			"target_filter": "basic_unicorn"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -38,9 +54,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/2_baby_unicorn_death.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Death)", "en": "Baby Unicorn (Death)"},
+	  "name": {
+		"es": "Baby Unicorn (Death)",
+		"en": "Baby Unicorn (Death)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(death)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(death)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -56,8 +79,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -70,9 +104,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/3_unicorn_poison.png"
 	},
 	"identity": {
-	  "name": {"es": "Veneno De Unicornio", "en": "Unicorn Poison"},
+	  "name": {
+		"es": "Veneno De Unicornio",
+		"en": "Unicorn Poison"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["unicorn", "poison"]
+	  "tags": [
+		"unicorn",
+        "poison"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -88,8 +128,19 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -102,9 +153,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/4_extremely_destructive_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Extremadamente Destructivo", "en": "Extremely Destructive Unicorn"},
+	  "name": {
+		"es": "Unicornio Extremadamente Destructivo",
+		"en": "Extremely Destructive Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["extremely", "destructive", "unicorn"]
+	  "tags": [
+		"extremely",
+		"destructive",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -120,8 +178,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "sacrifice", "amount": 1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "sacrifice",
+			"amount": 1,
+			"target_scope": "all_players",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -134,9 +203,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/5_good_deal.png"
 	},
 	"identity": {
-	  "name": {"es": "Ganga", "en": "Good Deal"},
+	  "name": {
+		"es": "Ganga",
+		"en": "Good Deal"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["good", "deal"]
+	  "tags": [
+		"good",
+        "deal"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -152,9 +227,26 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "draw", "amount": 3, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
-		  "secondary_action": {"type": "discard", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "draw",
+			"amount": 3,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
+		  "secondary_action": {
+			"type": "discard",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -166,9 +258,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/6_baby_unicorn_brown.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Brown)", "en": "Baby Unicorn (Brown)"},
+	  "name": {
+		"es": "Baby Unicorn (Brown)",
+		"en": "Baby Unicorn (Brown)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(brown)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(brown)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -184,8 +283,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -198,14 +308,28 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/7_basic_unicorn_yellow.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Básico (Amarillo)", "en": "Basic Unicorn (Yellow)"},
+	  "name": {
+		"es": "Unicornio Básico (Amarillo)",
+		"en": "Basic Unicorn (Yellow)"
+	  },
 	  "type": "basic_unicorn",
-	  "tags": ["basic", "unicorn", "(yellow)"]
+	  "tags": [
+		"basic",
+		"unicorn",
+        "(yellow)"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "Baila como si estuvieras sola", "en": "Dance like nobody's watching."}
+	  "description": {
+		"es": "Baila como si estuvieras sola",
+		"en": "Dance like nobody's watching."
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -214,9 +338,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/8_magical_kittencorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Gaticornio Mágico", "en": "Magical Kittencorn"},
+	  "name": {
+		"es": "Gaticornio Mágico",
+		"en": "Magical Kittencorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["magical", "kittencorn"]
+	  "tags": [
+		"magical",
+        "kittencorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -232,8 +362,17 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "immune_to_magic_destroy",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "target_scope": "self", "target_filter": "magic_spell"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"target_scope": "self",
+			"target_filter": "magic_spell"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -246,9 +385,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/9_sadistic_ritual.png"
 	},
 	"identity": {
-	  "name": {"es": "Ritual Sádico", "en": "Sadistic Ritual"},
+	  "name": {
+		"es": "Ritual Sádico",
+		"en": "Sadistic Ritual"
+	  },
 	  "type": "downgrade",
-	  "tags": ["sadistic", "ritual"]
+	  "tags": [
+		"sadistic",
+        "ritual"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -264,8 +409,19 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "unicorn_card"},
-		  "primary_action": {"type": "draw", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "cost": {
+			"required": true,
+			"action": "sacrifice",
+			"amount": 1,
+			"target_type": "unicorn_card"
+		  },
+		  "primary_action": {
+			"type": "draw",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -278,9 +434,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/10_targeted_destruction.png"
 	},
 	"identity": {
-	  "name": {"es": "Destrucción Selectiva", "en": "Targeted Destruction"},
+	  "name": {
+		"es": "Destrucción Selectiva",
+		"en": "Targeted Destruction"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["targeted", "destruction"]
+	  "tags": [
+		"targeted",
+        "destruction"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -296,9 +458,26 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "choice_either",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "upgrade_card"},
-		  "secondary_action": {"type": "sacrifice", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "downgrade_card"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "upgrade_card"
+		  },
+		  "secondary_action": {
+			"type": "sacrifice",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "downgrade_card"
+		  }
 		}
 	  ]
 	}
@@ -310,9 +489,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/11_unfair_bargain.png"
 	},
 	"identity": {
-	  "name": {"es": "Trato Injusto", "en": "Unfair Bargain"},
+	  "name": {
+		"es": "Trato Injusto",
+		"en": "Unfair Bargain"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["unfair", "bargain"]
+	  "tags": [
+		"unfair",
+        "bargain"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -328,8 +513,19 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "swap_hands", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "swap_hands",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -342,9 +538,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/12_seductive_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Seductor", "en": "Seductive Unicorn"},
+	  "name": {
+		"es": "Unicornio Seductor",
+		"en": "Seductive Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["seductive", "unicorn"]
+	  "tags": [
+		"seductive",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -360,8 +562,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": true, "action": "discard", "amount": 1, "target_type": "any"},
-		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "discard",
+			"amount": 1,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "steal",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -374,9 +587,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/13_baby_unicorn_orange.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Orange)", "en": "Baby Unicorn (Orange)"},
+	  "name": {
+		"es": "Baby Unicorn (Orange)",
+		"en": "Baby Unicorn (Orange)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(orange)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(orange)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -392,8 +612,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -406,9 +637,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/14_basic_unicorn_purple.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Básico (Púrpura)", "en": "Basic Unicorn (Purple)"},
+	  "name": {
+		"es": "Unicornio Básico (Púrpura)",
+		"en": "Basic Unicorn (Purple)"
+	  },
 	  "type": "basic_unicorn",
-	  "tags": ["basic", "unicorn", "(purple)"]
+	  "tags": [
+		"basic",
+		"unicorn",
+        "(purple)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -416,7 +654,11 @@
 		"en": "#nomakeup #nofilter #sunnies #shameless #selfie #basic #TGIF #unicornhairdontcare"
 	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -425,9 +667,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/15_shabby_the_narwhal.png"
 	},
 	"identity": {
-	  "name": {"es": "Narval Dick", "en": "Shabby the Narwhal"},
+	  "name": {
+		"es": "Narval Dick",
+		"en": "Shabby the Narwhal"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["shabby", "the", "narwhal"]
+	  "tags": [
+		"shabby",
+		"the",
+        "narwhal"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -443,9 +692,26 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "downgrade_card"},
-		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "search_deck",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "downgrade_card"
+		  },
+		  "secondary_action": {
+			"type": "shuffle_deck",
+			"amount": 0,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -457,9 +723,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/16_black_knight_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Caballero Negro", "en": "Black Knight Unicorn"},
+	  "name": {
+		"es": "Unicornio Caballero Negro",
+		"en": "Black Knight Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["black", "knight", "unicorn"]
+	  "tags": [
+		"black",
+		"knight",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -475,8 +748,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "replace_target_unicorn",
-		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "self"},
-		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "sacrifice",
+			"amount": 1,
+			"target_type": "self"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -489,9 +773,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/17_greedy_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Volador Codicioso", "en": "Greedy Flying Unicorn"},
+	  "name": {
+		"es": "Unicornio Volador Codicioso",
+		"en": "Greedy Flying Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["greedy", "flying", "unicorn"]
+	  "tags": [
+		"greedy",
+		"flying",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -507,16 +798,38 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "draw", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "draw",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -529,9 +842,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/18_unicorn_oracle.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Oráculo", "en": "Unicorn Oracle"},
+	  "name": {
+		"es": "Unicornio Oráculo",
+		"en": "Unicorn Oracle"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["unicorn", "oracle"]
+	  "tags": [
+		"unicorn",
+        "oracle"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -547,8 +866,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "scry_3",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "search_deck",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -561,9 +891,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/19_baby_unicorn_purple.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Purple)", "en": "Baby Unicorn (Purple)"},
+	  "name": {
+		"es": "Baby Unicorn (Purple)",
+		"en": "Baby Unicorn (Purple)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(purple)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(purple)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -579,8 +916,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -593,14 +941,28 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/20_basic_unicorn_green.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Básico (Verde)", "en": "Basic Unicorn (Green)"},
+	  "name": {
+		"es": "Unicornio Básico (Verde)",
+		"en": "Basic Unicorn (Green)"
+	  },
 	  "type": "basic_unicorn",
-	  "tags": ["basic", "unicorn", "(green)"]
+	  "tags": [
+		"basic",
+		"unicorn",
+        "(green)"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "Solo escucho discos de vinilo y cintas de casete.", "en": "Vinyl records and mixtapes only."}
+	  "description": {
+		"es": "Solo escucho discos de vinilo y cintas de casete.",
+		"en": "Vinyl records and mixtapes only."
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -609,9 +971,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/21_the_great_narwhal.png"
 	},
 	"identity": {
-	  "name": {"es": "El Gran Narval", "en": "The Great Narwhal"},
+	  "name": {
+		"es": "El Gran Narval",
+		"en": "The Great Narwhal"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["the", "great", "narwhal"]
+	  "tags": [
+		"the",
+		"great",
+        "narwhal"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -627,9 +996,26 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "tag_narwhal",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
-		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "search_deck",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
+		  "secondary_action": {
+			"type": "shuffle_deck",
+			"amount": 0,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -641,9 +1027,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/22_glitter_bomb.png"
 	},
 	"identity": {
-	  "name": {"es": "Bomba de Purpurina", "en": "Glitter Bomb"},
+	  "name": {
+		"es": "Bomba de Purpurina",
+		"en": "Glitter Bomb"
+	  },
 	  "type": "upgrade",
-	  "tags": ["glitter", "bomb"]
+	  "tags": [
+		"glitter",
+        "bomb"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -659,8 +1051,19 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "any"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "sacrifice",
+			"amount": 1,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -673,9 +1076,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/23_rainbow_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Arcoíris", "en": "Rainbow Unicorn"},
+	  "name": {
+		"es": "Unicornio Arcoíris",
+		"en": "Rainbow Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["rainbow", "unicorn"]
+	  "tags": [
+		"rainbow",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -691,8 +1100,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "summon", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "basic_unicorn"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "summon",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "basic_unicorn"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -705,9 +1125,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/24_barbed_wire.png"
 	},
 	"identity": {
-	  "name": {"es": "Alambre De Púas", "en": "Barbed Wire"},
+	  "name": {
+		"es": "Alambre De Púas",
+		"en": "Barbed Wire"
+	  },
 	  "type": "downgrade",
-	  "tags": ["barbed", "wire"]
+	  "tags": [
+		"barbed",
+        "wire"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -723,8 +1149,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "or_on_leave_stable",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "discard",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -737,9 +1174,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/25_dark_angel_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Ángel Oscuro", "en": "Dark Angel Unicorn"},
+	  "name": {
+		"es": "Unicornio Ángel Oscuro",
+		"en": "Dark Angel Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["dark", "angel", "unicorn"]
+	  "tags": [
+		"dark",
+		"angel",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -755,8 +1199,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "unicorn_card"},
-		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "sacrifice",
+			"amount": 1,
+			"target_type": "unicorn_card"
+		  },
+		  "primary_action": {
+			"type": "revive",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -769,9 +1224,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/26_ginormous_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Gordicornio", "en": "Ginormous Unicorn"},
+	  "name": {
+		"es": "Gordicornio",
+		"en": "Ginormous Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["ginormous", "unicorn"]
+	  "tags": [
+		"ginormous",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -787,16 +1248,38 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "counts_as_2_unicorns",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "amount": 2, "target_scope": "self", "target_zone": "stable", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 2,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "passive",
 		  "condition": "prevent_play_neigh",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "instant"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "cancel",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "instant"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -809,9 +1292,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/27_classy_narwhal.png"
 	},
 	"identity": {
-	  "name": {"es": "Narval Con Clase", "en": "Classy Narwhal"},
+	  "name": {
+		"es": "Narval Con Clase",
+		"en": "Classy Narwhal"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["classy", "narwhal"]
+	  "tags": [
+		"classy",
+        "narwhal"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -827,9 +1316,26 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "search_deck", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "upgrade_card"},
-		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "search_deck",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "upgrade_card"
+		  },
+		  "secondary_action": {
+			"type": "shuffle_deck",
+			"amount": 0,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -841,9 +1347,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/28_slowdown.png"
 	},
 	"identity": {
-	  "name": {"es": "Ralentización", "en": "Slowdown"},
+	  "name": {
+		"es": "Ralentización",
+		"en": "Slowdown"
+	  },
 	  "type": "downgrade",
-	  "tags": ["slowdown"]
+	  "tags": [
+        "slowdown"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -859,8 +1370,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "prevent_play_neigh",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "instant"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "cancel",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "instant"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -873,9 +1395,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/29_necromancer_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Nigromante", "en": "Necromancer Unicorn"},
+	  "name": {
+		"es": "Unicornio Nigromante",
+		"en": "Necromancer Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["necromancer", "unicorn"]
+	  "tags": [
+		"necromancer",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -891,8 +1419,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": true, "action": "discard", "amount": 2, "target_type": "unicorn_card"},
-		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "discard",
+			"amount": 2,
+			"target_type": "unicorn_card"
+		  },
+		  "primary_action": {
+			"type": "revive",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -905,9 +1444,17 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/30_unicorn_on_the_cob.png"
 	},
 	"identity": {
-	  "name": {"es": "Unizorca", "en": "Unicorn on the Cob"},
+	  "name": {
+		"es": "Unizorca",
+		"en": "Unicorn on the Cob"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["unicorn", "on", "the", "cob"]
+	  "tags": [
+		"unicorn",
+		"on",
+		"the",
+        "cob"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -923,9 +1470,26 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "draw", "amount": 2, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
-		  "secondary_action": {"type": "discard", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "draw",
+			"amount": 2,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
+		  "secondary_action": {
+			"type": "discard",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -937,9 +1501,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/31_baby_unicorn_white.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (White)", "en": "Baby Unicorn (White)"},
+	  "name": {
+		"es": "Baby Unicorn (White)",
+		"en": "Baby Unicorn (White)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(white)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(white)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -955,8 +1526,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -969,9 +1551,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/32_narwhal_torpedo.png"
 	},
 	"identity": {
-	  "name": {"es": "Narval Torpedo", "en": "Narwhal Torpedo"},
+	  "name": {
+		"es": "Narval Torpedo",
+		"en": "Narwhal Torpedo"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["narwhal", "torpedo"]
+	  "tags": [
+		"narwhal",
+        "torpedo"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -987,8 +1575,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "sacrifice", "amount": -1, "target_scope": "self", "target_zone": "stable", "target_filter": "downgrade_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "sacrifice",
+			"amount": -1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "downgrade_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1001,9 +1600,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/33_baby_unicorn_pink.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Pink)", "en": "Baby Unicorn (Pink)"},
+	  "name": {
+		"es": "Baby Unicorn (Pink)",
+		"en": "Baby Unicorn (Pink)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(pink)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(pink)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1019,8 +1625,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1033,9 +1650,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/34_neigh.png"
 	},
 	"identity": {
-	  "name": {"es": "Relincho", "en": "Neigh"},
+	  "name": {
+		"es": "Relincho",
+		"en": "Neigh"
+	  },
 	  "type": "instant",
-	  "tags": ["neigh"]
+	  "tags": [
+        "neigh"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1051,8 +1673,19 @@
 		  "order": 1,
 		  "trigger": "on_card_played",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "cancel",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1065,9 +1698,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/35_blinding_light.png"
 	},
 	"identity": {
-	  "name": {"es": "Luz Cegadora", "en": "Blinding Light"},
+	  "name": {
+		"es": "Luz Cegadora",
+		"en": "Blinding Light"
+	  },
 	  "type": "downgrade",
-	  "tags": ["blinding", "light"]
+	  "tags": [
+		"blinding",
+        "light"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1083,8 +1722,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "disable_unicorn_effects",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1097,9 +1747,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/36_baby_unicorn_rainbow.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Rainbow)", "en": "Baby Unicorn (Rainbow)"},
+	  "name": {
+		"es": "Baby Unicorn (Rainbow)",
+		"en": "Baby Unicorn (Rainbow)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(rainbow)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(rainbow)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1115,8 +1772,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1129,9 +1797,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/37_rainbow_aura.png"
 	},
 	"identity": {
-	  "name": {"es": "Aura Irisada", "en": "Rainbow Aura"},
+	  "name": {
+		"es": "Aura Irisada",
+		"en": "Rainbow Aura"
+	  },
 	  "type": "upgrade",
-	  "tags": ["rainbow", "aura"]
+	  "tags": [
+		"rainbow",
+        "aura"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1147,8 +1821,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "immune_to_destroy",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1161,14 +1846,28 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/38_basic_unicorn_red.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Básico (Rojo)", "en": "Basic Unicorn (Red)"},
+	  "name": {
+		"es": "Unicornio Básico (Rojo)",
+		"en": "Basic Unicorn (Red)"
+	  },
 	  "type": "basic_unicorn",
-	  "tags": ["basic", "unicorn", "(red)"]
+	  "tags": [
+		"basic",
+		"unicorn",
+        "(red)"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "Las barbas están súper en tendencia.", "en": "Beards are like, so hot."}
+	  "description": {
+		"es": "Las barbas están súper en tendencia.",
+		"en": "Beards are like, so hot."
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -1177,9 +1876,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/39_nanny_cam.png"
 	},
 	"identity": {
-	  "name": {"es": "Cámara Espia", "en": "Nanny Cam"},
+	  "name": {
+		"es": "Cámara Espia",
+		"en": "Nanny Cam"
+	  },
 	  "type": "downgrade",
-	  "tags": ["nanny", "cam"]
+	  "tags": [
+		"nanny",
+        "cam"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1195,8 +1900,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "hand_visible",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1209,9 +1925,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/40_mother_goose_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Mamá Ganso", "en": "Mother Goose Unicorn"},
+	  "name": {
+		"es": "Unicornio Mamá Ganso",
+		"en": "Mother Goose Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["mother", "goose", "unicorn"]
+	  "tags": [
+		"mother",
+		"goose",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1227,8 +1950,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "summon", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "baby_unicorn"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "summon",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "baby_unicorn"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1241,9 +1975,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/41_stable_artillery.png"
 	},
 	"identity": {
-	  "name": {"es": "Artillería En El Establo", "en": "Stable Artillery"},
+	  "name": {
+		"es": "Artillería En El Establo",
+		"en": "Stable Artillery"
+	  },
 	  "type": "upgrade",
-	  "tags": ["stable", "artillery"]
+	  "tags": [
+		"stable",
+        "artillery"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1259,8 +1999,19 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": true, "action": "discard", "amount": 2, "target_type": "any"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "discard",
+			"amount": 2,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1273,9 +2024,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/42_reset_button.png"
 	},
 	"identity": {
-	  "name": {"es": "Botón De Reinicio", "en": "Reset Button"},
+	  "name": {
+		"es": "Botón De Reinicio",
+		"en": "Reset Button"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["reset", "button"]
+	  "tags": [
+		"reset",
+        "button"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1291,16 +2048,44 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "sacrifice", "amount": -1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "upgrade_card"},
-		  "secondary_action": {"type": "sacrifice", "amount": -1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "downgrade_card"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "sacrifice",
+			"amount": -1,
+			"target_scope": "all_players",
+			"target_zone": "stable",
+			"target_filter": "upgrade_card"
+		  },
+		  "secondary_action": {
+			"type": "sacrifice",
+			"amount": -1,
+			"target_scope": "all_players",
+			"target_zone": "stable",
+			"target_filter": "downgrade_card"
+		  }
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "discard_pile", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "shuffle_deck",
+			"amount": 0,
+			"target_scope": "self",
+			"target_zone": "discard_pile",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1313,9 +2098,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/43_caffeine_overload.png"
 	},
 	"identity": {
-	  "name": {"es": "Hasta Las Cejas De Cafeína", "en": "Caffeine Overload"},
+	  "name": {
+		"es": "Hasta Las Cejas De Cafeína",
+		"en": "Caffeine Overload"
+	  },
 	  "type": "upgrade",
-	  "tags": ["caffeine", "overload"]
+	  "tags": [
+		"caffeine",
+        "overload"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1331,8 +2122,19 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "any"},
-		  "primary_action": {"type": "draw", "amount": 2, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "sacrifice",
+			"amount": 1,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "draw",
+			"amount": 2,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1345,9 +2147,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/44_rainbow_lasso.png"
 	},
 	"identity": {
-	  "name": {"es": "Lazo Del Arcoíris", "en": "Rainbow Lasso"},
+	  "name": {
+		"es": "Lazo Del Arcoíris",
+		"en": "Rainbow Lasso"
+	  },
 	  "type": "upgrade",
-	  "tags": ["rainbow", "lasso"]
+	  "tags": [
+		"rainbow",
+        "lasso"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1363,8 +2171,19 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": true, "action": "discard", "amount": 3, "target_type": "any"},
-		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "discard",
+			"amount": 3,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "steal",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1377,9 +2196,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/45_kiss_of_life.png"
 	},
 	"identity": {
-	  "name": {"es": "Beso De Amor Verdadero", "en": "Kiss of Life"},
+	  "name": {
+		"es": "Beso De Amor Verdadero",
+		"en": "Kiss of Life"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["kiss", "of", "life"]
+	  "tags": [
+		"kiss",
+		"of",
+        "life"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1395,8 +2221,19 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "revive",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1409,9 +2246,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/46_yay.png"
 	},
 	"identity": {
-	  "name": {"es": "¡Hurra!", "en": "Yay"},
+	  "name": {
+		"es": "¡Hurra!",
+		"en": "Yay"
+	  },
 	  "type": "upgrade",
-	  "tags": ["yay"]
+	  "tags": [
+        "yay"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1427,8 +2269,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "prevent_neigh_on_owner",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1441,9 +2294,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/47_blatant_thievery.png"
 	},
 	"identity": {
-	  "name": {"es": "Robo Descarado", "en": "Blatant Thievery"},
+	  "name": {
+		"es": "Robo Descarado",
+		"en": "Blatant Thievery"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["blatant", "thievery"]
+	  "tags": [
+		"blatant",
+        "thievery"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1459,8 +2318,19 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "pull", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "pull",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1473,9 +2343,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/48_tiny_stable.png"
 	},
 	"identity": {
-	  "name": {"es": "Establo Diminuto", "en": "Tiny Stable"},
+	  "name": {
+		"es": "Establo Diminuto",
+		"en": "Tiny Stable"
+	  },
 	  "type": "downgrade",
-	  "tags": ["tiny", "stable"]
+	  "tags": [
+		"tiny",
+        "stable"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1491,8 +2367,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "if_unicorn_count_exceeds_5",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "sacrifice", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "sacrifice",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1505,9 +2392,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/49_chainsaw_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio De Texas", "en": "Chainsaw Unicorn"},
+	  "name": {
+		"es": "Unicornio De Texas",
+		"en": "Chainsaw Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["chainsaw", "unicorn"]
+	  "tags": [
+		"chainsaw",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1523,9 +2416,26 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "choice_either",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "upgrade_card"},
-		  "secondary_action": {"type": "sacrifice", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "downgrade_card"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "upgrade_card"
+		  },
+		  "secondary_action": {
+			"type": "sacrifice",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "downgrade_card"
+		  }
 		}
 	  ]
 	}
@@ -1537,9 +2447,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/50_change_of_luck.png"
 	},
 	"identity": {
-	  "name": {"es": "Golpe De Suerte", "en": "Change of Luck"},
+	  "name": {
+		"es": "Golpe De Suerte",
+		"en": "Change of Luck"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["change", "of", "luck"]
+	  "tags": [
+		"change",
+		"of",
+        "luck"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1555,16 +2472,44 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "draw", "amount": 2, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
-		  "secondary_action": {"type": "discard", "amount": 3, "target_scope": "self", "target_zone": "hand", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "draw",
+			"amount": 2,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
+		  "secondary_action": {
+			"type": "discard",
+			"amount": 3,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  }
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "extra_turn", "amount": 1, "target_scope": "self", "target_zone": "none", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "extra_turn",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "none",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1577,9 +2522,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/51_stabby_the_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Acuchillador", "en": "Stabby the Unicorn"},
+	  "name": {
+		"es": "Unicornio Acuchillador",
+		"en": "Stabby the Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["stabby", "the", "unicorn"]
+	  "tags": [
+		"stabby",
+		"the",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1595,8 +2547,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1609,9 +2572,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/52_broken_stable.png"
 	},
 	"identity": {
-	  "name": {"es": "Establo En Obras", "en": "Broken Stable"},
+	  "name": {
+		"es": "Establo En Obras",
+		"en": "Broken Stable"
+	  },
 	  "type": "downgrade",
-	  "tags": ["broken", "stable"]
+	  "tags": [
+		"broken",
+        "stable"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1627,8 +2596,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "prevent_play_upgrade",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "upgrade_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "cancel",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "upgrade_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1641,9 +2621,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/53_baby_unicorn_blue.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Blue)", "en": "Baby Unicorn (Blue)"},
+	  "name": {
+		"es": "Baby Unicorn (Blue)",
+		"en": "Baby Unicorn (Blue)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(blue)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(blue)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1659,8 +2646,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1673,14 +2671,26 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/54_narwhal.png"
 	},
 	"identity": {
-	  "name": {"es": "Narval", "en": "Narwhal"},
+	  "name": {
+		"es": "Narval",
+		"en": "Narwhal"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["narwhal"]
+	  "tags": [
+        "narwhal"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "Esta carta no tiene poderes especiales, pero ¡es tan mona...!", "en": "This card has no special powers, but it sure is cute!"}
+	  "description": {
+		"es": "Esta carta no tiene poderes especiales, pero ¡es tan mona...!",
+		"en": "This card has no special powers, but it sure is cute!"
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -1689,14 +2699,28 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/55_basic_unicorn_indigo.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Básico (Índigo)", "en": "Basic Unicorn (Indigo)"},
+	  "name": {
+		"es": "Unicornio Básico (Índigo)",
+		"en": "Basic Unicorn (Indigo)"
+	  },
 	  "type": "basic_unicorn",
-	  "tags": ["basic", "unicorn", "(indigo)"]
+	  "tags": [
+		"basic",
+		"unicorn",
+        "(indigo)"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "Carta da Unicornio Básico", "en": "Basic Unicorn card"}
+	  "description": {
+		"es": "Carta da Unicornio Básico",
+		"en": "Basic Unicorn card"
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -1705,9 +2729,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/56_americorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Americornio", "en": "Americorn"},
+	  "name": {
+		"es": "Americornio",
+		"en": "Americorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["americorn"]
+	  "tags": [
+        "americorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1723,8 +2752,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "random",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "pull", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "pull",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1737,9 +2777,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/57_magical_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Magicornio Volador", "en": "Magical Flying Unicorn"},
+	  "name": {
+		"es": "Magicornio Volador",
+		"en": "Magical Flying Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["magical", "flying", "unicorn"]
+	  "tags": [
+		"magical",
+		"flying",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1755,16 +2802,38 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "magic_spell"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "revive",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "magic_spell"
+		  },
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1777,9 +2846,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/58_two-for-one.png"
 	},
 	"identity": {
-	  "name": {"es": "Dos por uno", "en": "Two-For-One"},
+	  "name": {
+		"es": "Dos por uno",
+		"en": "Two-For-One"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["two-for-one"]
+	  "tags": [
+        "two-for-one"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1795,8 +2869,19 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "any"},
-		  "primary_action": {"type": "destroy", "amount": 2, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
+		  "cost": {
+			"required": true,
+			"action": "sacrifice",
+			"amount": 1,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 2,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1809,14 +2894,28 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/59_basic_unicorn_blue.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Básico (Azul)", "en": "Basic Unicorn (Blue)"},
+	  "name": {
+		"es": "Unicornio Básico (Azul)",
+		"en": "Basic Unicorn (Blue)"
+	  },
 	  "type": "basic_unicorn",
-	  "tags": ["basic", "unicorn", "(blue)"]
+	  "tags": [
+		"basic",
+		"unicorn",
+        "(blue)"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "Los cuellos alzados son solo para las citas.", "en": "Popped collars are for date nights only."}
+	  "description": {
+		"es": "Los cuellos alzados son solo para las citas.",
+		"en": "Popped collars are for date nights only."
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -1825,9 +2924,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/60_baby_narwhal.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Narwhal", "en": "Baby Narwhal"},
+	  "name": {
+		"es": "Baby Narwhal",
+		"en": "Baby Narwhal"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "narwhal"]
+	  "tags": [
+		"baby",
+        "narwhal"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1843,8 +2948,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1857,14 +2973,26 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/61_base_deck_rule_card.png"
 	},
 	"identity": {
-	  "name": {"es": "Tarjeta de Reglas", "en": "Base Deck Rule Card"},
+	  "name": {
+		"es": "Tarjeta de Reglas",
+		"en": "Base Deck Rule Card"
+	  },
 	  "type": "reference",
-	  "tags": ["rule_card"]
+	  "tags": [
+        "rule_card"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "Lista de referencias de reglas.", "en": "Rule reference list."}
+	  "description": {
+		"es": "Lista de referencias de reglas.",
+		"en": "Rule reference list."
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -1873,9 +3001,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/62_back_kick.png"
 	},
 	"identity": {
-	  "name": {"es": "Coz", "en": "Back Kick"},
+	  "name": {
+		"es": "Coz",
+		"en": "Back Kick"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["back", "kick"]
+	  "tags": [
+		"back",
+        "kick"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1891,9 +3025,26 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
-		  "secondary_action": {"type": "discard", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "any"
+		  },
+		  "secondary_action": {
+			"type": "discard",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -1905,9 +3056,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/63_baby_unicorn_green.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Green)", "en": "Baby Unicorn (Green)"},
+	  "name": {
+		"es": "Baby Unicorn (Green)",
+		"en": "Baby Unicorn (Green)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(green)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(green)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1923,8 +3081,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1937,9 +3106,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/64_glitter_tornado.png"
 	},
 	"identity": {
-	  "name": {"es": "Tornado De Purpurina", "en": "Glitter Tornado"},
+	  "name": {
+		"es": "Tornado De Purpurina",
+		"en": "Glitter Tornado"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["glitter", "tornado"]
+	  "tags": [
+		"glitter",
+        "tornado"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1955,8 +3130,19 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "all_players", "target_zone": "stable", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "all_players",
+			"target_zone": "stable",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -1969,9 +3155,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/65_alluring_narwhal.png"
 	},
 	"identity": {
-	  "name": {"es": "Narval Cautivadora", "en": "Alluring Narwhal"},
+	  "name": {
+		"es": "Narval Cautivadora",
+		"en": "Alluring Narwhal"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["alluring", "narwhal"]
+	  "tags": [
+		"alluring",
+        "narwhal"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -1987,8 +3179,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "upgrade_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "steal",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "upgrade_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2001,9 +3204,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/66_swift_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Velocicornio Volador", "en": "Swift Flying Unicorn"},
+	  "name": {
+		"es": "Velocicornio Volador",
+		"en": "Swift Flying Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["swift", "flying", "unicorn"]
+	  "tags": [
+		"swift",
+		"flying",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2019,16 +3229,38 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "instant"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "revive",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "instant"
+		  },
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2041,9 +3273,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/67_mystical_vortex.png"
 	},
 	"identity": {
-	  "name": {"es": "Vórtice Místico", "en": "Mystical Vortex"},
+	  "name": {
+		"es": "Vórtice Místico",
+		"en": "Mystical Vortex"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["mystical", "vortex"]
+	  "tags": [
+		"mystical",
+        "vortex"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2059,9 +3297,26 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "all_players", "target_zone": "hand", "target_filter": "any"},
-		  "secondary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "discard_pile", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "discard",
+			"amount": 1,
+			"target_scope": "all_players",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
+		  "secondary_action": {
+			"type": "shuffle_deck",
+			"amount": 0,
+			"target_scope": "self",
+			"target_zone": "discard_pile",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -2073,9 +3328,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/68_annoying_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Plastacornio Volador", "en": "Annoying Flying Unicorn"},
+	  "name": {
+		"es": "Plastacornio Volador",
+		"en": "Annoying Flying Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["annoying", "flying", "unicorn"]
+	  "tags": [
+		"annoying",
+		"flying",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2091,16 +3353,38 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "discard",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2113,14 +3397,28 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/69_basic_unicorn_orange.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Básico (Naranja)", "en": "Basic Unicorn (Orange)"},
+	  "name": {
+		"es": "Unicornio Básico (Naranja)",
+		"en": "Basic Unicorn (Orange)"
+	  },
 	  "type": "basic_unicorn",
-	  "tags": ["basic", "unicorn", "(orange)"]
+	  "tags": [
+		"basic",
+		"unicorn",
+        "(orange)"
+	  ]
 	},
 	"visual": {
-	  "description": {"es": "es la esencia de la vida.", "en": "Pumpkin spice is the pumpkin spice of life."}
+	  "description": {
+		"es": "es la esencia de la vida.",
+		"en": "Pumpkin spice is the pumpkin spice of life."
+	  }
 	},
-	"gameplay": {"is_nursery": false, "deck_location": "main_deck", "effects": []}
+	"gameplay": {
+	  "is_nursery": false,
+	  "deck_location": "main_deck",
+	  "effects": []
+	}
   },
   {
 	"meta": {
@@ -2129,9 +3427,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/70_super_neigh.png"
 	},
 	"identity": {
-	  "name": {"es": "Súperrelincho", "en": "Super Neigh"},
+	  "name": {
+		"es": "Súperrelincho",
+		"en": "Super Neigh"
+	  },
 	  "type": "instant",
-	  "tags": ["super", "neigh"]
+	  "tags": [
+		"super",
+        "neigh"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2147,8 +3451,19 @@
 		  "order": 1,
 		  "trigger": "on_card_played",
 		  "condition": "cannot_be_neighed",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "cancel", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "cancel",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2161,9 +3476,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/71_claw_machine.png"
 	},
 	"identity": {
-	  "name": {"es": "Tragamonedas", "en": "Claw Machine"},
+	  "name": {
+		"es": "Tragamonedas",
+		"en": "Claw Machine"
+	  },
 	  "type": "upgrade",
-	  "tags": ["claw", "machine"]
+	  "tags": [
+		"claw",
+        "machine"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2179,8 +3500,19 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": true, "action": "discard", "amount": 1, "target_type": "any"},
-		  "primary_action": {"type": "draw", "amount": 1, "target_scope": "self", "target_zone": "deck", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "discard",
+			"amount": 1,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "draw",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2193,9 +3525,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/72_unicorn_swap.png"
 	},
 	"identity": {
-	  "name": {"es": "Intercambio De Unicornios", "en": "Unicorn Swap"},
+	  "name": {
+		"es": "Intercambio De Unicornios",
+		"en": "Unicorn Swap"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["unicorn", "swap"]
+	  "tags": [
+		"unicorn",
+        "swap"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2211,8 +3549,19 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "move_unicorn_to_opponent",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "steal",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2225,9 +3574,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/73_re-target.png"
 	},
 	"identity": {
-	  "name": {"es": "Cambio De Objetivo", "en": "Re-Target"},
+	  "name": {
+		"es": "Cambio De Objetivo",
+		"en": "Re-Target"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["re-target"]
+	  "tags": [
+        "re-target"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2243,9 +3597,26 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "retarget_upgrade_downgrade",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "steal", "amount": 1, "target_scope": "any_player", "target_zone": "stable", "target_filter": "upgrade_card"},
-		  "secondary_action": {"type": "steal", "amount": 1, "target_scope": "any_player", "target_zone": "stable", "target_filter": "downgrade_card"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "steal",
+			"amount": 1,
+			"target_scope": "any_player",
+			"target_zone": "stable",
+			"target_filter": "upgrade_card"
+		  },
+		  "secondary_action": {
+			"type": "steal",
+			"amount": 1,
+			"target_scope": "any_player",
+			"target_zone": "stable",
+			"target_filter": "downgrade_card"
+		  }
 		}
 	  ]
 	}
@@ -2257,9 +3628,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/74_baby_unicorn_black.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Black)", "en": "Baby Unicorn (Black)"},
+	  "name": {
+		"es": "Baby Unicorn (Black)",
+		"en": "Baby Unicorn (Black)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(black)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(black)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2275,8 +3653,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2289,9 +3678,17 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/75_shark_with_a_horn.png"
 	},
 	"identity": {
-	  "name": {"es": "Tiburón Cornudo", "en": "Shark With a Horn"},
+	  "name": {
+		"es": "Tiburón Cornudo",
+		"en": "Shark With a Horn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["shark", "with", "a", "horn"]
+	  "tags": [
+		"shark",
+		"with",
+		"a",
+        "horn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2307,8 +3704,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": true, "action": "sacrifice", "amount": 1, "target_type": "self"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "sacrifice",
+			"amount": 1,
+			"target_type": "self"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2321,9 +3729,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/76_unicorn_phoenix.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Fénix", "en": "Unicorn Phoenix"},
+	  "name": {
+		"es": "Unicornio Fénix",
+		"en": "Unicorn Phoenix"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["unicorn", "phoenix"]
+	  "tags": [
+		"unicorn",
+        "phoenix"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2339,8 +3753,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {"required": true, "action": "discard", "amount": 1, "target_type": "any"},
-		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "discard",
+			"amount": 1,
+			"target_type": "any"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2353,9 +3778,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/77_mermaid_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unicornio Sirena", "en": "Mermaid Unicorn"},
+	  "name": {
+		"es": "Unicornio Sirena",
+		"en": "Mermaid Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["mermaid", "unicorn"]
+	  "tags": [
+		"mermaid",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2371,8 +3802,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2385,9 +3827,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/78_shake_up.png"
 	},
 	"identity": {
-	  "name": {"es": "Agitar", "en": "Shake Up"},
+	  "name": {
+		"es": "Agitar",
+		"en": "Shake Up"
+	  },
 	  "type": "magic_spell",
-	  "tags": ["shake", "up"]
+	  "tags": [
+		"shake",
+        "up"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2403,9 +3851,26 @@
 		  "order": 1,
 		  "trigger": "on_play",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "shuffle_deck", "amount": 0, "target_scope": "self", "target_zone": "deck", "target_filter": "hand_and_discard"},
-		  "secondary_action": {"type": "draw", "amount": 5, "target_scope": "self", "target_zone": "deck", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "shuffle_deck",
+			"amount": 0,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "hand_and_discard"
+		  },
+		  "secondary_action": {
+			"type": "draw",
+			"amount": 5,
+			"target_scope": "self",
+			"target_zone": "deck",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}
@@ -2417,9 +3882,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/79_baby_unicorn_red.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Red)", "en": "Baby Unicorn (Red)"},
+	  "name": {
+		"es": "Baby Unicorn (Red)",
+		"en": "Baby Unicorn (Red)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(red)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(red)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2435,8 +3907,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2449,9 +3932,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/80_pandamonium.png"
 	},
 	"identity": {
-	  "name": {"es": "Pandamonio", "en": "Pandamonium"},
+	  "name": {
+		"es": "Pandamonio",
+		"en": "Pandamonium"
+	  },
 	  "type": "downgrade",
-	  "tags": ["pandamonium"]
+	  "tags": [
+        "pandamonium"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2467,8 +3955,19 @@
 		  "order": 1,
 		  "trigger": "passive",
 		  "condition": "convert_unicorns_to_pandas",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "protect", "amount": 1, "target_scope": "self", "target_zone": "stable", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "protect",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2481,9 +3980,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/81_majestic_flying_unicorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Majestucornio Volador", "en": "Majestic Flying Unicorn"},
+	  "name": {
+		"es": "Majestucornio Volador",
+		"en": "Majestic Flying Unicorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["majestic", "flying", "unicorn"]
+	  "tags": [
+		"majestic",
+		"flying",
+        "unicorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2499,16 +4005,38 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "revive", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "unicorn_card"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "revive",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "unicorn_card"
+		  },
 		  "secondary_action": null
 		},
 		{
 		  "order": 2,
 		  "trigger": "on_destroy",
 		  "condition": "or_on_sacrifice",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_hand", "amount": 1, "target_scope": "self", "target_zone": "hand", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_hand",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "hand",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2521,9 +4049,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/82_llamacorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Unipaca", "en": "Llamacorn"},
+	  "name": {
+		"es": "Unipaca",
+		"en": "Llamacorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["llamacorn"]
+	  "tags": [
+        "llamacorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2539,8 +4072,19 @@
 		  "order": 1,
 		  "trigger": "on_enter_stable",
 		  "condition": "none",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "discard", "amount": 1, "target_scope": "all_players", "target_zone": "hand", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "discard",
+			"amount": 1,
+			"target_scope": "all_players",
+			"target_zone": "hand",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2553,9 +4097,15 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/83_double_dutch.png"
 	},
 	"identity": {
-	  "name": {"es": "Comba Doble", "en": "Double Dutch"},
+	  "name": {
+		"es": "Comba Doble",
+		"en": "Double Dutch"
+	  },
 	  "type": "upgrade",
-	  "tags": ["double", "dutch"]
+	  "tags": [
+		"double",
+        "dutch"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2571,8 +4121,19 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "extra_action", "amount": 2, "target_scope": "self", "target_zone": "none", "target_filter": "any"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "extra_action",
+			"amount": 2,
+			"target_scope": "self",
+			"target_zone": "none",
+			"target_filter": "any"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2585,9 +4146,16 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/84_baby_unicorn_yellow.png"
 	},
 	"identity": {
-	  "name": {"es": "Baby Unicorn (Yellow)", "en": "Baby Unicorn (Yellow)"},
+	  "name": {
+		"es": "Baby Unicorn (Yellow)",
+		"en": "Baby Unicorn (Yellow)"
+	  },
 	  "type": "baby_unicorn",
-	  "tags": ["baby", "unicorn", "(yellow)"]
+	  "tags": [
+		"baby",
+		"unicorn",
+        "(yellow)"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2603,8 +4171,19 @@
 		  "order": 1,
 		  "trigger": "on_destroy",
 		  "condition": "always",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "return_to_nursery", "amount": 1, "target_scope": "self", "target_zone": "nursery", "target_filter": "self"},
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "return_to_nursery",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "nursery",
+			"target_filter": "self"
+		  },
 		  "secondary_action": null
 		}
 	  ]
@@ -2617,9 +4196,14 @@
 	  "image_path": "res://assets/textures/cards/cartas_base/85_rhinocorn.png"
 	},
 	"identity": {
-	  "name": {"es": "Uniceronte", "en": "Rhinocorn"},
+	  "name": {
+		"es": "Uniceronte",
+		"en": "Rhinocorn"
+	  },
 	  "type": "magical_unicorn",
-	  "tags": ["rhinocorn"]
+	  "tags": [
+        "rhinocorn"
+	  ]
 	},
 	"visual": {
 	  "description": {
@@ -2635,9 +4219,26 @@
 		  "order": 1,
 		  "trigger": "on_turn_start",
 		  "condition": "in_stable",
-		  "cost": {"required": false, "action": "none", "amount": 0, "target_type": "none"},
-		  "primary_action": {"type": "destroy", "amount": 1, "target_scope": "chosen_opponent", "target_zone": "stable", "target_filter": "unicorn_card"},
-		  "secondary_action": {"type": "skip_turn", "amount": 1, "target_scope": "self", "target_zone": "none", "target_filter": "any"}
+		  "cost": {
+			"required": false,
+			"action": "none",
+			"amount": 0,
+			"target_type": "none"
+		  },
+		  "primary_action": {
+			"type": "destroy",
+			"amount": 1,
+			"target_scope": "chosen_opponent",
+			"target_zone": "stable",
+			"target_filter": "unicorn_card"
+		  },
+		  "secondary_action": {
+			"type": "skip_turn",
+			"amount": 1,
+			"target_scope": "self",
+			"target_zone": "none",
+			"target_filter": "any"
+		  }
 		}
 	  ]
 	}

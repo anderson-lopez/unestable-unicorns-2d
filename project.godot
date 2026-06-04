@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 
 CardDatabase="*uid://3qih4fil7ujq"
 GameManager="*uid://30hcw1oqx4kk"
+EffectProcessor="*res://scripts/core/EffectProcessor.gd"
+NeighManager="*res://scripts/core/NeighManager.gd"
 TestLoader="*uid://ca2jkkyoxhpap"
 
 [physics]

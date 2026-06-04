@@ -49,6 +49,13 @@ func _ready():
 	GameManager.player_disconnected.connect(_refresh_player_list)
 	GameManager.game_error.connect(_on_error)
 	GameManager.game_started.connect(_on_game_started)
+	# Cuando llegan reglas nuevas del host, actualizar la UI del cliente
+	GameManager.rules_updated.connect(_update_ui_from_manager)
+
+	# El host emite cambios de reglas en vivo
+	spin_unicorns.value_changed.connect(func(_v): _on_rules_ui_changed())
+	check_nursery.toggled.connect(func(_b): _on_rules_ui_changed())
+	check_double.toggled.connect(func(_b): _on_rules_ui_changed())
 
 # --- BOTONES DE LOGIN ---
 
