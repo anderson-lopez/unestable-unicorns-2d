@@ -3,6 +3,19 @@ extends Control
 # --- CONSTANTES ---
 const RIVAL_ZONE_SCENE = preload("res://scenes/game/RivalZone.tscn")
 const CARD_SCENE = preload("res://scenes/cards/CardUI.tscn")
+const CARD_BACK_TEX = preload("res://assets/textures/cards/reverso/1_reverso.jpg")
+
+# Efectos de sonido (cargados perezosamente en _build_sfx).
+const SFX_FILES := {
+	"click": "res://assets/audio/click.wav",
+	"draw": "res://assets/audio/draw.wav",
+	"play": "res://assets/audio/play.wav",
+	"neigh": "res://assets/audio/neigh.wav",
+	"destroy": "res://assets/audio/destroy.wav",
+	"turn": "res://assets/audio/turn.wav",
+	"win": "res://assets/audio/win.wav",
+	"shuffle": "res://assets/audio/shuffle.wav",
+}
 
 # --- REFERENCIAS DE UI ---
 @onready var my_hand_container: HBoxContainer = $HandZone/CardsContainer
@@ -26,6 +39,13 @@ var btn_end_turn: Button
 var lbl_deck: Label
 var winner_panel: PanelContainer
 
+# --- Registro de jugadas (log lateral, desplegable) ---
+var log_panel: PanelContainer
+var log_scroll: ScrollContainer
+var log_container: VBoxContainer
+var log_collapsed: bool = false
+var _log_toggle_btn: Button
+
 # --- Pilas visibles (Mazo / Descarte / Guardería) ---
 var pile_deck_btn: Button
 var pile_discard_btn: Button
@@ -38,9 +58,18 @@ var _count_nursery: int = 0
 var modal_layer: CanvasLayer
 var active_modal: Control = null
 
+# --- Capa de animaciones (cartas voladoras) ---
+var anim_layer: CanvasLayer
+
+# --- Sonidos (nombre -> AudioStreamPlayer) ---
+var _sfx: Dictionary = {}
+
 # --- Estado de selección (para enviar al servidor cuando el usuario clickea) ---
 var pending_pick_kind: String = "" # "card", "stable", "player", "binary", "cost"
 var pending_cost_payload: Dictionary = {}
+
+# --- Descarte por límite de mano (elección múltiple) ---
+var _discard_limit_picked: Array = []
 
 # --- Estado de ventana Neigh activa (permite jugar Neighs desde la mano) ---
 var neigh_window_active: bool = false
@@ -58,6 +87,8 @@ func _ready():
 	_clear_debug_cards()
 	_build_hud()
 	_build_modal_layer()
+	_build_anim_layer()
+	_build_sfx()
 
 	# Subimos la capa del UILayer (CardInfoPanel + CardSelector) por encima de
 	# hud_layer (5) y modal_layer (10) para que el panel de info siempre se vea.
@@ -97,34 +128,35 @@ func _build_hud():
 	hud_layer.layer = 5
 	add_child(hud_layer)
 
-	var top = PanelContainer.new()
-	top.anchor_left = 0.5; top.anchor_right = 0.5
-	top.offset_left = -260; top.offset_right = 260
-	top.offset_top = 10; top.offset_bottom = 70
-	hud_layer.add_child(top)
+	# Panel de info en la ESQUINA SUPERIOR IZQUIERDA (turno / fase / acciones / meta).
+	var info_box := PanelContainer.new()
+	info_box.anchor_left = 0.0; info_box.anchor_right = 0.0
+	info_box.anchor_top = 0.0; info_box.anchor_bottom = 0.0
+	info_box.offset_left = 12; info_box.offset_top = 10
+	info_box.offset_right = 252; info_box.offset_bottom = 136
+	var info_sb := StyleBoxFlat.new()
+	info_sb.bg_color = Color(0, 0, 0, 0.5)
+	info_sb.set_corner_radius_all(6)
+	info_sb.set_content_margin_all(10)
+	info_box.add_theme_stylebox_override("panel", info_sb)
+	hud_layer.add_child(info_box)
 
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 30)
-	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	top.add_child(hbox)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 4)
+	info_box.add_child(vb)
 
 	lbl_turn = Label.new()
 	lbl_turn.add_theme_font_size_override("font_size", 18)
-	hbox.add_child(lbl_turn)
+	vb.add_child(lbl_turn)
 	lbl_phase = Label.new()
-	lbl_phase.add_theme_font_size_override("font_size", 18)
-	hbox.add_child(lbl_phase)
+	lbl_phase.add_theme_font_size_override("font_size", 15)
+	vb.add_child(lbl_phase)
 	lbl_actions = Label.new()
-	lbl_actions.add_theme_font_size_override("font_size", 18)
-	hbox.add_child(lbl_actions)
-
+	lbl_actions.add_theme_font_size_override("font_size", 15)
+	vb.add_child(lbl_actions)
 	lbl_deck = Label.new()
-	lbl_deck.anchor_left = 1.0; lbl_deck.anchor_right = 1.0
-	lbl_deck.offset_left = -360; lbl_deck.offset_right = -10
-	lbl_deck.offset_top = 15; lbl_deck.offset_bottom = 45
-	lbl_deck.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	lbl_deck.add_theme_font_size_override("font_size", 14)
-	hud_layer.add_child(lbl_deck)
+	vb.add_child(lbl_deck)
 
 	btn_end_turn = Button.new()
 	btn_end_turn.text = "Finalizar Turno"
@@ -137,6 +169,7 @@ func _build_hud():
 	hud_layer.add_child(btn_end_turn)
 
 	_build_piles()
+	_build_log_panel()
 	_update_hud()
 
 # Tres pilas clicables en el lado izquierdo: Mazo, Descarte, Guardería.
@@ -186,10 +219,229 @@ func _request_pile_view(which: String):
 		# El cliente pide los datos al servidor; este responde SOLO a él
 		rpc_id(1, "server_request_pile", which)
 
+# ==============================================================================
+# 📜 REGISTRO DE JUGADAS (log lateral)
+# ==============================================================================
+
+func _build_log_panel():
+	log_panel = PanelContainer.new()
+	log_panel.anchor_left = 1.0; log_panel.anchor_right = 1.0
+	log_panel.anchor_top = 0.0; log_panel.anchor_bottom = 1.0
+	log_panel.offset_left = -224; log_panel.offset_right = -10
+	log_panel.offset_top = 90; log_panel.offset_bottom = -90
+	log_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0.45)
+	sb.set_corner_radius_all(6)
+	sb.set_content_margin_all(8)
+	log_panel.add_theme_stylebox_override("panel", sb)
+	hud_layer.add_child(log_panel)
+
+	var outer := VBoxContainer.new()
+	outer.add_theme_constant_override("separation", 6)
+	log_panel.add_child(outer)
+
+	# Fila de título con botón para plegar/desplegar.
+	var title_row := HBoxContainer.new()
+	outer.add_child(title_row)
+	var title := Label.new()
+	title.text = "📜 Registro"
+	title.add_theme_font_size_override("font_size", 14)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_row.add_child(title)
+	_log_toggle_btn = Button.new()
+	_log_toggle_btn.text = "▾"
+	_log_toggle_btn.tooltip_text = "Mostrar/ocultar el registro"
+	_log_toggle_btn.custom_minimum_size = Vector2(30, 0)
+	_log_toggle_btn.pressed.connect(_toggle_log)
+	title_row.add_child(_log_toggle_btn)
+
+	log_scroll = ScrollContainer.new()
+	log_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	log_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.add_child(log_scroll)
+
+	log_container = VBoxContainer.new()
+	log_container.add_theme_constant_override("separation", 3)
+	log_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	log_scroll.add_child(log_container)
+
+# Pliega/despliega el registro: al plegar, el panel se encoge a solo el título.
+func _toggle_log():
+	log_collapsed = not log_collapsed
+	if is_instance_valid(log_scroll):
+		log_scroll.visible = not log_collapsed
+	if is_instance_valid(_log_toggle_btn):
+		_log_toggle_btn.text = "▸" if log_collapsed else "▾"
+	if is_instance_valid(log_panel):
+		if log_collapsed:
+			log_panel.anchor_bottom = 0.0
+			log_panel.offset_bottom = 134.0
+		else:
+			log_panel.anchor_bottom = 1.0
+			log_panel.offset_bottom = -90.0
+
+# Añade una línea al registro local y hace auto-scroll al fondo.
+func _add_log_line(text: String, color: Color = Color.WHITE) -> void:
+	if not is_instance_valid(log_container):
+		return
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.modulate = color
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.custom_minimum_size = Vector2(198, 0)
+	log_container.add_child(lbl)
+	# Podar las líneas más viejas para no crecer sin límite.
+	var excess := log_container.get_child_count() - 60
+	for _i in range(max(0, excess)):
+		var old := log_container.get_child(0)
+		log_container.remove_child(old)
+		old.queue_free()
+	await get_tree().process_frame
+	if is_instance_valid(log_scroll):
+		var vbar := log_scroll.get_v_scroll_bar()
+		if vbar:
+			log_scroll.scroll_vertical = int(vbar.max_value)
+
+# RPC: el servidor difunde una línea de registro a todos.
+@rpc("authority", "call_local", "reliable")
+func client_log_event(text: String, color: Color = Color.WHITE) -> void:
+	_add_log_line(text, color)
+
+# Atajo server-side para difundir una línea de registro.
+func _server_log(text: String, color: Color = Color.WHITE) -> void:
+	if not multiplayer.is_server():
+		return
+	rpc("client_log_event", text, color)
+
 func _build_modal_layer():
 	modal_layer = CanvasLayer.new()
 	modal_layer.layer = 10
 	add_child(modal_layer)
+
+# ==============================================================================
+# 🎬 ANIMACIONES DE MOVIMIENTO (capa overlay)
+# ==============================================================================
+# Las cartas "vuelan" como nodos temporales en una CanvasLayer aparte. Así el
+# movimiento NO pelea con el layout de los HBox/VBox (que reordenan a sus hijos).
+# Cada vuelo es puramente cosmético-local; la lógica de red no cambia.
+
+func _build_anim_layer():
+	anim_layer = CanvasLayer.new()
+	anim_layer.layer = 15 # encima de modales (10), debajo del UILayer (20)
+	add_child(anim_layer)
+
+# Crea un AudioStreamPlayer por cada efecto de sonido disponible.
+func _build_sfx():
+	for key in SFX_FILES:
+		var path: String = SFX_FILES[key]
+		if not ResourceLoader.exists(path):
+			continue
+		var player := AudioStreamPlayer.new()
+		player.stream = load(path)
+		add_child(player)
+		_sfx[key] = player
+
+# Reproduce un efecto de sonido por nombre (silencioso si no se cargó).
+func _play_sfx(sfx_name: String) -> void:
+	if _sfx.has(sfx_name) and is_instance_valid(_sfx[sfx_name]):
+		_sfx[sfx_name].play()
+
+# Centro global de un nodo Control (para apuntar vuelos a su posición real).
+func _node_center(node: Control) -> Vector2:
+	if not is_instance_valid(node):
+		return get_viewport_rect().size * 0.5
+	return node.global_position + node.size * 0.5
+
+# Textura de una carta por id (cae al reverso si no existe la imagen).
+func _card_texture(card_id: int) -> Texture2D:
+	var data = CardDatabase.get_card_data(card_id)
+	if data and ResourceLoader.exists(data.image_path):
+		return load(data.image_path)
+	return CARD_BACK_TEX
+
+func _first_rival_center() -> Vector2:
+	for pid in rival_stables:
+		var z = rival_stables[pid]
+		if is_instance_valid(z):
+			return _node_center(z)
+	return get_viewport_rect().size * 0.5
+
+# Lanza una carta fantasma que viaja de un centro global a otro, escalando de
+# tamaño, y se autodestruye al llegar. `on_finish` corre al aterrizar.
+func _fly_card(texture: Texture2D, from_center: Vector2, to_center: Vector2,
+		from_size: Vector2, to_size: Vector2, duration: float = 0.35,
+		on_finish: Callable = Callable()) -> void:
+	if not is_instance_valid(anim_layer):
+		if on_finish.is_valid(): on_finish.call()
+		return
+	var ghost := TextureRect.new()
+	ghost.texture = texture
+	ghost.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ghost.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ghost.size = from_size
+	ghost.global_position = from_center - from_size * 0.5
+	ghost.z_index = 50
+	anim_layer.add_child(ghost)
+	var tw := ghost.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(ghost, "global_position", to_center - to_size * 0.5, duration)
+	tw.tween_property(ghost, "size", to_size, duration)
+	tw.chain().tween_callback(func():
+		ghost.queue_free()
+		if on_finish.is_valid(): on_finish.call()
+	)
+
+# Una carta recién añadida a la mano: vuela desde el mazo y se revela al aterrizar.
+func _animate_card_into_hand(card: CardUI) -> void:
+	if not is_instance_valid(card) or not card.card_data:
+		return
+	var from := _node_center(pile_deck_btn)
+	card.modulate.a = 0.0 # oculta hasta que aterrice el fantasma
+	await get_tree().process_frame # dejar que el HBox posicione la carta real
+	if not is_instance_valid(card):
+		return
+	var to := _node_center(card)
+	var to_size := card.size
+	if to_size == Vector2.ZERO:
+		to_size = Vector2(100, 140)
+	_fly_card(_card_texture(card.card_data.id), from, to, Vector2(70, 96), to_size, 0.35, func():
+		if is_instance_valid(card):
+			var tw := card.create_tween()
+			tw.tween_property(card, "modulate:a", 1.0, 0.12)
+	)
+
+# Una carta jugada desde la mano: vuela hacia su destino (establo o descarte).
+func _animate_card_play(card_ui: CardUI) -> void:
+	if not is_instance_valid(card_ui) or not card_ui.card_data:
+		if is_instance_valid(card_ui): card_ui.queue_free()
+		return
+	var data: CardData = card_ui.card_data
+	var from := _node_center(card_ui)
+	var from_size := card_ui.size
+	var to: Vector2
+	if data.is_downgrade():
+		to = _first_rival_center() # los Downgrades van al establo rival
+	elif data.is_permanent():
+		to = _node_center(my_upgrades_row if data.is_upgrade() else my_unicorns_row)
+	else:
+		to = _node_center(pile_discard_btn) # magias/instantáneas → descarte
+	card_ui.queue_free() # sale de la mano ya
+	_fly_card(_card_texture(data.id), from, to, from_size, Vector2(95, 130), 0.4)
+
+# Una carta que sale de MI establo: vuela hacia la pila de descarte.
+func _animate_card_to_discard(card: Control) -> void:
+	if not is_instance_valid(card):
+		return
+	var from := _node_center(card)
+	var from_size := card.size
+	var tex: Texture2D = null
+	if card is CardUI and card.card_data:
+		tex = _card_texture(card.card_data.id)
+	card.queue_free()
+	if tex:
+		_fly_card(tex, from, _node_center(pile_discard_btn), from_size, Vector2(70, 96), 0.4)
 
 func _update_hud():
 	if not is_instance_valid(lbl_turn): return
@@ -209,8 +461,7 @@ func _update_hud():
 	}
 	lbl_phase.text = "Fase: %s" % phase_names.get(GameManager.current_phase, "?")
 	lbl_actions.text = "Acciones: %d" % GameManager.actions_remaining
-	lbl_deck.text = "Meta: %d 🦄  |  Mazo: %d  |  Descarte: %d" % [
-		GameManager.current_rules.unicorns_to_win, GameManager.deck.size(), GameManager.discard_pile.size()]
+	lbl_deck.text = "Meta: %d 🦄" % GameManager.current_rules.unicorns_to_win
 
 	var can_end = is_my_turn and GameManager.current_phase == GameManager.TurnPhase.ACTION and GameManager.is_game_active
 	btn_end_turn.disabled = not can_end
@@ -233,11 +484,21 @@ func _refresh_hand_interactivity():
 				card.set_disabled(not can_play)
 
 func _on_turn_changed(_player_id: int): _update_hud()
-func _on_phase_changed(_phase: int): _update_hud()
+func _on_phase_changed(phase: int):
+	_update_hud()
+	# Registrar el cambio de turno una sola vez (al entrar en fase INICIO).
+	if phase == GameManager.TurnPhase.START:
+		var pname := "—"
+		if GameManager.players.has(GameManager.active_player_id):
+			pname = GameManager.players[GameManager.active_player_id].name
+		_add_log_line("🔄 Turno de %s" % pname, Color(0.7, 0.85, 1.0))
+		if GameManager.active_player_id == multiplayer.get_unique_id():
+			_play_sfx("turn") # campanita cuando empieza TU turno
 func _on_actions_changed(_remaining: int): _update_hud()
 
 func _on_end_turn_pressed():
 	btn_end_turn.disabled = true
+	_play_sfx("click")
 	if multiplayer.is_server():
 		GameManager.request_end_turn()
 	else:
@@ -247,6 +508,7 @@ var _vote_tally_label: Label
 
 func _on_game_won(winner_id: int, winner_name: String):
 	_update_hud()
+	_play_sfx("win")
 	_show_endgame_panel(winner_id, winner_name)
 
 func _show_endgame_panel(winner_id: int, winner_name: String):
@@ -357,15 +619,31 @@ func client_go_to_lobby():
 
 func setup_table():
 	var my_id = multiplayer.get_unique_id()
+	# Contar rivales para escalar la mesa dinámicamente (2-8 jugadores).
+	var rival_count := 0
+	for p_id in GameManager.players:
+		if p_id != my_id:
+			rival_count += 1
 	for p_id in GameManager.players:
 		if p_id == my_id:
 			print("Configurando mi zona: ", GameManager.players[p_id].name)
 		else:
-			_create_rival_zone(p_id, GameManager.players[p_id])
+			_create_rival_zone(p_id, GameManager.players[p_id], rival_count)
 
-func _create_rival_zone(id: int, data: PlayerData):
+# Escala de carta para las zonas rivales según cuántos haya (mesa dinámica).
+func _rival_card_scale(n: int) -> float:
+	if n <= 3:
+		return 1.0
+	elif n <= 5:
+		return 0.8
+	else:
+		return 0.62
+
+func _create_rival_zone(id: int, data: PlayerData, rival_count: int = 1):
 	var rival_zone = RIVAL_ZONE_SCENE.instantiate()
 	rivals_container.add_child(rival_zone)
+	if rival_zone.has_method("set_card_scale"):
+		rival_zone.set_card_scale(_rival_card_scale(rival_count))
 	rival_zone.setup(data.name)
 	rival_stables[id] = rival_zone
 
@@ -397,6 +675,7 @@ func _server_deal_initial_hands():
 	# Sync inicial de contadores de pilas
 	rpc("client_sync_deck_counters", GameManager.deck.size(), GameManager.discard_pile.size(), GameManager.nursery_deck.size())
 	print("Servidor: Reparto completado. Iniciando primer turno.")
+	_server_log("🎮 ¡Comienza la partida!", Color(1, 0.9, 0.5))
 	GameManager.setup_turn_order()
 
 # ==============================================================================
@@ -406,6 +685,7 @@ func _server_deal_initial_hands():
 @rpc("authority", "call_local", "reliable")
 func client_start_baby_selection(available_babies: Array):
 	print("Cliente: Abriendo selector de bebés...")
+	_play_sfx("shuffle") # las cartas se barajan al empezar
 	card_selector.open_selection(available_babies, "¡Elige tu Bebé Inicial!")
 	var selected_id = await card_selector.card_selected
 	rpc_id(1, "server_receive_baby_choice", selected_id)
@@ -475,6 +755,7 @@ func server_play_card(card_id: int, target_player_id: int = -1):
 			return
 
 	print("Servidor: ", sender_id, " JUEGA ", card_data.name_es)
+	_server_log("▶ %s juega %s" % [p_data.name, card_data.name_es], Color(0.85, 1.0, 0.7))
 
 	# Activar lock de resolución
 	GameManager.is_resolving = true
@@ -490,6 +771,7 @@ func server_play_card(card_id: int, target_player_id: int = -1):
 		var cancelled = await NeighManager.open_window(card_id, sender_id)
 		if cancelled:
 			print("Servidor: carta ", card_data.name_es, " fue NEIGH'd")
+			_server_log("⚡ %s fue relinchada" % card_data.name_es, Color(1, 0.55, 0.45))
 			GameManager.discard_pile.append(card_id)
 			rpc("client_sync_deck_counters", GameManager.deck.size(), GameManager.discard_pile.size(), GameManager.nursery_deck.size())
 			GameManager.is_resolving = false
@@ -557,13 +839,17 @@ func client_toast(msg: String):
 @rpc("authority", "call_local", "reliable")
 func client_receive_initial_hand(card_ids: Array):
 	for id in card_ids:
-		add_card_to_hand(id)
+		var c := add_card_to_hand(id)
+		_animate_card_into_hand(c) # reparto inicial: vuelan desde el mazo
 	_update_hud()
 
 @rpc("authority", "call_local", "reliable")
 func client_receive_drawn_batch(card_ids: Array):
 	for id in card_ids:
-		add_card_to_hand(id)
+		var c := add_card_to_hand(id)
+		_animate_card_into_hand(c) # robo: la carta vuela del mazo a la mano
+	if not card_ids.is_empty():
+		_play_sfx("draw")
 	_update_hud()
 
 # El servidor rechazó la jugada: devolvemos la carta a la mano (deshacer predicción).
@@ -625,8 +911,9 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 	var my_id = multiplayer.get_unique_id()
 	var card_data = CardDatabase.get_card_data(card_id)
 	var new_card = CARD_SCENE.instantiate()
+	var is_top := card_data.is_upgrade() or card_data.is_downgrade()
 	if player_id == my_id:
-		if card_data.is_upgrade() or card_data.is_downgrade():
+		if is_top:
 			my_upgrades_row.add_child(new_card)
 		else:
 			my_unicorns_row.add_child(new_card)
@@ -634,14 +921,18 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 		new_card.scale = Vector2(0.8, 0.8)
 	else:
 		if rival_stables.has(player_id):
-			rival_stables[player_id].add_card_to_stable(new_card)
+			rival_stables[player_id].add_card_to_stable(new_card, is_top)
 	new_card.setup_card(card_data)
 	new_card.name = "Stable_%d_%d" % [player_id, card_id]
+	new_card.set_meta("card_id", card_id) # para localizar/quitar (soporta duplicados)
 	# Las cartas del establo nunca se juegan/descartan, pero SÍ se pueden inspeccionar:
 	new_card.info_requested.connect(_on_card_info_requested)
 	new_card.set_disabled(true)
 	# Animación "pop": entra escalando desde pequeño
 	_animate_pop_in(new_card)
+	# El que juega ya escuchó "play" al clickear; los demás lo oyen al aterrizar.
+	if player_id != my_id:
+		_play_sfx("play")
 	GameManager.stable_changed.emit(player_id)
 	_update_hud()
 
@@ -655,20 +946,30 @@ func _animate_pop_in(card: Control):
 
 @rpc("authority", "call_local", "reliable")
 func client_card_left_stable(player_id: int, card_id: int):
-	var target_name = "Stable_%d_%d" % [player_id, card_id]
-	# Buscar en mi establo
+	_play_sfx("destroy")
+	# Buscar en mi establo por metadata (soporta duplicados) → vuela al descarte
 	for row in [my_upgrades_row, my_unicorns_row]:
 		for child in row.get_children():
-			if child.name == target_name:
-				var tween = create_tween()
-				tween.tween_property(child, "modulate:a", 0.0, 0.2)
-				tween.tween_callback(child.queue_free)
+			if child.has_meta("card_id") and int(child.get_meta("card_id")) == card_id:
+				_animate_card_to_discard(child)
 				return
 	# Buscar en rivales
 	if rival_stables.has(player_id):
 		var zone = rival_stables[player_id]
 		if zone.has_method("remove_card_from_stable"):
 			zone.remove_card_from_stable(card_id)
+
+# Un jugador se desconectó: quitamos su zona rival de la mesa.
+@rpc("authority", "call_local", "reliable")
+func client_remove_player_zone(player_id: int):
+	if rival_stables.has(player_id):
+		var zone = rival_stables[player_id]
+		if is_instance_valid(zone):
+			var tw = create_tween()
+			tw.tween_property(zone, "modulate:a", 0.0, 0.3)
+			tw.tween_callback(zone.queue_free)
+		rival_stables.erase(player_id)
+	_update_hud()
 
 @rpc("authority", "call_local", "reliable")
 func client_sync_deck_counters(deck_size: int, discard_size: int, nursery_size: int = 0):
@@ -678,7 +979,7 @@ func client_sync_deck_counters(deck_size: int, discard_size: int, nursery_size: 
 	_count_discard = discard_size
 	_count_nursery = nursery_size
 	if is_instance_valid(lbl_deck):
-		lbl_deck.text = "Mazo: %d  |  Descarte: %d" % [deck_size, discard_size]
+		lbl_deck.text = "Meta: %d 🦄" % GameManager.current_rules.unicorns_to_win
 	_refresh_pile_labels()
 	# Pulso visual al cambiar
 	if discard_changed and is_instance_valid(pile_discard_btn):
@@ -965,6 +1266,94 @@ func _skip_cost_pay():
 	else:
 		EffectProcessor.rpc_id(1, "server_cost_response", false, [])
 
+# ==============================================================================
+# 🗑️ DESCARTE POR LÍMITE DE MANO (el jugador elige qué soltar)
+# ==============================================================================
+
+@rpc("authority", "call_local", "reliable")
+func client_open_discard_to_limit(amount: int):
+	_show_discard_to_limit_picker(amount)
+
+func _show_discard_to_limit_picker(amount: int):
+	_close_modal()
+	var my_id = multiplayer.get_unique_id()
+	var p = GameManager.players.get(my_id)
+	if not p:
+		_send_discard_chosen([]) # sin mano: el server completará por FIFO
+		return
+	_discard_limit_picked = []
+	var panel = _make_modal_panel("Tu mano supera el límite. Elige %d carta(s) para descartar." % amount)
+	active_modal = panel
+	panel.set_meta("amount", amount)
+	modal_layer.add_child(panel)
+
+	var info_lbl = Label.new()
+	info_lbl.text = "Marcadas 0/%d" % amount
+	panel.set_meta("info_lbl", info_lbl)
+	_modal_vbox(panel).add_child(info_lbl)
+
+	var hbox = _make_scrollable_hbox(_modal_vbox(panel))
+	for c in p.hand:
+		var cid = c.id
+		var data = CardDatabase.get_card_data(cid)
+		if not data: continue
+		var card_ui = CARD_SCENE.instantiate()
+		hbox.add_child(card_ui)
+		card_ui.setup_card(data)
+		card_ui.custom_minimum_size = Vector2(120, 165)
+		card_ui.play_button.text = "Marcar"
+		card_ui.discard_button.hide()
+		card_ui.play_requested.connect(func(c_ui):
+			_toggle_discard_limit_card(cid, c_ui)
+		)
+		card_ui.info_requested.connect(_on_card_info_requested)
+
+	var btn_confirm = Button.new()
+	btn_confirm.text = "Descartar (0/%d)" % amount
+	btn_confirm.disabled = true
+	btn_confirm.pressed.connect(_confirm_discard_to_limit)
+	panel.set_meta("confirm_btn", btn_confirm)
+	_modal_vbox(panel).add_child(btn_confirm)
+
+func _toggle_discard_limit_card(card_id: int, card_ui: CardUI):
+	if not is_instance_valid(active_modal): return
+	var amount: int = active_modal.get_meta("amount", 1)
+	if card_id in _discard_limit_picked:
+		_discard_limit_picked.erase(card_id)
+		card_ui.modulate = Color.WHITE
+	else:
+		if _discard_limit_picked.size() >= amount:
+			return
+		_discard_limit_picked.append(card_id)
+		card_ui.modulate = Color(1, 0.5, 0.5)
+	var info_lbl = active_modal.get_meta("info_lbl", null)
+	if is_instance_valid(info_lbl):
+		info_lbl.text = "Marcadas %d/%d" % [_discard_limit_picked.size(), amount]
+	var btn = active_modal.get_meta("confirm_btn", null)
+	if is_instance_valid(btn):
+		btn.text = "Descartar (%d/%d)" % [_discard_limit_picked.size(), amount]
+		btn.disabled = _discard_limit_picked.size() < amount
+
+func _confirm_discard_to_limit():
+	if not is_instance_valid(active_modal): return
+	var amount: int = active_modal.get_meta("amount", 1)
+	if _discard_limit_picked.size() < amount: return
+	var chosen = _discard_limit_picked.duplicate()
+	_close_modal()
+	_send_discard_chosen(chosen)
+
+func _send_discard_chosen(card_ids: Array):
+	if multiplayer.is_server():
+		GameManager._on_discard_choice(card_ids)
+	else:
+		rpc_id(1, "server_discard_chosen", card_ids)
+
+@rpc("any_peer", "reliable")
+func server_discard_chosen(card_ids: Array):
+	if not multiplayer.is_server(): return
+	if multiplayer.get_remote_sender_id() != GameManager.active_player_id: return
+	GameManager._on_discard_choice(card_ids)
+
 func _make_modal_panel(title: String) -> PanelContainer:
 	var panel = PanelContainer.new()
 	panel.anchor_left = 0.5; panel.anchor_right = 0.5
@@ -1073,11 +1462,20 @@ func _show_neigh_panel(card_name: String, player_name: String, neighs: Array, se
 	neigh_window_panel.anchor_left = 0.5; neigh_window_panel.anchor_right = 0.5
 	neigh_window_panel.anchor_top = 0.0; neigh_window_panel.anchor_bottom = 0.0
 	neigh_window_panel.offset_left = -300; neigh_window_panel.offset_right = 300
-	neigh_window_panel.offset_top = 90; neigh_window_panel.offset_bottom = 220
+	neigh_window_panel.offset_top = 90; neigh_window_panel.offset_bottom = 230
+	var nsb := StyleBoxFlat.new()
+	nsb.bg_color = Color(0.1, 0.06, 0.06, 0.95)
+	nsb.set_corner_radius_all(10)
+	nsb.set_content_margin_all(14)
+	nsb.set_border_width_all(3)
+	nsb.border_color = Color(1, 0.27, 0.2, 0.95) # rojo "Relincho"
+	neigh_window_panel.add_theme_stylebox_override("panel", nsb)
 	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
 	neigh_window_panel.add_child(vbox)
 	var lbl = Label.new()
 	lbl.text = "🐴 %s está jugando %s\n¿Relinchar? (%.0fs)" % [player_name, card_name, secs]
+	lbl.add_theme_font_size_override("font_size", 17)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(lbl)
 	var hb = HBoxContainer.new()
@@ -1120,31 +1518,23 @@ func client_close_neigh_window():
 
 @rpc("authority", "call_local", "reliable")
 func client_announce_neigh(neigher_id: int, neigh_card_id: int, _original_player_id: int, original_card_id: int):
-	var n_name = GameManager.players[neigher_id].name
+	_play_sfx("neigh")
+	var n_name = GameManager.players[neigher_id].name if GameManager.players.has(neigher_id) else "?"
 	var orig_card = CardDatabase.get_card_data(original_card_id)
 	var n_card = CardDatabase.get_card_data(neigh_card_id)
-	print("⚡ %s usa %s contra %s" % [n_name, n_card.name_es, orig_card.name_es])
-	# Pequeño toast visual
-	var toast = Label.new()
-	toast.text = "⚡ %s: ¡%s!" % [n_name, n_card.name_es]
-	toast.add_theme_font_size_override("font_size", 22)
-	toast.anchor_left = 0.5; toast.anchor_right = 0.5
-	toast.anchor_top = 0.4; toast.anchor_bottom = 0.4
-	toast.offset_left = -200; toast.offset_right = 200
-	toast.offset_top = 0; toast.offset_bottom = 40
-	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	modal_layer.add_child(toast)
-	var tw = create_tween()
-	tw.tween_property(toast, "modulate:a", 0.0, 1.5)
-	tw.tween_callback(toast.queue_free)
+	var orig_name = orig_card.name_es if orig_card else "?"
+	var n_card_name = n_card.name_es if n_card else "?"
+	print("⚡ %s usa %s contra %s" % [n_name, n_card_name, orig_name])
+	_show_toast("⚡ %s: ¡%s!" % [n_name, n_card_name])
+	_add_log_line("⚡ %s relinchó %s" % [n_name, orig_name], Color(1, 0.55, 0.45))
 
 # ==============================================================================
 # 🛠️ UTILIDADES
 # ==============================================================================
 
-func add_card_to_hand(card_id: int):
+func add_card_to_hand(card_id: int) -> CardUI:
 	var data = CardDatabase.get_card_data(card_id)
-	if not data: return
+	if not data: return null
 	var new_card = CARD_SCENE.instantiate()
 	my_hand_container.add_child(new_card)
 	new_card.setup_card(data)
@@ -1154,6 +1544,7 @@ func add_card_to_hand(card_id: int):
 	new_card.discard_requested.connect(_on_card_discard_requested)
 	new_card.set_disabled(true)
 	_refresh_hand_interactivity()
+	return new_card
 
 func _server_remove_card_from_hand(player_id: int, card_id: int) -> int:
 	if not GameManager.players.has(player_id): return -1
@@ -1189,10 +1580,11 @@ func _on_card_play_requested(card_ui: CardUI):
 		# Cierra el modal de Neigh si está abierto (visual)
 		if is_instance_valid(neigh_window_panel):
 			neigh_window_panel.queue_free()
-		# Animación de salida
-		var tw = create_tween()
-		tw.tween_property(card_ui, "scale", Vector2(0,0), 0.2)
-		tw.tween_callback(card_ui.queue_free)
+		# Animación: el Relincho vuela de la mano hacia el descarte
+		var from := _node_center(card_ui)
+		var from_size := card_ui.size
+		card_ui.queue_free()
+		_fly_card(_card_texture(card_id), from, _node_center(pile_discard_btn), from_size, Vector2(80, 110), 0.35)
 		return
 
 	# --- BLOQUEO: no permitir jugar Neighs sin contexto ---
@@ -1209,34 +1601,45 @@ func _on_card_play_requested(card_ui: CardUI):
 	if GameManager.actions_remaining <= 0:
 		print("Sin acciones"); return
 	rpc_id(1, "server_play_card", card_id, -1)
-	var tween = create_tween()
-	tween.tween_property(card_ui, "scale", Vector2(0,0), 0.2)
-	tween.tween_callback(card_ui.queue_free)
+	_play_sfx("play")
+	_animate_card_play(card_ui) # vuela de la mano a su destino (establo/descarte)
 
 func _show_toast(text: String, duration: float = 2.0):
-	var toast = Label.new()
+	# Aviso con fondo oscuro y borde, en la franja superior, que NO estorba
+	# (click-through) y se desvanece solo.
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.anchor_left = 0.5; panel.anchor_right = 0.5
+	panel.anchor_top = 0.16; panel.anchor_bottom = 0.16
+	panel.offset_left = -280; panel.offset_right = 280
+	panel.offset_top = -28; panel.offset_bottom = 28
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.07, 0.07, 0.1, 0.92)
+	sb.set_corner_radius_all(8)
+	sb.set_content_margin_all(12)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(1, 0.82, 0.35, 0.9)
+	panel.add_theme_stylebox_override("panel", sb)
+	var toast := Label.new()
 	toast.text = text
 	toast.add_theme_font_size_override("font_size", 18)
-	toast.anchor_left = 0.5; toast.anchor_right = 0.5
-	toast.anchor_top = 0.5; toast.anchor_bottom = 0.5
-	toast.offset_left = -250; toast.offset_right = 250
-	toast.offset_top = -20; toast.offset_bottom = 20
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	toast.modulate = Color(1, 0.8, 0.3)
-	modal_layer.add_child(toast)
+	toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	toast.modulate = Color(1, 0.92, 0.7)
+	toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(toast)
+	modal_layer.add_child(panel)
 	var tw = create_tween()
 	tw.tween_interval(duration * 0.6)
-	tw.tween_property(toast, "modulate:a", 0.0, duration * 0.4)
-	tw.tween_callback(toast.queue_free)
+	tw.tween_property(panel, "modulate:a", 0.0, duration * 0.4)
+	tw.tween_callback(panel.queue_free)
 
 func _on_card_discard_requested(card_ui: CardUI):
 	var card_id = card_ui.card_data.id
 	var is_my_turn = GameManager.active_player_id == multiplayer.get_unique_id()
 	if not is_my_turn or GameManager.current_phase != GameManager.TurnPhase.ACTION: return
 	rpc_id(1, "server_discard_card", card_id)
-	var tween = create_tween()
-	tween.tween_property(card_ui, "scale", Vector2(0,0), 0.2)
-	tween.tween_callback(card_ui.queue_free)
+	_animate_card_to_discard(card_ui) # vuela de la mano al descarte
 
 func _clear_debug_cards():
 	for child in my_hand_container.get_children():

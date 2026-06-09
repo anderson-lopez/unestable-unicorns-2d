@@ -133,6 +133,60 @@ Meta del juego: ser el primero en tener 7 unicornios en tu establo (configurable
 
 ---
 
+### Sesión — Pulido y build LAN (animaciones, red, registro, descarte, sonido, .exe)
+
+A pedido de Anderson: animaciones de movimiento real + una versión jugable en red local
+(.exe) + extras. Se hizo TODO, en este orden:
+
+1. **Primero, red más robusta** (lo pidió primero):
+   - El host ve su **IP local** en el lobby para compartirla; IP por defecto `127.0.0.1`.
+   - **Timeout de conexión** (8 s) con aviso claro si no conecta.
+   - **Desconexión a mitad de partida**: avisa a todos, quita la zona del rival, desbloquea
+     esperas de UI pendientes, avanza el turno si era del que se fue, y declara victoria por
+     abandono si queda uno solo.
+2. **Animaciones de movimiento real**: capa overlay `anim_layer` + `_fly_card`. Las cartas
+   vuelan de verdad: mazo→mano (robo), mano→establo/descarte (jugar), establo→descarte (morir).
+   No pelean con el layout porque viven en una CanvasLayer aparte.
+3. **Registro de jugadas**: panel lateral derecho que narra turno, jugadas, destrucciones,
+   robos, relinchos, victoria y desconexiones (RPC `client_log_event`).
+4. **Descarte elegible al límite de mano**: en vez de FIFO, el jugador elige qué soltar
+   (picker multi-selección) con fallback FIFO si no responde / sin UI.
+5. **Sonidos**: 8 .wav procedurales generados con `assets/audio/generate_sounds.py`
+   (click, draw, play, neigh, destroy, turn, win, shuffle), enganchados a los eventos.
+6. **Exportación a .exe**: `export_presets.cfg` (Windows Desktop, pck embebido) →
+   `builds/UnstableUnicorns2D.exe` (~128 MB, un solo archivo). `builds/` en `.gitignore`.
+
+Detalle de gotcha encontrado: el caché de clases (`.godot/global_script_class_cache.cfg`)
+estaba desactualizado y rompía las corridas headless (`PassiveRegistry`/`TargetResolver` no
+resolvían). Se arregla con `godot --headless --import --path .` antes de testear/exportar.
+
+Verificación: 0 errores de parseo (pasada de editor), **216 tests OK**, export EXIT 0,
+lobby arranca limpio. Falta playtest en vivo de la UI en partida real (2 instancias).
+
+### Sesión — Multijugador 8p, mesa dinámica, HUD y multiplicador
+
+Anderson pidió varias mejoras de UX y multijugador. Se hizo todo (código puro, 216 tests OK):
+
+- **Hasta 8 jugadores** (`MAX_CLIENTS=7`), con mínimo 2 para empezar.
+- **Multiplicador del mazo** (`deck_multiplier`, x1-x5) configurable en el lobby por el host.
+  Esto obligó a localizar las cartas del establo por `meta("card_id")` en vez de por nombre
+  de nodo (que colisionaba con cartas duplicadas).
+  - ⚠️ PRIMER intento: multiplicar SOLO cartas de acción (magia/relincho/ventaja/desventaja).
+    Anderson reportó que "solo salían magias" → el mazo quedaba 72% acción y casi sin
+    unicornios. **Corregido**: ahora se multiplica TODO el mazo por igual (unicornios incluidos),
+    conservando las proporciones del juego. Multiplicar unicornios NO rompe el balance
+    (igual hay que juntar 7 en tu establo); lo que rompía era el desbalance del primer intento.
+- **Mesa dinámica**: las zonas rivales se achican automáticamente según cuántos jugadores haya
+  (x1 hasta 3 rivales, x0.8 con 4-5, x0.62 con 6-7) para que quepan 2-8.
+- **Establo rival** reorganizado: ventajas/desventajas ARRIBA de los unicornios (como el propio).
+- **HUD** movido a la esquina superior izquierda (turno/fase/acciones/meta) y **registro de
+  jugadas desplegable** (botón ▾/▸).
+- **Mensajes/modales**: toasts con fondo oscuro/borde que no estorban (click-through) y se
+  desvanecen solos; modal de Relincho con estilo (fondo oscuro, borde rojo).
+
+Verificación: 0 errores de parseo, 216 tests OK, export EXIT 0, lobby arranca limpio.
+Pendiente: **playtest en vivo** de la UI en partida real (idealmente 3-4 jugadores).
+
 ## ✅ Estado actual (todo verde)
 
 - **85 cartas**, **84 efectos**, **0 gaps** en el motor.
@@ -140,6 +194,8 @@ Meta del juego: ser el primero en tener 7 unicornios en tu establo (configurable
 - **0 errores de compilación.**
 - Jugable de principio a fin: lobby → selección de bebé → turnos con efectos completos →
   Relinchos → victoria → votación (revancha o lobby).
+- **Pulido**: animaciones de movimiento, sonidos, registro de jugadas, descarte elegible,
+  red robusta (timeout, IP local, desconexión) y **exportación a .exe** lista.
 
 ---
 

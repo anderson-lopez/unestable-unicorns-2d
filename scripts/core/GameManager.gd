@@ -39,6 +39,10 @@ var current_phase: TurnPhase = TurnPhase.START
 # Evita que el jugador juegue otra carta a la mitad de una resolución (desync).
 var is_resolving: bool = false
 
+# Descarte por límite de mano: el jugador activo elige qué soltar al pasar de 7.
+var _pending_discard_ids: Array = []
+var _pending_discard_done: bool = false
+
 # Referencia global a la mesa de juego (la setea game_table en su _ready)
 var game_table: Node = null
 
@@ -47,7 +51,8 @@ var extra_turn_queue: Array[int] = []
 
 # Configuración de Red
 const PORT = 7777
-const MAX_CLIENTS = 4
+const MAX_CLIENTS = 7 # 7 clientes + host = 8 jugadores máximo
+const JOIN_TIMEOUT_SECONDS = 8.0
 
 func _ready():
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -65,18 +70,24 @@ func initialize_deck():
 	nursery_deck.clear()
 	discard_pile.clear()
 
+	# Multiplicador del mazo: pone N copias de CADA carta (unicornios incluidos) para
+	# conservar las proporciones del juego y dar cartas de sobra con muchos jugadores.
+	# Los bebés (guardería) quedan en 1 copia (no se gastan al elegir).
+	var mult: int = clampi(current_rules.deck_multiplier, 1, 5)
+
 	for card_id in CardDatabase.database:
 		var data = CardDatabase.database[card_id]
 		if data.type == GameEnums.CardType.REFERENCE:
 			continue # Cartas de referencia no van al mazo
 		if data.is_nursery:
-			nursery_deck.append(card_id)
-		else:
+			nursery_deck.append(card_id) # bebés: siempre 1 copia (guardería)
+			continue
+		for _i in range(mult):
 			deck.append(card_id)
 
 	deck.shuffle()
 
-	print("Servidor: Mazos listos.")
+	print("Servidor: Mazos listos (mazo x", mult, ").")
 	print(" - Robo: ", deck.size(), " cartas.")
 	print(" - Guardería: ", nursery_deck.size(), " bebés disponibles.")
 
@@ -175,25 +186,76 @@ func _server_advance_to_end_phase():
 	if not multiplayer.is_server(): return
 	rpc("sync_turn_state", active_player_id, TurnPhase.END, 0)
 
-	# Aplicar límite de mano
+	# Aplicar límite de mano: el jugador ELIGE qué descartar (antes era FIFO).
 	var player: PlayerData = players.get(active_player_id)
 	if player:
 		var limit = current_rules.hand_limit
-		while player.hand.size() > limit:
-			var card: CardData = player.hand.pop_front()
-			discard_pile.append(card.id)
-			if game_table:
-				game_table.rpc_id(active_player_id, "client_force_discard", card.id)
-		var new_size = player.hand.size()
+		var excess = player.hand.size() - limit
+		if excess > 0:
+			await _resolve_hand_limit_discard(player, excess)
+		if not is_game_active: return
+		var new_size = player.hand.size() if players.has(active_player_id) else 0
 		if game_table:
 			for p in players:
 				if p != active_player_id:
 					game_table.rpc_id(p, "client_sync_hand_size", active_player_id, new_size)
 			game_table.rpc("client_sync_deck_counters", deck.size(), discard_pile.size(), nursery_deck.size())
 
+	if not is_game_active: return
 	await get_tree().create_timer(0.4).timeout
 	if not is_game_active: return
 	_server_next_turn()
+
+# Pide al jugador activo que elija qué cartas descartar para volver al límite.
+# Si no hay UI (tests) o no responde a tiempo, completa por FIFO (las primeras).
+func _resolve_hand_limit_discard(player: PlayerData, excess: int) -> void:
+	if not multiplayer.is_server(): return
+	var chooser_id := active_player_id
+	if game_table:
+		_pending_discard_ids = []
+		_pending_discard_done = false
+		game_table.rpc_id(chooser_id, "client_open_discard_to_limit", excess)
+		var elapsed := 0.0
+		while not _pending_discard_done and elapsed < 30.0:
+			await get_tree().create_timer(0.25).timeout
+			elapsed += 0.25
+			if not players.has(chooser_id):
+				return # se desconectó: no insistir
+	if not players.has(chooser_id):
+		return
+	# Validar que las elegidas estén realmente en su mano (sin duplicados).
+	var valid: Array = []
+	if game_table:
+		for cid in _pending_discard_ids:
+			if cid in valid:
+				continue
+			for c in player.hand:
+				if c.id == cid:
+					valid.append(cid); break
+	# Completar por FIFO si eligió de menos o no respondió.
+	if valid.size() < excess:
+		for c in player.hand:
+			if c.id in valid:
+				continue
+			valid.append(c.id)
+			if valid.size() >= excess:
+				break
+	valid = valid.slice(0, excess)
+	# Aplicar el descarte.
+	for cid in valid:
+		for i in range(player.hand.size()):
+			if player.hand[i].id == cid:
+				player.hand.remove_at(i)
+				discard_pile.append(cid)
+				if game_table:
+					game_table.rpc_id(chooser_id, "client_force_discard", cid)
+				break
+
+# Recibe la elección de descarte del jugador activo (llamado desde game_table).
+func _on_discard_choice(card_ids: Array) -> void:
+	if not multiplayer.is_server(): return
+	_pending_discard_ids = card_ids
+	_pending_discard_done = true
 
 func _server_next_turn():
 	if not multiplayer.is_server(): return
@@ -297,6 +359,8 @@ func announce_winner(winner_id: int, winner_name: String):
 	is_game_active = false
 	game_won.emit(winner_id, winner_name)
 	print("🏆 ¡", winner_name, " GANA LA PARTIDA!")
+	if game_table and game_table.has_method("_add_log_line"):
+		game_table._add_log_line("🏆 %s gana la partida" % winner_name, Color(1, 0.9, 0.3))
 
 # ==============================================================================
 # 🌐 LÓGICA DE CONEXIÓN (HOSTING / JOINING)
@@ -321,6 +385,11 @@ func host_game(player_name: String, rules: GameRules):
 func join_game(player_name: String, ip: String):
 	local_player_info["name"] = player_name
 
+	# IP vacía → asumimos misma máquina (cómodo para pruebas locales)
+	ip = ip.strip_edges()
+	if ip.is_empty():
+		ip = "127.0.0.1"
+
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_client(ip, PORT)
 
@@ -330,6 +399,33 @@ func join_game(player_name: String, ip: String):
 
 	multiplayer.multiplayer_peer = peer
 	print("Intentando conectar a ", ip)
+	_watch_join_timeout(peer)
+
+# Si tras JOIN_TIMEOUT_SECONDS seguimos en estado CONNECTING con este mismo peer,
+# la conexión nunca se estableció (IP mal, host caído, firewall): abortamos con aviso.
+func _watch_join_timeout(peer: ENetMultiplayerPeer) -> void:
+	await get_tree().create_timer(JOIN_TIMEOUT_SECONDS).timeout
+	if multiplayer.multiplayer_peer == peer and peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTING:
+		printerr("Timeout de conexión al servidor")
+		game_error.emit("No se pudo conectar (tiempo agotado).\nRevisa la IP y que el host tenga la sala abierta en la misma red.")
+		multiplayer.multiplayer_peer = null
+
+# Devuelve la primera IPv4 de red local (192.168.x / 10.x / 172.16-31.x).
+# Útil para mostrarle al host qué dirección compartir con los demás jugadores.
+func get_local_ip() -> String:
+	for addr in IP.get_local_addresses():
+		if addr.count(".") != 3:
+			continue # descartar IPv6
+		if addr.begins_with("127."):
+			continue
+		if addr.begins_with("192.168.") or addr.begins_with("10."):
+			return addr
+		# Rango privado 172.16.0.0 – 172.31.255.255
+		if addr.begins_with("172."):
+			var second := addr.split(".")[1].to_int()
+			if second >= 16 and second <= 31:
+				return addr
+	return "127.0.0.1"
 
 # ==============================================================================
 # 🤝 HANDSHAKE
@@ -389,10 +485,55 @@ func _register_player(id: int, info: Dictionary):
 	print("Jugador registrado: ", info["name"], " [ID: ", id, "]")
 
 func _on_peer_disconnected(id: int):
+	var pname := "Un jugador"
 	if players.has(id):
-		print("Jugador desconectado: ", players[id].name)
+		pname = players[id].name
+		print("Jugador desconectado: ", pname)
 		players.erase(id)
 		player_disconnected.emit(id)
+
+	# A partir de aquí, solo el servidor decide qué pasa con la partida.
+	if not multiplayer.is_server():
+		return
+	if not is_game_active:
+		return
+
+	# Avisar a todos en la mesa y quitar la zona visual del jugador que se fue.
+	if game_table:
+		game_table.rpc("client_toast", "⚠ %s se desconectó" % pname)
+		game_table.rpc("client_log_event", "⚠ %s se desconectó" % pname, Color(1, 0.6, 0.3))
+		game_table.rpc("client_remove_player_zone", id)
+
+	# Si estábamos esperando una respuesta de UI de ALGUIEN (picker / pago de coste),
+	# desbloqueamos para que la resolución no quede colgada para siempre.
+	if is_resolving:
+		EffectProcessor.target_picked.emit(-1, -1)
+		EffectProcessor.cost_paid.emit(false, [])
+		is_resolving = false
+
+	# ¿Quedan suficientes jugadores para seguir?
+	if players.size() <= 1:
+		_end_match_last_player_standing()
+		return
+
+	# Sacar al jugador del orden de turnos.
+	var was_active := active_player_id == id
+	turn_order.erase(id)
+	extra_turn_queue.erase(id)
+	if turn_order.is_empty():
+		return
+	# Si era SU turno, arrancamos el del siguiente en la rueda.
+	if was_active:
+		current_turn_index = current_turn_index % turn_order.size()
+		_server_start_turn(turn_order[current_turn_index])
+
+# Si solo queda un jugador conectado, gana por abandono de los demás.
+func _end_match_last_player_standing():
+	if not multiplayer.is_server(): return
+	if players.is_empty(): return
+	var last_id: int = players.keys()[0]
+	print("Servidor: solo queda ", players[last_id].name, " → gana por abandono")
+	rpc("announce_winner", last_id, players[last_id].name + " (por abandono)")
 
 func get_opponents_of(player_id: int) -> Array[int]:
 	var result: Array[int] = []
@@ -407,6 +548,10 @@ func get_opponents_of(player_id: int) -> Array[int]:
 
 func start_game():
 	if not multiplayer.is_server(): return
+
+	if players.size() < 2:
+		print("Servidor: se necesitan al menos 2 jugadores para empezar")
+		return # red de seguridad; el aviso al usuario lo da el lobby
 
 	multiplayer.multiplayer_peer.refuse_new_connections = true
 	is_game_active = true

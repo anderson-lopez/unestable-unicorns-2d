@@ -22,6 +22,9 @@ extends Control
 @onready var check_nursery: CheckBox = %CheckNursery
 @onready var check_double: CheckBox = %CheckDouble
 
+# Control creado por código: multiplicador de copias de cartas de acción.
+var spin_multiplier: SpinBox
+
 # Plantilla para la fila de jugador (lo crearemos por código para no ensuciar)
 var player_item_style = StyleBoxFlat.new()
 
@@ -38,6 +41,11 @@ func _ready():
 	login_panel.show()
 	lobby_panel.hide()
 	status_label.text = ""
+
+	# Pista de IP: por defecto la misma máquina (cómodo para probar en una sola PC).
+	if ip_input.text.strip_edges().is_empty():
+		ip_input.text = "127.0.0.1"
+	ip_input.placeholder_text = "IP del host (vacío = misma PC)"
 	
 	# Conexiones de botones locales
 	host_btn.pressed.connect(_on_host_pressed)
@@ -56,6 +64,26 @@ func _ready():
 	spin_unicorns.value_changed.connect(func(_v): _on_rules_ui_changed())
 	check_nursery.toggled.connect(func(_b): _on_rules_ui_changed())
 	check_double.toggled.connect(func(_b): _on_rules_ui_changed())
+
+	# Control extra (por código): multiplicador de copias de cartas de acción.
+	_build_multiplier_control()
+
+# Crea el selector de multiplicador (x1..x5) dentro del panel de reglas.
+func _build_multiplier_control():
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 8)
+	var lbl := Label.new()
+	lbl.text = "Copias del mazo (x):"
+	hb.add_child(lbl)
+	spin_multiplier = SpinBox.new()
+	spin_multiplier.min_value = 1
+	spin_multiplier.max_value = 5
+	spin_multiplier.step = 1
+	spin_multiplier.value = 1
+	spin_multiplier.tooltip_text = "Multiplica TODO el mazo por igual (unicornios, magias, relinchos, ventajas...)\npara que no falten cartas con muchos jugadores. x1 = mazo normal."
+	spin_multiplier.value_changed.connect(func(_v): _on_rules_ui_changed())
+	hb.add_child(spin_multiplier)
+	rules_container.add_child(hb)
 
 # --- BOTONES DE LOGIN ---
 
@@ -93,17 +121,29 @@ func _lock_buttons():
 func _go_to_lobby(is_host: bool):
 	login_panel.hide()
 	lobby_panel.show()
-	
+
 	start_game_btn.visible = is_host
-	waiting_label.visible = not is_host
-	
+
+	# El host ve su IP local para compartirla; el cliente ve "esperando...".
+	waiting_label.visible = true
+	if is_host:
+		var ip := GameManager.get_local_ip()
+		if ip == "127.0.0.1":
+			waiting_label.text = "🌐 Sala creada en esta PC.\nOtro jugador en la MISMA red debe usar tu IP local (puerto %d)." % GameManager.PORT
+		else:
+			waiting_label.text = "🌐 Tu IP local: %s  (puerto %d)\nCompártela con los demás jugadores de tu red." % [ip, GameManager.PORT]
+	else:
+		waiting_label.text = "Esperando a que el host inicie la partida..."
+
 	# CAMBIO CLAVE: Siempre mostramos las reglas, pero desactivamos edición
-	rules_container.visible = true 
+	rules_container.visible = true
 	
 	spin_unicorns.editable = is_host
 	check_nursery.disabled = not is_host
 	check_double.disabled = not is_host
-	
+	if is_instance_valid(spin_multiplier):
+		spin_multiplier.editable = is_host
+
 	if is_host:
 		_on_rules_ui_changed() # Enviar estado inicial
 
@@ -114,7 +154,9 @@ func _on_rules_ui_changed():
 	GameManager.current_rules.unicorns_to_win = int(spin_unicorns.value)
 	GameManager.current_rules.nursery_is_safe_zone = check_nursery.button_pressed
 	GameManager.current_rules.double_dutch_enabled = check_double.button_pressed
-	
+	if is_instance_valid(spin_multiplier):
+		GameManager.current_rules.deck_multiplier = int(spin_multiplier.value)
+
 	# Si agregaste la función update_rules_broadcast en GameManager, úsala:
 	if GameManager.has_method("update_rules_broadcast"):
 		GameManager.update_rules_broadcast()
@@ -127,6 +169,8 @@ func _update_ui_from_manager():
 	spin_unicorns.value = r.unicorns_to_win
 	check_nursery.button_pressed = r.nursery_is_safe_zone
 	check_double.button_pressed = r.double_dutch_enabled
+	if is_instance_valid(spin_multiplier):
+		spin_multiplier.value = r.deck_multiplier
 
 # --- ACTUALIZACIÓN DE LISTA DE JUGADORES ---
 
@@ -161,13 +205,20 @@ func _update_rules_from_ui():
 	GameManager.current_rules.unicorns_to_win = int(spin_unicorns.value)
 	GameManager.current_rules.nursery_is_safe_zone = check_nursery.button_pressed
 	GameManager.current_rules.double_dutch_enabled = check_double.button_pressed
+	if is_instance_valid(spin_multiplier):
+		GameManager.current_rules.deck_multiplier = int(spin_multiplier.value)
 	# Nota: Falta implementar la sincronización en tiempo real de reglas hacia clientes
 	# Por ahora se envían al conectar.
 
 # --- INICIO ---
 
 func _on_start_pressed():
-	_update_rules_from_ui() 
+	if GameManager.players.size() < 2:
+		waiting_label.visible = true
+		waiting_label.text = "⚠ Necesitas al menos 2 jugadores conectados para empezar."
+		return
+
+	_update_rules_from_ui()
 	
 	# 2. Ahora sí, avisar al GameManager para que envíe las reglas actualizadas a todos
 	if GameManager.has_method("update_rules_broadcast"):

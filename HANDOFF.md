@@ -3,7 +3,12 @@
 > Documento maestro (detalle técnico) para continuar en otra sesión de Claude Code.
 > 👉 Para la CRÓNICA completa de lo trabajado, lee primero **HISTORIAL.md**.
 > Estado: jugable de punta a punta. 85 cartas, 84 efectos, 0 gaps. 216 tests OK. 0 errores de compilación.
-> Pendiente: pulido (sonido, animación de movimiento real, migrar UI a escenas).
+> Pulido hecho: animaciones de movimiento real, sonidos, registro de jugadas, descarte
+> elegible al límite de mano, red más robusta (timeout, IP local, desconexión) y exportación a .exe.
+> Multijugador: hasta 8 jugadores, mesa dinámica (zonas rivales escalan según cantidad),
+> establo rival con ventajas/desventajas arriba, multiplicador de cartas de acción (x1-x5)
+> configurable en el lobby, HUD en esquina superior izquierda, registro desplegable.
+> Pendiente: migrar HUD/pickers a escenas .tscn, reconexión de jugadores caídos, PLAYTEST en vivo.
 
 ---
 
@@ -278,6 +283,70 @@ Constante `WINDOW_SECONDS = 5.0` (modificable).
 
 ---
 
+### Sesión de pulido — Animaciones, red, registro, descarte, sonido y export
+
+Toda esta tanda es código puro (sin tocar escenas en el editor). 216 tests siguen OK.
+
+**🎬 Animaciones de movimiento real** (`game_table.gd`)
+- Nueva `anim_layer` (CanvasLayer, layer=15) con helper `_fly_card(tex, from_center, to_center, from_size, to_size, dur, on_finish)`: lanza una carta "fantasma" temporal que viaja entre dos puntos globales y se autodestruye. Vive fuera de los contenedores → no pelea con el layout de los HBox/VBox.
+- Robar → la carta vuela del mazo a la mano y se revela al aterrizar (`_animate_card_into_hand`, usa `await process_frame` para leer la posición real tras el layout).
+- Jugar → vuela de la mano al destino: establo (unicornio/mejora), establo rival (downgrade) o descarte (magia/instantánea) (`_animate_card_play`).
+- Salir del establo / descartar → vuela al descarte (`_animate_card_to_discard`).
+
+**🌐 Red más robusta** (`GameManager.gd`, `lobby.gd`, `game_table.gd`)
+- `GameManager.get_local_ip()`: devuelve la IPv4 LAN (192.168/10/172.16-31). El lobby la muestra al host para compartir.
+- IP por defecto `127.0.0.1` + placeholder en el lobby (cómodo para misma PC).
+- Timeout de conexión: `_watch_join_timeout` aborta con aviso si tras 8 s sigue en CONNECTING.
+- Desconexión a mitad de partida: avisa a todos (toast + registro), quita la zona del rival (`client_remove_player_zone`), desbloquea esperas de UI pendientes (emite `target_picked(-1,-1)` y `cost_paid(false,[])`), saca al jugador del orden de turnos y, si era su turno, avanza. Si queda 1 → victoria por abandono (`_end_match_last_player_standing`).
+
+**📜 Registro de jugadas** (`game_table.gd`, `EffectProcessor.gd`)
+- Panel lateral derecho (`_build_log_panel`) con scroll y poda a 60 líneas.
+- RPC `client_log_event(text, color)` + helper server `_server_log()` (en game_table) y `_log()` (en EffectProcessor, vía `_table_rpc`).
+- Eventos: inicio de partida, turno de X, juega carta, relinchada, destruyó/robó (desde EffectProcessor), victoria, desconexión.
+
+**🗑️ Descarte elegible al límite de mano** (`GameManager.gd`, `game_table.gd`)
+- Reemplaza el FIFO automático. `_resolve_hand_limit_discard` abre en el cliente activo `client_open_discard_to_limit(excess)` (picker multi-selección obligatorio), espera la elección (`server_discard_chosen` → `_on_discard_choice`) con timeout de 30 s y **fallback FIFO** si no responde o no hay UI (tests headless).
+
+**🔊 Sonidos** (`assets/audio/`, `game_table.gd`)
+- 8 .wav procedurales generados por `assets/audio/generate_sounds.py` (sin dependencias): click, draw, play, neigh, destroy, turn, win, shuffle.
+- `_build_sfx()` crea un `AudioStreamPlayer` por sonido; `_play_sfx(name)` los dispara. Enganchados a robar, jugar, entrar al establo (rivales), destruir, relincho, inicio de TU turno, victoria, barajar (inicio) y click de fin de turno.
+
+**📦 Exportación (Windows + macOS)** (`export_presets.cfg`, `.gitignore`)
+- **Windows** [preset.0]: `embed_pck=true` (un solo archivo), salida `builds/UnstableUnicorns2D.exe` (~128 MB).
+  CLI: `godot --headless --path . --export-release "Windows Desktop" "builds/UnstableUnicorns2D.exe"`.
+- **macOS** [preset.1]: arquitectura `universal` (Intel + Apple Silicon), salida `builds/UnstableUnicorns2D_mac.zip` (~85 MB, contiene el `.app`). SIN firmar/notarizar.
+  CLI: `godot --headless --path . --export-release "macOS" "builds/UnstableUnicorns2D_mac.zip"`.
+- ⚠️ macOS universal/arm64 EXIGE `rendering/textures/vram_compression/import_etc2_astc=true` en project.godot (ya activado). Tras activarlo hay que reimportar (`--import`).
+- ⚠️ El `.app` de macOS NO está firmado: Gatekeeper lo bloquea. En el Mac: descomprimir el .zip y o bien click derecho → Abrir → Abrir, o en Terminal `xattr -cr UnstableUnicorns2D.app` y luego abrirlo. Si no abre, `chmod +x UnstableUnicorns2D.app/Contents/MacOS/*`.
+- Plantillas: las trae el Godot de Steam en `editor_data/export_templates/<version>/` (incluye `macos.zip`). Si faltan: Editor → Proyecto → Exportar → "Administrar plantillas de exportación".
+- ⚠️ Al hostear, el firewall (Windows/macOS) pedirá permiso para el puerto 7777 (aceptar redes privadas/locales).
+
+### Sesión — Multijugador 8p, mesa dinámica, HUD y multiplicador de cartas
+
+Todo código puro (sin tocar escenas). 216 tests siguen OK, 0 errores de parseo.
+
+**👥 Hasta 8 jugadores** (`GameManager.gd`)
+- `MAX_CLIENTS = 7` (7 clientes + host = 8). `start_game` exige ≥2 jugadores (aviso en lobby).
+
+**🃏 Multiplicador del mazo** (`GameRules.gd`, `GameManager.gd`, `lobby.gd`)
+- `GameRules.deck_multiplier` (1-5), serializado en to/from_dictionary.
+- Control SpinBox "Copias del mazo (x)" creado por código en el lobby (`_build_multiplier_control`), solo editable por el host, sincronizado en vivo.
+- `initialize_deck` pone `mult` copias de CADA carta del mazo (unicornios incluidos) para conservar las proporciones. Los bebés (guardería) quedan en 1 copia. ⚠️ Intento previo (multiplicar SOLO cartas de acción) inundaba el mazo de magias y dejaba sin unicornios → corregido multiplicando todo por igual.
+- ⚠️ Cartas duplicadas: los nodos del establo ahora se localizan por `set_meta("card_id", id)` y se quita el PRIMER match (antes era por nombre de nodo, que colisionaba con duplicados).
+- ⚠️ Limitación conocida (duplicados): todo el protocolo identifica cartas por `card_id`, no por instancia. Si tienes DOS copias del MISMO id en mano y debes descartar ambas, el picker de límite de mano solo marca una por id; el resto se completa por FIFO (el CONTEO siempre es correcto, nunca se traba, pero la carta exacta puede diferir). Arreglo real = IDs de instancia en toda la red (refactor grande, pendiente).
+
+**🪑 Mesa dinámica** (`game_table.gd`, `rival_zone.gd`)
+- `setup_table` cuenta rivales y pasa una escala (`_rival_card_scale`: x1 ≤3 rivales, x0.8 4-5, x0.62 6-7) a cada `RivalZone.set_card_scale()`. Las zonas rivales (HBox `RivalsContainer`) se achican para caber 2-8.
+- **Establo rival**: `rival_zone._build_upgrades_row()` crea por código una fila de ventajas/desventajas ARRIBA de la de unicornios (`add_card_to_stable(node, is_top_row)`).
+
+**🖥️ HUD reorganizado** (`game_table.gd`)
+- Turno/Fase/Acciones/Meta ahora en un panel en la **esquina superior izquierda** (antes centrado arriba).
+- **Registro desplegable**: botón ▾/▸ en el título pliega/despliega el panel del registro.
+
+**💬 Mensajes/modales** (`game_table.gd`)
+- Toasts con fondo oscuro, borde y click-through (no estorban), en la franja superior; se desvanecen solos. `client_announce_neigh` usa el toast con estilo.
+- Modal de Relincho con fondo oscuro, borde rojo y márgenes (más legible).
+
 ## ❌ Lo que FALTA — Pendiente
 
 ### Bugs/incompletos importantes
@@ -291,16 +360,16 @@ Constante `WINDOW_SECONDS = 5.0` (modificable).
 - **`REPLACE_TARGET_UNICORN`** (Black Knight): debería interceptar destroys sobre unicornios del dueño.
 
 ### UX/Polish (Fase 5)
-- **HUD migrar a escena `.tscn`** — actualmente construido por código en `_build_hud()`. Migrar a `scenes/ui/HUD.tscn` para enseñar nodos al usuario.
-- **Pickers a escenas** — `_show_*` funciones podrían migrar a escenas reutilizables (`scenes/ui/CardPicker.tscn`, etc.)
-- **Animaciones** — mover cartas (mano → establo) con tween en vez de pop/queue_free
-- **Sonidos** — shuffle, jugar, Neigh
-- **Log de jugadas** — chat lateral con historial de acciones
-- **Pila de descarte visible** — clickeable para revisar
-- **Discard picker en hand limit** — actualmente auto-saca del front; debería ser elección del jugador
-- **Reconexión** — si un jugador se desconecta, partida queda colgada
-- **Pantalla de game over** — botón "Nueva partida"
-- **`RivalZone.remove_card_from_stable(card_id)`** — el método no existe; las cartas destruidas en establos rivales no se ven removidas. Pendiente añadir.
+- **HUD migrar a escena `.tscn`** — actualmente construido por código en `_build_hud()`. Migrar a `scenes/ui/HUD.tscn` para enseñar nodos al usuario. ⏳ Pendiente.
+- **Pickers a escenas** — `_show_*` funciones podrían migrar a escenas reutilizables (`scenes/ui/CardPicker.tscn`, etc.) ⏳ Pendiente.
+- ✅ **Animaciones de movimiento** — HECHO (cartas vuelan vía `_fly_card` en `anim_layer`).
+- ✅ **Sonidos** — HECHO (8 .wav procedurales, ver `assets/audio/`).
+- ✅ **Log de jugadas** — HECHO (panel lateral derecho + `client_log_event`).
+- ✅ **Pila de descarte visible** — HECHO (sesión previa).
+- ✅ **Discard picker en hand limit** — HECHO (`client_open_discard_to_limit` + fallback FIFO).
+- ⏳ **Reconexión** — la desconexión ya se maneja (avisa, avanza turno, victoria por abandono) pero NO hay flujo para que un jugador caído vuelva a entrar. Pendiente.
+- ✅ **Pantalla de game over** — HECHO (panel con votación revancha/lobby).
+- ✅ **`RivalZone.remove_card_from_stable(card_id)`** — HECHO.
 
 ### Tests
 - **No hay tests E2E** de un juego completo. Solo TestLoader de integridad de datos.
@@ -475,7 +544,7 @@ Conceptos pendientes de cubrir cuando se migren HUD/pickers a escenas:
 5. **Re-Target / Unicorn Swap** — efectos especiales no completamente implementados.
 6. **Sin chat ni log de jugadas** — los eventos solo aparecen en consola.
 7. **Reconexión no manejada**.
-8. **Puerto y MAX_CLIENTS hardcoded** (7777, 4).
+8. **Puerto hardcoded** (7777). MAX_CLIENTS = 7 (8 jugadores máx).
 
 ---
 
@@ -508,16 +577,15 @@ Orden recomendado:
 
 ## 🚀 Próximos pasos sugeridos (en orden)
 
-1. **Probar el juego end-to-end** con dos clientes. Documentar bugs en este archivo.
-2. **Arreglar `OR_ON_LEAVE_STABLE`** y `IMMUNE_TO_MAGIC_DESTROY` — son one-liners.
-3. **Migrar HUD a escena** `scenes/ui/HUD.tscn` (oportunidad pedagógica).
-4. **Migrar Pickers a escena** reutilizable.
-5. **Animaciones de movimiento** de carta con tween.
-6. **Log de jugadas** en sidebar.
-7. **Implementar conditions faltantes** (Re-Target, Unicorn Swap, Black Knight).
-8. **Sonido**.
-9. **Pantalla de victoria con "Nueva partida"**.
-10. **Persistencia de partida** (save/load) — opcional.
+1. **Probar el juego end-to-end** con dos clientes/instancias. Documentar bugs aquí.
+2. **Migrar HUD a escena** `scenes/ui/HUD.tscn` (oportunidad pedagógica).
+3. **Migrar Pickers a escena** reutilizable.
+4. **Reconexión** de un jugador caído (la desconexión ya se maneja; falta volver a entrar).
+5. **Control de volumen / mute** y reemplazar los .wav procedurales por sonidos definitivos.
+6. **Persistencia de partida** (save/load) — opcional.
+
+> Hecho en la sesión de pulido: animaciones de movimiento, sonidos, registro de jugadas,
+> descarte elegible al límite, red más robusta y exportación a .exe.
 
 ---
 

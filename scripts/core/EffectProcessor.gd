@@ -36,6 +36,15 @@ func reset():
 func _notify(player_id: int, msg: String) -> void:
 	_table_rpc_id(player_id, "client_toast", msg)
 
+# Difunde una línea al registro de jugadas de todos los jugadores.
+func _log(msg: String, color: Color = Color.WHITE) -> void:
+	_table_rpc("client_log_event", msg, color)
+
+func _player_name(player_id: int) -> String:
+	if GameManager.players.has(player_id):
+		return GameManager.players[player_id].name
+	return "?"
+
 # ==============================================================================
 # 🎯 ENTRADA PRINCIPAL
 # ==============================================================================
@@ -264,6 +273,9 @@ func _act_destroy(amount: int, scope: GameEnums.Scope, filter: GameEnums.Filter,
 		var target_owner = pick["owner_id"]
 		var target_card_id = pick["card_id"]
 		_remove_from_stable(target_owner, target_card_id, true)
+		var dcard = CardDatabase.get_card_data(target_card_id)
+		if dcard:
+			_log("💥 %s destruyó %s (de %s)" % [_player_name(acting_player_id), dcard.name_es, _player_name(target_owner)], Color(1, 0.5, 0.4))
 		did_any = true
 	return did_any
 
@@ -320,6 +332,7 @@ func _act_steal(amount: int, scope: GameEnums.Scope, filter: GameEnums.Filter, a
 			passives.on_card_entered_stable(acting_player_id, card_data)
 			if card_data.is_unicorn():
 				await _on_unicorn_stable_changed(acting_player_id, true)
+			_log("🤝 %s robó %s a %s" % [_player_name(acting_player_id), card_data.name_es, _player_name(source_owner)], Color(0.9, 0.8, 1.0))
 			did_any = true
 	GameManager.check_win_condition()
 	return did_any
