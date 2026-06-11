@@ -19,6 +19,15 @@ func _table_rpc_id(target_id: int, method, p1 = null, p2 = null, p3 = null, p4 =
 		if p != null: args.append(p)
 	GameManager.game_table.callv("rpc_id", args)
 
+func _pname(pid: int) -> String:
+	if GameManager.players.has(pid):
+		return GameManager.players[pid].name
+	return "Jugador %d" % pid
+
+func _neigh_log(text: String) -> void:
+	if GameManager.game_table:
+		GameManager.game_table.rpc("client_log_event", text, Color(1, 0.7, 0.4))
+
 var pending_card_id: int = -1
 var pending_player_id: int = -1
 var pending_super: bool = false # si la pila va por super-neigh
@@ -42,19 +51,24 @@ func open_window(card_id: int, playing_player_id: int) -> bool:
 
 	# Si el dueño tiene Yay (PREVENT_NEIGH_ON_OWNER), no se puede Relinchar
 	if EffectProcessor.passives.owner_immune_to_neigh(playing_player_id):
+		_neigh_log("🛡️ %s no se puede relinchar (inmune)" % card_data.name_es)
 		return false
 
 	# Buscar quién puede responder (tiene Neigh en mano y puede jugarlo)
 	var eligible: Array[int] = []
 	for pid in GameManager.players:
 		if pid == playing_player_id: continue
-		if not EffectProcessor.passives.can_play_instant(pid): continue
 		var p: PlayerData = GameManager.players[pid]
 		var has_neigh = false
 		for c in p.hand:
 			if c.is_instant():
 				has_neigh = true; break
-		if has_neigh:
+		var can_instant = EffectProcessor.passives.can_play_instant(pid)
+		print("NeighManager: ", _pname(pid), " has_neigh=", has_neigh, " can_play_instant=", can_instant)
+		# Diagnóstico claro en pantalla: si TIENE relincho pero está bloqueado.
+		if has_neigh and not can_instant:
+			_neigh_log("🐌 %s tiene Relincho pero no puede usarlo (Ralentización/Gordicornio)" % _pname(pid))
+		if can_instant and has_neigh:
 			eligible.append(pid)
 
 	if eligible.is_empty():
