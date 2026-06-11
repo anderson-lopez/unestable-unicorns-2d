@@ -81,8 +81,11 @@ func _ready():
 	OnlineServer.room_error.connect(_on_online_error)
 	OnlineServer.room_game_started.connect(_on_room_game_started)
 
-# URL del servidor online. Local para pruebas; en producción será el de Render.
-const ONLINE_SERVER_URL := "ws://127.0.0.1:7777"
+# URL del servidor online.
+#  - PRODUCCIÓN (Render): wss:// y SIN puerto (Render expone el 443 por fuera).
+#  - LOCAL (pruebas): comenta la de Render y descomenta la local con tu servidor --dedicated.
+const ONLINE_SERVER_URL := "wss://unstable-unicorns-server.onrender.com"
+#const ONLINE_SERVER_URL := "ws://127.0.0.1:7777" # ← para probar en tu PC
 
 var _online_layer: CanvasLayer
 var _online_panel: PanelContainer
