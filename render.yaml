@@ -6,7 +6,8 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free          # gratis: se duerme tras 15 min sin uso (~50s al despertar)
-    healthCheckPath: /  # WebSocket; Render solo verifica que el puerto responda
+    # SIN healthCheckPath: es un servidor WebSocket (no responde HTTP GET).
+    # Render lo da por vivo cuando detecta el puerto $PORT abierto.
     envVars:
       - key: UU_DEDICATED
         value: "1"
