@@ -915,10 +915,11 @@ func server_play_card(card_id: int, target_player_id: int = -1):
 			GameManager.consume_action()
 			return
 
-	# Determinar destino para Downgrades
+	# Determinar destino para Downgrades: el jugador ELIGE a qué rival se la pone.
+	# Con 1 solo rival (2 jugadores) va directo, sin preguntar (es obvio).
 	var dest_player_id: int = sender_id
 	if card_data.is_downgrade():
-		dest_player_id = _resolve_downgrade_target(sender_id, target_player_id)
+		dest_player_id = await _server_choose_downgrade_target(sender_id, target_player_id)
 
 	# Resolver efectos
 	if card_data.is_permanent():
@@ -943,12 +944,22 @@ func server_play_card(card_id: int, target_player_id: int = -1):
 
 	GameManager.consume_action()
 
-func _resolve_downgrade_target(sender_id: int, requested: int) -> int:
+# Elige a qué rival se le coloca la desventaja.
+#  - 0 rivales: a uno mismo (caso borde).
+#  - 1 rival (2 jugadores): directo, SIN picker (es obvio).
+#  - 2+ rivales: muestra el selector de jugador al que la juega.
+# Si el cliente ya mandó un objetivo válido (requested), se respeta.
+func _server_choose_downgrade_target(sender_id: int, requested: int) -> int:
 	var opponents = GameManager.get_opponents_of(sender_id)
 	if opponents.is_empty(): return sender_id
 	if requested != -1 and requested != sender_id and requested in opponents:
 		return requested
-	return opponents[0]
+	if opponents.size() == 1:
+		return opponents[0]
+	var chosen = await EffectProcessor._request_player_pick(sender_id, opponents)
+	if chosen == -1 or not (chosen in opponents):
+		return opponents[0] # por si cancela: cae al primero (la carta ya se jugó)
+	return chosen
 
 @rpc("any_peer", "call_local", "reliable")
 func server_discard_card(card_id: int):
