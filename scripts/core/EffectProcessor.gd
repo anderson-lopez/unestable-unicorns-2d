@@ -835,6 +835,11 @@ func _request_stable_target(acting_player_id: int, scope: GameEnums.Scope, filte
 	# pueda elegir o CANCELAR. Antes auto-seleccionaba y forzaba la jugada.
 	_table_rpc_id(acting_player_id, "client_open_stable_target_pick", candidates, "Elige una carta objetivo")
 	var result = await target_picked
+	# Cancelar (el jugador rechaza el efecto opcional "puedes...") emite -1:
+	# devolvemos vacío para que la acción NO se dé por hecha (así no salta el
+	# turno ni se ejecuta el efecto secundario). Vale para destruir/robar/etc.
+	if result[0] == -1:
+		return {}
 	return {"card_id": result[0], "owner_id": result[1]}
 
 func _request_card_pick(player_id: int, card_ids: Array, prompt: String) -> int:
