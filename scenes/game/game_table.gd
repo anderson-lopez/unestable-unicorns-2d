@@ -1019,10 +1019,68 @@ func client_toast(msg: String):
 
 @rpc("authority", "call_local", "reliable")
 func client_receive_initial_hand(card_ids: Array):
+	# El servidor árbitro no tiene mano que repartir visualmente.
+	if GameManager.is_dedicated_referee:
+		return
+	# Reparto inicial LIMPIO: las cartas quedan ocultas hasta que su animación
+	# aterriza, y se reparten UNA POR UNA de DERECHA a IZQUIERDA, volteándose.
+	var cards: Array = []
 	for id in card_ids:
 		var c := add_card_to_hand(id)
-		_animate_card_into_hand(c) # reparto inicial: vuelan desde el mazo
+		if c:
+			c.modulate.a = 0.0 # oculta hasta que su animación termine
+			cards.append(c)
 	_update_hud()
+	# Esperar a que el HBox coloque las cartas (centradas) para apuntar bien.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# De derecha (última) a izquierda (primera), una por una.
+	for i in range(cards.size() - 1, -1, -1):
+		var c = cards[i]
+		if is_instance_valid(c):
+			await _deal_one_card(c)
+
+# Reparte UNA carta: un fantasma sale del mazo mostrando el REVERSO, vuela hasta
+# el sitio de la carta y a mitad de camino se VOLTEA para mostrar la cara. Al
+# aterrizar, se revela la carta real. Es secuencial (se espera a que termine).
+func _deal_one_card(card: CardUI) -> void:
+	if not is_instance_valid(card) or not card.card_data:
+		return
+	var from := _node_center(pile_deck_btn)
+	var to := _node_center(card)
+	var to_size := card.size
+	if to_size == Vector2.ZERO:
+		to_size = Vector2(100, 140)
+	if not is_instance_valid(anim_layer):
+		card.modulate.a = 1.0
+		return
+	_play_sfx("draw")
+	var ghost := TextureRect.new()
+	ghost.texture = CARD_BACK_TEX # empieza boca abajo
+	ghost.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ghost.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ghost.size = to_size
+	ghost.pivot_offset = to_size * 0.5
+	ghost.global_position = from - to_size * 0.5
+	ghost.z_index = 60
+	anim_layer.add_child(ghost)
+	var dur := 0.5
+	# Vuelo (posición) en paralelo con el volteo (escala X).
+	var fly := ghost.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	fly.tween_property(ghost, "global_position", to - to_size * 0.5, dur)
+	var flip := ghost.create_tween().set_trans(Tween.TRANS_SINE)
+	flip.tween_property(ghost, "scale:x", 0.0, dur * 0.5)
+	flip.tween_callback(func():
+		if is_instance_valid(ghost): ghost.texture = _card_texture(card.card_data.id)
+	)
+	flip.tween_property(ghost, "scale:x", 1.0, dur * 0.5)
+	await flip.finished
+	if is_instance_valid(ghost):
+		ghost.queue_free()
+	if is_instance_valid(card):
+		card.modulate.a = 1.0
+	# Pequeña pausa entre cartas para que se vea "una por una".
+	await get_tree().create_timer(0.1).timeout
 
 @rpc("authority", "call_local", "reliable")
 func client_receive_drawn_batch(card_ids: Array):
