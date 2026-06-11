@@ -8,8 +8,9 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-# Versión de Godot (debe coincidir con la de desarrollo: 4.x).
-ENV GODOT_VERSION=4.3-stable
+# Versión de Godot (DEBE coincidir con la de desarrollo, 4.6.x; con 4.3 los
+# autoloads del proyecto 4.6 no compilan y quedan nulos).
+ENV GODOT_VERSION=4.6.3-stable
 
 # Dependencias mínimas para Godot headless.
 RUN apt-get update && apt-get install -y --no-install-recommends \
