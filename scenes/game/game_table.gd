@@ -484,7 +484,7 @@ func _first_rival_center() -> Vector2:
 # Lanza una carta fantasma que viaja de un centro global a otro, escalando de
 # tamaño, y se autodestruye al llegar. `on_finish` corre al aterrizar.
 func _fly_card(texture: Texture2D, from_center: Vector2, to_center: Vector2,
-		from_size: Vector2, to_size: Vector2, duration: float = 0.55,
+		from_size: Vector2, to_size: Vector2, duration: float = 1.0,
 		on_finish: Callable = Callable()) -> void:
 	if not is_instance_valid(anim_layer):
 		if on_finish.is_valid(): on_finish.call()
@@ -518,10 +518,10 @@ func _animate_card_into_hand(card: CardUI) -> void:
 	var to_size := card.size
 	if to_size == Vector2.ZERO:
 		to_size = Vector2(100, 140)
-	_fly_card(_card_texture(card.card_data.id), from, to, Vector2(70, 96), to_size, 0.62, func():
+	_fly_card(_card_texture(card.card_data.id), from, to, Vector2(70, 96), to_size, 1.0, func():
 		if is_instance_valid(card):
 			var tw := card.create_tween()
-			tw.tween_property(card, "modulate:a", 1.0, 0.22)
+			tw.tween_property(card, "modulate:a", 1.0, 0.3)
 	)
 
 # Una carta jugada desde la mano: vuela hacia su destino (establo o descarte).
@@ -540,7 +540,7 @@ func _animate_card_play(card_ui: CardUI) -> void:
 	else:
 		to = _node_center(pile_discard_btn) # magias/instantáneas → descarte
 	card_ui.queue_free() # sale de la mano ya
-	_fly_card(_card_texture(data.id), from, to, from_size, Vector2(95, 130), 0.7)
+	_fly_card(_card_texture(data.id), from, to, from_size, Vector2(95, 130), 1.0)
 
 # Una carta que sale de MI establo: vuela hacia la pila de descarte.
 func _animate_card_to_discard(card: Control) -> void:
@@ -553,7 +553,7 @@ func _animate_card_to_discard(card: Control) -> void:
 		tex = _card_texture(card.card_data.id)
 	card.queue_free()
 	if tex:
-		_fly_card(tex, from, _node_center(pile_discard_btn), from_size, Vector2(70, 96), 0.4)
+		_fly_card(tex, from, _node_center(pile_discard_btn), from_size, Vector2(70, 96), 1.0)
 
 func _update_hud():
 	if not is_instance_valid(lbl_turn): return
@@ -1132,7 +1132,7 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 func _animate_pop_in(card: Control):
 	card.modulate.a = 0.0
 	var tw = card.create_tween().set_trans(Tween.TRANS_SINE)
-	tw.tween_property(card, "modulate:a", 1.0, 0.45)
+	tw.tween_property(card, "modulate:a", 1.0, 0.7)
 
 @rpc("authority", "call_local", "reliable")
 func client_card_left_stable(player_id: int, card_id: int):
@@ -1906,7 +1906,7 @@ func _on_card_play_requested(card_ui: CardUI):
 		var from := _node_center(card_ui)
 		var from_size := card_ui.size
 		card_ui.queue_free()
-		_fly_card(_card_texture(card_id), from, _node_center(pile_discard_btn), from_size, Vector2(80, 110), 0.35)
+		_fly_card(_card_texture(card_id), from, _node_center(pile_discard_btn), from_size, Vector2(80, 110), 1.0)
 		return
 
 	# --- BLOQUEO: no permitir jugar Neighs sin contexto ---
