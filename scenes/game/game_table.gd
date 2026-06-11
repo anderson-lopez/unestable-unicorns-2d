@@ -511,7 +511,10 @@ func _animate_card_into_hand(card: CardUI) -> void:
 		return
 	var from := _node_center(pile_deck_btn)
 	card.modulate.a = 0.0 # oculta hasta que aterrice el fantasma
-	await get_tree().process_frame # dejar que el HBox posicione la carta real
+	# Esperar a que el HBox REORDENE la mano (centrado) para apuntar el vuelo a la
+	# posición FINAL real de la carta nueva (a la derecha), no a una intermedia.
+	await get_tree().process_frame
+	await get_tree().process_frame
 	if not is_instance_valid(card):
 		return
 	var to := _node_center(card)
@@ -1728,6 +1731,12 @@ func _show_neigh_panel(card_name: String, player_name: String, neighs: Array, se
 	btn_skip.text = "Pasar"
 	btn_skip.custom_minimum_size = Vector2(110, 56)
 	btn_skip.pressed.connect(func():
+		# Avisar al servidor que NO relincho: si todos pasan, la jugada sigue YA
+		# (sin esperar los 15s).
+		if multiplayer.is_server():
+			NeighManager.server_receive_pass(multiplayer.get_unique_id())
+		else:
+			NeighManager.rpc_id(1, "server_receive_pass_rpc")
 		if is_instance_valid(neigh_window_panel): neigh_window_panel.queue_free()
 	)
 	hb.add_child(btn_skip)

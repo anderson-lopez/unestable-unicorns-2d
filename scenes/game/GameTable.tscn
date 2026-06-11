@@ -38,7 +38,7 @@ alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = -10
-alignment = 0
+alignment = 1
 
 [node name="RivalsContainer" type="HBoxContainer" parent="." unique_id=561721397]
 layout_mode = 1

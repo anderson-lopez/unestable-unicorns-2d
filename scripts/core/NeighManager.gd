@@ -24,6 +24,10 @@ var pending_player_id: int = -1
 var pending_super: bool = false # si la pila va por super-neigh
 var window_open: bool = false
 var responses: Dictionary = {} # peer_id -> response (true/false)
+# Quiénes pueden relinchar esta jugada y quiénes ya PASARON (no relinchan).
+# Cuando todos pasan, la ventana se cierra al instante (sin esperar 15s).
+var eligible_ids: Array[int] = []
+var passed_ids: Dictionary = {} # peer_id -> true
 
 # Abre ventana. Devuelve true si la carta original FUE cancelada.
 func open_window(card_id: int, playing_player_id: int) -> bool:
@@ -58,6 +62,8 @@ func open_window(card_id: int, playing_player_id: int) -> bool:
 
 	# Abrir ventana
 	window_open = true
+	eligible_ids = eligible.duplicate()
+	passed_ids.clear()
 	for pid in eligible:
 		_table_rpc_id(pid, "client_open_neigh_window",
 			card_id, playing_player_id, WINDOW_SECONDS)
@@ -77,7 +83,29 @@ func _await_neigh_response() -> bool:
 		if pending_super:
 			# Significa que recibimos un neigh y abrimos super-window
 			return await _handle_neigh_chain()
+		# ¿TODOS los que podían relinchar ya pasaron? → cerrar al instante.
+		if _all_eligible_passed():
+			return false
 	return false
+
+# True si cada jugador que podía relinchar ya pulsó "Pasar".
+func _all_eligible_passed() -> bool:
+	if eligible_ids.is_empty(): return false
+	for pid in eligible_ids:
+		if not passed_ids.has(pid):
+			return false
+	return true
+
+# RPC: un cliente avisa que NO va a relinchar (pasó).
+@rpc("any_peer", "call_local", "reliable")
+func server_receive_pass_rpc():
+	if not multiplayer.is_server(): return
+	server_receive_pass(multiplayer.get_remote_sender_id())
+
+func server_receive_pass(player_id: int):
+	if not window_open: return
+	if player_id in eligible_ids:
+		passed_ids[player_id] = true
 
 # RPC: cliente envía su Neigh al servidor
 @rpc("any_peer", "call_local", "reliable")
