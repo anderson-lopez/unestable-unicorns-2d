@@ -199,8 +199,11 @@ func set_disabled(value: bool):
 	if discard_button:
 		discard_button.visible = not is_disabled
 		discard_button.disabled = is_disabled
-	# Tinte sutil para indicar visualmente que no se puede jugar
+	# Tinte sutil para indicar visualmente que no se puede jugar.
+	# IMPORTANTE: conservar el ALFA actual; si la carta está oculta por una
+	# animación (modulate.a = 0), no debemos volverla visible aquí.
+	var a := modulate.a
 	if is_disabled:
-		modulate = Color(0.85, 0.85, 0.85)
+		modulate = Color(0.85, 0.85, 0.85, a)
 	else:
-		modulate = Color.WHITE
+		modulate = Color(1, 1, 1, a)

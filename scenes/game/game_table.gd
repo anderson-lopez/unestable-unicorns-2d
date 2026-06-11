@@ -594,7 +594,8 @@ func _refresh_hand_interactivity():
 			# aunque no sea mi turno, así puedo clickearlos desde la mano.
 			if neigh_window_active and card.card_data and card.card_data.is_instant():
 				card.set_disabled(false)
-				card.modulate = Color(1.2, 1.1, 0.4) # tinte amarillo "puedes Neighear"
+				# Tinte amarillo "puedes Neighear" (conservando el alfa por si está oculta).
+				card.modulate = Color(1.2, 1.1, 0.4, card.modulate.a)
 			else:
 				card.set_disabled(not can_play)
 
