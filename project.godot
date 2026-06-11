@@ -24,12 +24,6 @@ NeighManager="*res://scripts/core/NeighManager.gd"
 TestLoader="*uid://ca2jkkyoxhpap"
 OnlineServer="*res://scripts/core/OnlineServer.gd"
 
-[input_devices]
-
-; CRÍTICO para móvil/APK: convierte cada toque en clic de ratón, así los
-; botones (lobby, mesa) y las cartas responden al toque. El juego depende de esto.
-pointing/emulate_mouse_from_touch=true
-
 [display]
 
 window/size/viewport_width=1280

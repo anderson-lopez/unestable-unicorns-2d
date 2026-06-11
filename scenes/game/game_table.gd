@@ -484,7 +484,7 @@ func _first_rival_center() -> Vector2:
 # Lanza una carta fantasma que viaja de un centro global a otro, escalando de
 # tamaño, y se autodestruye al llegar. `on_finish` corre al aterrizar.
 func _fly_card(texture: Texture2D, from_center: Vector2, to_center: Vector2,
-		from_size: Vector2, to_size: Vector2, duration: float = 0.35,
+		from_size: Vector2, to_size: Vector2, duration: float = 0.55,
 		on_finish: Callable = Callable()) -> void:
 	if not is_instance_valid(anim_layer):
 		if on_finish.is_valid(): on_finish.call()
@@ -518,10 +518,10 @@ func _animate_card_into_hand(card: CardUI) -> void:
 	var to_size := card.size
 	if to_size == Vector2.ZERO:
 		to_size = Vector2(100, 140)
-	_fly_card(_card_texture(card.card_data.id), from, to, Vector2(70, 96), to_size, 0.35, func():
+	_fly_card(_card_texture(card.card_data.id), from, to, Vector2(70, 96), to_size, 0.62, func():
 		if is_instance_valid(card):
 			var tw := card.create_tween()
-			tw.tween_property(card, "modulate:a", 1.0, 0.12)
+			tw.tween_property(card, "modulate:a", 1.0, 0.22)
 	)
 
 # Una carta jugada desde la mano: vuela hacia su destino (establo o descarte).
@@ -540,7 +540,7 @@ func _animate_card_play(card_ui: CardUI) -> void:
 	else:
 		to = _node_center(pile_discard_btn) # magias/instantáneas → descarte
 	card_ui.queue_free() # sale de la mano ya
-	_fly_card(_card_texture(data.id), from, to, from_size, Vector2(95, 130), 0.4)
+	_fly_card(_card_texture(data.id), from, to, from_size, Vector2(95, 130), 0.7)
 
 # Una carta que sale de MI establo: vuela hacia la pila de descarte.
 func _animate_card_to_discard(card: Control) -> void:
@@ -780,6 +780,9 @@ func _create_rival_zone(id: int, data: PlayerData, index: int, rival_count: int 
 	if rival_zone.has_method("set_card_scale"):
 		rival_zone.set_card_scale(_rival_card_scale(rival_count))
 	rival_zone.setup(data.name)
+	# Cámara Espía: tocar una carta revelada del rival abre su detalle grande.
+	if rival_zone.has_signal("reveal_card_clicked"):
+		rival_zone.reveal_card_clicked.connect(_on_reveal_card_clicked)
 
 	# Posición ALREDEDOR de la mesa: arriba (centro), izquierda o derecha (centradas
 	# verticalmente). El panel crece hacia abajo según su contenido.
@@ -1129,7 +1132,7 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 func _animate_pop_in(card: Control):
 	card.modulate.a = 0.0
 	var tw = card.create_tween().set_trans(Tween.TRANS_SINE)
-	tw.tween_property(card, "modulate:a", 1.0, 0.25)
+	tw.tween_property(card, "modulate:a", 1.0, 0.45)
 
 @rpc("authority", "call_local", "reliable")
 func client_card_left_stable(player_id: int, card_id: int):
@@ -1774,8 +1777,72 @@ func client_announce_neigh(neigher_id: int, neigh_card_id: int, _original_player
 	var orig_name = orig_card.name_es if orig_card else "?"
 	var n_card_name = n_card.name_es if n_card else "?"
 	print("⚡ %s usa %s contra %s" % [n_name, n_card_name, orig_name])
-	_show_toast("⚡ %s: ¡%s!" % [n_name, n_card_name])
 	_add_log_line("⚡ %s relinchó %s" % [n_name, orig_name], Color(1, 0.55, 0.45))
+	# Cinemática: la carta de relincho aparece grande en el centro con giro "3D".
+	if not GameManager.is_dedicated_referee:
+		_play_neigh_cinematic(neigh_card_id, n_name)
+
+# Muestra la carta de RELINCHO grande en el centro con una animación tipo flip 3D.
+func _play_neigh_cinematic(neigh_card_id: int, neigher_name: String) -> void:
+	var layer: Node = modal_layer if is_instance_valid(modal_layer) else self
+	var holder := Control.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.z_index = 200
+	layer.add_child(holder)
+
+	# Fondo oscuro que resalta la carta (no bloquea el toque).
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.0)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(dim)
+
+	var vp := get_viewport_rect().size
+	var csize := Vector2(280, 388)
+	var card := TextureRect.new()
+	card.texture = _card_texture(neigh_card_id)
+	card.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	card.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	card.custom_minimum_size = csize
+	card.size = csize
+	card.pivot_offset = csize * 0.5
+	card.position = (vp - csize) * 0.5
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(card)
+
+	# Rótulo "¡RELINCHO!" sobre la carta.
+	var lbl := Label.new()
+	lbl.text = "⚡ ¡RELINCHO de %s!" % neigher_name
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 34)
+	lbl.add_theme_color_override("font_color", Color(1, 0.85, 0.3))
+	lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+	lbl.add_theme_constant_override("outline_size", 8)
+	lbl.anchor_left = 0.0; lbl.anchor_right = 1.0
+	lbl.anchor_top = 0.0; lbl.anchor_bottom = 0.0
+	lbl.offset_top = vp.y * 0.5 - csize.y * 0.5 - 56
+	lbl.offset_bottom = lbl.offset_top + 44
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.modulate.a = 0.0
+	holder.add_child(lbl)
+
+	# Flip "3D": empieza como un filo vertical girado y gira hasta quedar de frente.
+	card.scale = Vector2(0.03, 1.18)
+	card.rotation = -0.28
+	var tw := card.create_tween()
+	tw.parallel().tween_property(dim, "color:a", 0.55, 0.25)
+	tw.parallel().tween_property(card, "scale", Vector2(1.14, 1.14), 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(card, "rotation", 0.0, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(card, "scale", Vector2(1.0, 1.0), 0.14)
+	tw.parallel().tween_property(lbl, "modulate:a", 1.0, 0.14)
+	# Se mantiene visible un momento.
+	tw.chain().tween_interval(0.85)
+	# Sale: flip inverso + se desvanece.
+	tw.chain().tween_property(card, "scale", Vector2(0.03, 1.12), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(card, "rotation", 0.28, 0.28)
+	tw.parallel().tween_property(holder, "modulate:a", 0.0, 0.28)
+	tw.chain().tween_callback(holder.queue_free)
 
 # ==============================================================================
 # 🛠️ UTILIDADES
@@ -1815,6 +1882,12 @@ func _ids_to_data(ids: Array[int]) -> Array[CardData]:
 
 func _on_card_info_requested(data: CardData):
 	info_panel.show_card_info(data)
+
+# Cámara Espía: abre el detalle grande de una carta revelada del rival (por id).
+func _on_reveal_card_clicked(card_id: int):
+	var data := CardDatabase.get_card_data(card_id)
+	if data:
+		info_panel.show_card_info(data)
 
 func _on_card_play_requested(card_ui: CardUI):
 	var card_id = card_ui.card_data.id

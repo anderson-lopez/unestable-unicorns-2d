@@ -1,5 +1,9 @@
 extends PanelContainer
 
+# Cámara Espía: al tocar/clickear una carta revelada del rival, avisamos a la mesa
+# para abrir su detalle grande.
+signal reveal_card_clicked(card_id: int)
+
 @onready var name_label: Label = $VBoxContainer/TopInfo/NameLabel
 @onready var hand_container: HBoxContainer = $VBoxContainer/TopInfo/HandContainer
 @onready var stable_container: HBoxContainer = $VBoxContainer/StableContainer
@@ -80,8 +84,19 @@ func reveal_hand(card_ids: Array):
 			tex.texture = load(data.image_path)
 		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		tex.custom_minimum_size = Vector2(44 * card_scale, 64 * card_scale)
+		tex.custom_minimum_size = Vector2(50 * card_scale, 72 * card_scale)
+		# Clicable/tocable: abre el detalle de ESA carta (Cámara Espía).
+		tex.mouse_filter = Control.MOUSE_FILTER_STOP
+		tex.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		tex.tooltip_text = "Toca para ver"
+		tex.gui_input.connect(_on_reveal_card_input.bind(cid))
 		hand_container.add_child(tex)
+
+# Detecta clic/toque sobre una carta revelada y avisa a la mesa.
+func _on_reveal_card_input(event: InputEvent, card_id: int) -> void:
+	if (event is InputEventMouseButton and event.pressed) \
+			or (event is InputEventScreenTouch and event.pressed):
+		reveal_card_clicked.emit(card_id)
 
 func hide_hand_reveal(count: int):
 	hand_revealed = false
