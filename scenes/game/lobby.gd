@@ -24,6 +24,8 @@ extends Control
 
 # Control creado por código: multiplicador de copias de cartas de acción.
 var spin_multiplier: SpinBox
+# Botón para copiar la IP del host al portapapeles (útil en móvil).
+var _copy_ip_btn: Button
 
 # Plantilla para la fila de jugador (lo crearemos por código para no ensuciar)
 var player_item_style = StyleBoxFlat.new()
@@ -46,6 +48,8 @@ func _ready():
 	if ip_input.text.strip_edges().is_empty():
 		ip_input.text = "127.0.0.1"
 	ip_input.placeholder_text = "IP del host (vacío = misma PC)"
+	# Teclado virtual adecuado en móvil (con números y puntos).
+	ip_input.virtual_keyboard_type = LineEdit.KEYBOARD_TYPE_URL
 	
 	# Conexiones de botones locales
 	host_btn.pressed.connect(_on_host_pressed)
@@ -67,6 +71,185 @@ func _ready():
 
 	# Control extra (por código): multiplicador de copias de cartas de acción.
 	_build_multiplier_control()
+
+	# Botón + pantalla de juego ONLINE (salas con código). Todo por código.
+	_build_online_button()
+	_build_online_overlay()
+	# Señales del servidor de salas
+	OnlineServer.room_joined.connect(_on_room_joined)
+	OnlineServer.room_players_updated.connect(_on_room_players_updated)
+	OnlineServer.room_error.connect(_on_online_error)
+	OnlineServer.room_game_started.connect(_on_room_game_started)
+
+# URL del servidor online. Local para pruebas; en producción será el de Render.
+const ONLINE_SERVER_URL := "ws://127.0.0.1:7777"
+
+var _online_layer: CanvasLayer
+var _online_panel: PanelContainer
+var _online_status: Label
+var _online_code_input: LineEdit
+var _online_room_box: VBoxContainer
+var _online_code_label: Label
+var _online_players_box: VBoxContainer
+var _online_start_btn: Button
+var _online_connected := false
+
+func _build_online_button():
+	# Lo añadimos junto a los botones de login (mismo contenedor que HostBtn).
+	var btn := Button.new()
+	btn.text = "🌐 JUGAR ONLINE (código de sala)"
+	btn.pressed.connect(_open_online)
+	host_btn.get_parent().add_child(btn)
+
+func _open_online():
+	if name_input.text.strip_edges().is_empty():
+		status_label.text = "¡Necesitas un nombre!"
+		return
+	_online_layer.visible = true
+	_online_room_box.visible = false
+	_online_status.text = "Conectando al servidor..."
+	# Modo online: el registro de jugadores lo gestiona la sala, no el flujo local.
+	GameManager.online_mode = true
+	OnlineServer.connect_to_server(ONLINE_SERVER_URL)
+	# Damos un momento y mostramos los controles de crear/unirse.
+	await get_tree().create_timer(0.4).timeout
+	_online_connected = true
+	_online_status.text = "Conectado. Crea una sala o únete con un código."
+
+func _build_online_overlay():
+	_online_layer = CanvasLayer.new()
+	_online_layer.layer = 30
+	_online_layer.visible = false
+	add_child(_online_layer)
+
+	# Fondo oscuro semitransparente
+	var bg := ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.6)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_online_layer.add_child(bg)
+
+	_online_panel = PanelContainer.new()
+	_online_panel.anchor_left = 0.5; _online_panel.anchor_right = 0.5
+	_online_panel.anchor_top = 0.5; _online_panel.anchor_bottom = 0.5
+	_online_panel.offset_left = -260; _online_panel.offset_right = 260
+	_online_panel.offset_top = -230; _online_panel.offset_bottom = 230
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.10, 0.10, 0.14, 1.0)
+	sb.set_corner_radius_all(12); sb.set_border_width_all(3)
+	sb.border_color = Color(0.5, 0.5, 0.6); sb.set_content_margin_all(18)
+	_online_panel.add_theme_stylebox_override("panel", sb)
+	_online_layer.add_child(_online_panel)
+
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	_online_panel.add_child(v)
+
+	var title := Label.new()
+	title.text = "🌐 Jugar Online"
+	title.add_theme_font_size_override("font_size", 24)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(title)
+
+	_online_status = Label.new()
+	_online_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_online_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(_online_status)
+
+	# Crear sala
+	var create_btn := Button.new()
+	create_btn.text = "➕ Crear sala"
+	create_btn.custom_minimum_size = Vector2(0, 44)
+	create_btn.pressed.connect(_on_create_room)
+	v.add_child(create_btn)
+
+	v.add_child(_hsep())
+
+	# Unirse con código
+	_online_code_input = LineEdit.new()
+	_online_code_input.placeholder_text = "Código de sala (ej. ABCD)"
+	_online_code_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_online_code_input.max_length = 6
+	v.add_child(_online_code_input)
+	var join_btn := Button.new()
+	join_btn.text = "🚪 Unirse con código"
+	join_btn.custom_minimum_size = Vector2(0, 44)
+	join_btn.pressed.connect(_on_join_room)
+	v.add_child(join_btn)
+
+	# Vista de SALA (oculta hasta crear/unirse)
+	_online_room_box = VBoxContainer.new()
+	_online_room_box.add_theme_constant_override("separation", 8)
+	_online_room_box.visible = false
+	v.add_child(_online_room_box)
+
+	_online_code_label = Label.new()
+	_online_code_label.add_theme_font_size_override("font_size", 26)
+	_online_code_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_online_room_box.add_child(_online_code_label)
+
+	_online_players_box = VBoxContainer.new()
+	_online_room_box.add_child(_online_players_box)
+
+	_online_start_btn = Button.new()
+	_online_start_btn.text = "¡INICIAR PARTIDA!"
+	_online_start_btn.custom_minimum_size = Vector2(0, 44)
+	_online_start_btn.pressed.connect(func(): OnlineServer.start_room())
+	_online_room_box.add_child(_online_start_btn)
+
+	var close_btn := Button.new()
+	close_btn.text = "Volver"
+	close_btn.pressed.connect(func(): _online_layer.visible = false)
+	v.add_child(close_btn)
+
+func _hsep() -> HSeparator:
+	return HSeparator.new()
+
+func _on_create_room():
+	if not _online_connected:
+		_online_status.text = "Aún no conectado al servidor."
+		return
+	OnlineServer.create_room(name_input.text)
+
+func _on_join_room():
+	if not _online_connected:
+		_online_status.text = "Aún no conectado al servidor."
+		return
+	var code := _online_code_input.text.strip_edges().to_upper()
+	if code.is_empty():
+		_online_status.text = "Escribe un código de sala."
+		return
+	OnlineServer.join_room(code, name_input.text)
+
+func _on_room_joined(code: String, players: Array):
+	_online_status.text = "¡En la sala!"
+	_online_room_box.visible = true
+	_online_code_label.text = "Código: %s" % code
+	_render_online_players(players)
+
+func _on_room_players_updated(players: Array):
+	_render_online_players(players)
+
+func _render_online_players(players: Array):
+	for c in _online_players_box.get_children(): c.queue_free()
+	var is_host := false
+	var my_id := multiplayer.get_unique_id()
+	for p in players:
+		var lbl := Label.new()
+		lbl.text = p["name"] + ("  (HOST)" if p.get("host", false) else "") + ("  (TÚ)" if p["id"] == my_id else "")
+		_online_players_box.add_child(lbl)
+		if p["id"] == my_id and p.get("host", false):
+			is_host = true
+	_online_start_btn.visible = is_host
+
+func _on_online_error(message: String):
+	_online_status.text = "⚠ " + message
+
+func _on_room_game_started(_code: String):
+	# El servidor ya nos registró en la partida; cargamos la mesa.
+	# (Cliente: NO somos autoridad; solo recibimos los RPCs visuales del servidor.)
+	_online_status.text = "¡La partida va a comenzar!"
+	GameManager.is_game_active = true
+	get_tree().change_scene_to_file("res://scenes/game/GameTable.tscn")
 
 # Crea el selector de multiplicador (x1..x5) dentro del panel de reglas.
 func _build_multiplier_control():
@@ -128,10 +311,8 @@ func _go_to_lobby(is_host: bool):
 	waiting_label.visible = true
 	if is_host:
 		var ip := GameManager.get_local_ip()
-		if ip == "127.0.0.1":
-			waiting_label.text = "🌐 Sala creada en esta PC.\nOtro jugador en la MISMA red debe usar tu IP local (puerto %d)." % GameManager.PORT
-		else:
-			waiting_label.text = "🌐 Tu IP local: %s  (puerto %d)\nCompártela con los demás jugadores de tu red." % [ip, GameManager.PORT]
+		waiting_label.text = "🌐 Tu IP: %s  (puerto %d)\nCompártela con los jugadores de tu MISMA red WiFi." % [ip, GameManager.PORT]
+		_add_copy_ip_button(ip)
 	else:
 		waiting_label.text = "Esperando a que el host inicie la partida..."
 
@@ -147,6 +328,20 @@ func _go_to_lobby(is_host: bool):
 	if is_host:
 		_on_rules_ui_changed() # Enviar estado inicial
 
+
+# Crea (una sola vez) un botón que copia la IP del host al portapapeles.
+func _add_copy_ip_button(ip: String):
+	if is_instance_valid(_copy_ip_btn):
+		_copy_ip_btn.queue_free()
+	_copy_ip_btn = Button.new()
+	_copy_ip_btn.text = "📋 Copiar IP (%s)" % ip
+	_copy_ip_btn.pressed.connect(func():
+		DisplayServer.clipboard_set(ip)
+		_copy_ip_btn.text = "✓ IP copiada: %s" % ip
+	)
+	var parent = waiting_label.get_parent()
+	parent.add_child(_copy_ip_btn)
+	parent.move_child(_copy_ip_btn, waiting_label.get_index() + 1)
 
 func _on_rules_ui_changed():
 	if not multiplayer.is_server(): return

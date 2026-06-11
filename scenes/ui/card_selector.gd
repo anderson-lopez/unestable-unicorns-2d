@@ -25,20 +25,12 @@ func open_selection(card_ids: Array, title: String):
 		
 		var card = CARD_SCENE.instantiate()
 		grid.add_child(card)
-		
-		# Configuramos la carta
 		card.setup_card(data)
-		
-		# --- MODO SELECCIÓN ---
-		# Cambiamos el texto del botón
-		card.play_button.text = "ELEGIR"
-		# Ocultamos el botón descartar (no tiene sentido aquí)
-		card.discard_button.hide()
-		
-		# CONEXIÓN INTELIGENTE:
-		# No tocamos las señales internas del botón.
-		# Simplemente escuchamos cuando la carta dice "Hey, quieren jugarme"
-		card.play_requested.connect(func(_card_ui): _on_card_chosen(id))
+
+		# MODO SELECCIÓN: toda la carta es clicable (funciona con mouse Y toque,
+		# sin necesidad de hover).
+		var cap_id: int = id
+		card.enable_pick_mode(func(): _on_card_chosen(cap_id))
 
 	show()
 

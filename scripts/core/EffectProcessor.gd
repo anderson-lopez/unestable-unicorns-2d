@@ -453,7 +453,9 @@ func _act_revive(amount: int, zone: GameEnums.Zone, filter: GameEnums.Filter, ac
 		if zone == GameEnums.Zone.STABLE:
 			p.stable.append(card_data)
 			_table_rpc(&"client_card_entered_stable_visual", acting_player_id, picked_id)
-			passives.on_card_entered_stable(acting_player_id, card_data)
+			# Dispara su efecto de ENTRADA (+ registra pasivos + Alambre/Establo Diminuto).
+			# Antes solo registraba pasivos → los efectos al entrar no se activaban.
+			await resolve_on_enter_stable(card_data, acting_player_id)
 			GameManager.check_win_condition()
 		else: # HAND
 			p.hand.append(card_data)
@@ -826,18 +828,18 @@ func _request_stable_target(acting_player_id: int, scope: GameEnums.Scope, filte
 				continue
 		clean.append(cand)
 	candidates = clean
-	if candidates.is_empty(): return {}
-	# Si solo hay 1 candidato y scope no es CHOSEN: auto-seleccionar
-	if candidates.size() == 1:
-		return candidates[0]
-	# Abrir picker
+	if candidates.is_empty():
+		_notify(acting_player_id, "No hay cartas válidas para el efecto")
+		return {}
+	# SIEMPRE mostramos el picker (aunque haya 1 candidato) para que el jugador
+	# pueda elegir o CANCELAR. Antes auto-seleccionaba y forzaba la jugada.
 	_table_rpc_id(acting_player_id, "client_open_stable_target_pick", candidates, "Elige una carta objetivo")
 	var result = await target_picked
 	return {"card_id": result[0], "owner_id": result[1]}
 
 func _request_card_pick(player_id: int, card_ids: Array, prompt: String) -> int:
 	if card_ids.is_empty(): return -1
-	if card_ids.size() == 1: return card_ids[0]
+	# SIEMPRE mostramos el picker (con cancelar), aunque haya 1 candidato.
 	_table_rpc_id(player_id, "client_open_card_pick", card_ids, prompt, true)
 	var result = await target_picked
 	return result[0]
@@ -875,7 +877,6 @@ func _request_owner_stable_pick(viewer_id: int, owner_id: int, filter: GameEnums
 				continue
 			candidates.append({"owner_id": owner_id, "card_id": c.id})
 	if candidates.is_empty(): return -1
-	if candidates.size() == 1: return candidates[0]["card_id"]
 	_table_rpc_id(viewer_id, "client_open_stable_target_pick", candidates, "Elige una carta")
 	var result = await target_picked
 	return result[0]
@@ -883,7 +884,6 @@ func _request_owner_stable_pick(viewer_id: int, owner_id: int, filter: GameEnums
 # Pick de una lista explícita de candidatos {owner_id, card_id}
 func _request_candidate_pick(viewer_id: int, candidates: Array, prompt: String) -> Dictionary:
 	if candidates.is_empty(): return {}
-	if candidates.size() == 1: return candidates[0]
 	_table_rpc_id(viewer_id, "client_open_stable_target_pick", candidates, prompt)
 	var result = await target_picked
 	return {"card_id": result[0], "owner_id": result[1]}

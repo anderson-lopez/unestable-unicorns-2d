@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Unestable Unicorns 2D"
-run/main_scene="uid://ctrkxwibp02ws"
+run/main_scene="res://scenes/ui/SplashScreen.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -21,7 +21,16 @@ CardDatabase="*uid://3qih4fil7ujq"
 GameManager="*uid://30hcw1oqx4kk"
 EffectProcessor="*res://scripts/core/EffectProcessor.gd"
 NeighManager="*res://scripts/core/NeighManager.gd"
+OnlineServer="*res://scripts/core/OnlineServer.gd"
 TestLoader="*uid://ca2jkkyoxhpap"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation="landscape"
 
 [physics]
 

@@ -14,16 +14,30 @@ var card_scale: float = 1.0
 
 func _ready():
 	_build_upgrades_row()
+	_apply_panel_style()
+
+# Fondo sólido oscuro con borde para que cada establo rival se distinga de la mesa.
+func _apply_panel_style():
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.10, 0.11, 0.15, 0.96)
+	sb.set_corner_radius_all(8)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(0.35, 0.37, 0.48, 0.9)
+	sb.set_content_margin_all(8)
+	add_theme_stylebox_override("panel", sb)
 
 # Crea la fila de ventajas/desventajas y la coloca justo debajo del nombre/mano,
 # por ENCIMA de la fila de unicornios (stable_container).
 func _build_upgrades_row():
 	upgrades_row = HBoxContainer.new()
 	upgrades_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	upgrades_row.add_theme_constant_override("separation", 2)
+	upgrades_row.add_theme_constant_override("separation", 4)
 	var vbox := stable_container.get_parent()
+	# Separación clara entre nombre/mano, ventajas/desventajas y unicornios.
+	vbox.add_theme_constant_override("separation", 8)
 	vbox.add_child(upgrades_row)
 	vbox.move_child(upgrades_row, stable_container.get_index()) # justo arriba de unicornios
+	stable_container.add_theme_constant_override("separation", 4)
 
 # Ajusta el tamaño de las cartas (1.0 normal; <1 para muchos jugadores).
 func set_card_scale(s: float):

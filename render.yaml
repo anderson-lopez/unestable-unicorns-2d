@@ -1,0 +1,12 @@
+# Blueprint de Render para el servidor dedicado (Opción 🅰️: una partida a la vez).
+# Render → New → Blueprint → conecta este repo y detecta este archivo.
+services:
+  - type: web
+    name: unstable-unicorns-server
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free          # gratis: se duerme tras 15 min sin uso (~50s al despertar)
+    healthCheckPath: /  # WebSocket; Render solo verifica que el puerto responda
+    envVars:
+      - key: UU_DEDICATED
+        value: "1"

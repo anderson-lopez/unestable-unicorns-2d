@@ -4,3 +4,9 @@
 
 # Builds exportados (no versionar los binarios)
 /builds/
+/UnstableUnicorns2D.exe
+/UnstableUnicorns2D.pck
+/UnstableUnicorns2D_mac.zip
+/unestableunicorns2dHTML5/
+*.exe
+*.pck

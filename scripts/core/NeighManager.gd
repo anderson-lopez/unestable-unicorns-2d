@@ -2,7 +2,7 @@ extends Node
 # Autoload: gestiona la ventana de Relinchos al jugar una carta.
 # Server-side: pregunta a quien tenga Neigh si quiere usarlo durante N segundos.
 
-const WINDOW_SECONDS: float = 5.0
+const WINDOW_SECONDS: float = 15.0
 
 # Wrappers para RPCs visuales que viven en game_table
 func _table_rpc(method, p1 = null, p2 = null, p3 = null, p4 = null):

@@ -187,6 +187,91 @@ Anderson pidió varias mejoras de UX y multijugador. Se hizo todo (código puro,
 Verificación: 0 errores de parseo, 216 tests OK, export EXIT 0, lobby arranca limpio.
 Pendiente: **playtest en vivo** de la UI en partida real (idealmente 3-4 jugadores).
 
+### Sesión — Relincho 15s, fix auto-target, layout de rivales y máx 4
+
+Reportado por Anderson jugando:
+- **Bug auto-target**: cuando un efecto tenía UN solo objetivo válido (ej: Uniceronte con 1
+  unicornio rival), el picker auto-seleccionaba y FORZABA la jugada (no dejaba elegir ni
+  cancelar). **Fix**: se quitó el auto-select de `_request_stable_target`, `_request_card_pick`,
+  `_request_owner_stable_pick`, `_request_candidate_pick` → el picker SIEMPRE aparece (con
+  Cancelar). Aplica a todas las cartas, no solo Uniceronte.
+- **Alerta de Relincho mejorada**: ventana de **15 s** (antes 5), panel grande "⚡ ¡PUEDES
+  RELINCHAR! ⚡", cuenta regresiva en vivo (Timer hijo, rojo en últimos 5 s), borde pulsante.
+  La mecánica ya abría la ventana para TODOS los oponentes con Relincho (sin importar si el
+  que juega tiene uno); el problema era solo visibilidad/tiempo.
+- **Máximo 4 jugadores** (`MAX_CLIENTS=3`). Rivales posicionados ALREDEDOR en banda superior:
+  1 rival=arriba-centro, 2=izquierda+derecha, 3=izquierda+centro+derecha. Capa libre
+  `rival_layer` (Control full-rect) en vez del HBox; el `$RivalsContainer` queda oculto.
+
+Verificación: 0 errores de parseo, 216 tests OK.
+
+### Sesión — Layout alrededor de la mesa, soporte táctil y prep. APK
+
+- **Rivales ALREDEDOR** (no todos arriba): `_rival_slot` devuelve "top"/"left"/"right".
+  1=arriba, 2=izq+der, 3=arriba+izq+der (centrados verticalmente los laterales). Para que no
+  choquen: el **log** se acortó (arriba-izq, termina antes del rival izq) y las **pilas+botones**
+  se subieron/compactaron (arriba-der, terminan antes del rival der).
+- **Visor de reglas** con fondo SÓLIDO oscuro + palabras clave coloreadas (`_colorize_keywords`).
+  Todos los modales ahora tienen fondo sólido (`_make_modal_panel` con StyleBoxFlat).
+- **Establos rivales** con fondo sólido/borde y que CRECEN según contenido (grow_vertical END).
+- **Soporte TÁCTIL** (card_ui.gd): las cartas se abren con TAP (`_on_detector_input` +
+  `_toggle_open`); hover solo en escritorio (`_is_touch` = OS.has_feature("mobile") o pantalla
+  táctil). Los botones no capturan el toque cuando la carta está cerrada (`_set_buttons_interactive`).
+- **Crash arreglado**: textura null al meter carta en establo de jugador sin zona → guard
+  (no setup_card fuera del árbol) + `setup_card`/`_update_highlight_color` defensivos.
+- **Prep. móvil** (project.godot): orientación landscape, stretch canvas_items/expand,
+  emulate_mouse_from_touch/emulate_touch_from_mouse, base 1280x720.
+- **Botón "📖 Ver Reglas"** nuevo (junto a Finalizar Turno). Finalizar Turno arreglado
+  (antes quedaba debajo del panel de registro que capturaba los clicks).
+- **APK**: NO se puede generar aquí (falta Android SDK/JDK/plantillas 4.6.3). Se creó
+  **GUIA_APK_ANDROID.md** con los pasos para instalarlo y exportar desde el editor.
+
+Verificación: 0 errores de parseo, 216 tests OK.
+
+### Sesión — Online (Render + WebSocket): Fase 1 y 3.1
+
+- **Fase 1 COMPLETA:** red migrada de **ENet → WebSocket** (`WebSocketMultiplayerPeer`).
+  `host_game`/`join_game` usan URLs `ws://`. La lógica de juego (rpc) quedó intacta.
+  Local sigue funcionando. Límite de 4 jugadores + rechazo de sala llena (`kicked_from_server`).
+- **Decisión:** ir directo a **multi-sala con código** (opción 3B), no una sala global.
+- **Paso 3.1 hecho:** `scripts/core/OnlineServer.gd` (autoload) — núcleo del servidor
+  dedicado multi-sala: modo `--dedicated`/`UU_DEDICATED`, puerto de Render `$PORT`,
+  códigos únicos de 4 letras, crear/unirse/iniciar sala, máx 4 por sala, manejo de
+  desconexión. Solo MATCHMAKING (la lógica de partida por-sala viene en 3.3).
+- **Pendientes Fase 3:** 3.2 UI online en lobby · 3.3 estado del juego POR-SALA (refactor
+  grande de GameManager/EffectProcessor/NeighManager de singleton global → por sala) ·
+  3.4 conectar inicio de partida por sala. Ver **PLAN_ONLINE.md**.
+- Ajuste UI: cartas del establo propio más pequeñas (sin truco de scale) + filas separadas.
+  PENDIENTE (chip): reducir más y que se vean las ventajas/desventajas del rival.
+
+### Sesión — Online 3.2 confirmado + base de 3.3 + fix revive
+
+- **Fix:** revive al establo (Beso de Amor, etc.) ahora dispara `resolve_on_enter_stable`
+  (efecto de entrada + Alambre/Establo Diminuto). Antes solo registraba pasivos.
+- **Fase 3.2 PROBADA EN VIVO:** UI "🌐 JUGAR ONLINE" en el lobby (overlay por código en
+  `lobby.gd`): crear sala → código de 4 letras (ej. 9HSZ), unirse con código, lista de
+  jugadores en vivo. Funciona con servidor dedicado local. (El botón "Iniciar partida"
+  online aún NO arranca el juego → eso es 3.3.)
+- **Base de 3.3 creada:** `scripts/core/RoomState.gd` — contenedor del estado por-sala
+  (players, deck, discard, nursery, turnos, passives, etc.).
+- **3.3 paso 1 hecho:** cada sala en `OnlineServer.rooms[code]["state"]` lleva su propio
+  `RoomState`; helpers `room_state_of(peer_id)` y `room_state_by_code(code)` para enrutar.
+- UI: cartas del establo propio MÁS pequeñas (64×88 ventajas/desv., 78×107 unicornios) +
+  separación entre filas del rival para ver sus ventajas/desventajas.
+- **3.3 pasos 2-7 PENDIENTES** (el grande): mover la lógica de turnos/efectos/neigh para
+  operar sobre un RoomState en vez de las variables globales de GameManager. Ver PLAN_ONLINE.md.
+- **PLAN_ONLINE.md** tiene los 7 pasos concretos para ejecutar la Fase 3.3 (refactor
+  GameManager/EffectProcessor/NeighManager de global → por-sala) con cuidados y cómo probar.
+
+### 🔑 Comando para retomar (Fase 3.3)
+```
+Lee HISTORIAL.md y PLAN_ONLINE.md. Vamos en la Fase 3.3 del online (multi-sala con código):
+mover el estado del juego de GameManager (global) a RoomState (por-sala), y enrutar los
+RPCs por sala usando OnlineServer.peer_room. RoomState.gd ya existe (sin cablear). El
+matchmaking (3.1/3.2) ya funciona. Hazlo por pasos con tests (216 deben seguir pasando) y
+sin romper el modo local. Servidor dedicado de prueba: godot --headless --path . --dedicated
+```
+
 ## ✅ Estado actual (todo verde)
 
 - **85 cartas**, **84 efectos**, **0 gaps** en el motor.

@@ -27,6 +27,9 @@ const SFX_FILES := {
 @onready var info_panel: CardInfoPanel = $UILayer/CardInfoPanel
 @onready var card_selector: PanelContainer = $UILayer/CardSelector
 
+# Capa libre donde se posicionan los rivales alrededor de la mesa
+var rival_layer: Control
+
 # --- VARIABLES LÓGICAS ---
 var rival_stables: Dictionary = {}
 
@@ -102,6 +105,22 @@ func _ready():
 	$HandZone.z_index = 100
 	$MyStable.z_index = 1
 	$RivalsContainer.z_index = 1
+	# El HBox original ya no se usa para posicionar (lo dejamos oculto).
+	$RivalsContainer.visible = false
+
+	# Separación clara entre la fila de Ventajas/Desventajas (arriba) y la de
+	# Unicornios (abajo) para que no se encimen y se vean limpias.
+	$MyStable.add_theme_constant_override("separation", 18)
+	$MyStable/UpgradesRow.add_theme_constant_override("separation", 8)
+	$MyStable/UnicornsRow.add_theme_constant_override("separation", 8)
+
+	# Capa libre para posicionar a los rivales ALREDEDOR de la mesa
+	# (arriba / izquierda / derecha). No usa auto-layout.
+	rival_layer = Control.new()
+	rival_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	rival_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rival_layer.z_index = 1
+	add_child(rival_layer)
 
 	# Ocultar los botones de debug ("Obtener Carta Magica" / "Limpiar mesa")
 	if has_node("DebugUI"):
@@ -158,44 +177,52 @@ func _build_hud():
 	lbl_deck.add_theme_font_size_override("font_size", 14)
 	vb.add_child(lbl_deck)
 
-	btn_end_turn = Button.new()
-	btn_end_turn.text = "Finalizar Turno"
-	btn_end_turn.anchor_left = 1.0; btn_end_turn.anchor_right = 1.0
-	btn_end_turn.anchor_top = 1.0; btn_end_turn.anchor_bottom = 1.0
-	btn_end_turn.offset_left = -180; btn_end_turn.offset_right = -20
-	btn_end_turn.offset_top = -70; btn_end_turn.offset_bottom = -20
-	btn_end_turn.disabled = true
-	btn_end_turn.pressed.connect(_on_end_turn_pressed)
-	hud_layer.add_child(btn_end_turn)
-
-	_build_piles()
+	_build_right_column()
 	_build_log_panel()
 	_update_hud()
 
-# Tres pilas clicables en el lado izquierdo: Mazo, Descarte, Guardería.
-func _build_piles():
+# Columna DERECHA: pilas (Mazo/Descarte/Guardería) + botones (Finalizar Turno, Ver Reglas).
+func _build_right_column():
+	# Compacta y arriba a la derecha, para dejar libre el CENTRO-derecho al rival.
 	var col = VBoxContainer.new()
-	col.add_theme_constant_override("separation", 8)
-	col.anchor_left = 0.0; col.anchor_right = 0.0
-	col.anchor_top = 0.5; col.anchor_bottom = 0.5
-	col.offset_left = 12; col.offset_right = 132
-	col.offset_top = -90; col.offset_bottom = 90
+	col.add_theme_constant_override("separation", 5)
+	col.anchor_left = 1.0; col.anchor_right = 1.0
+	col.anchor_top = 0.0; col.anchor_bottom = 0.0
+	col.offset_left = -150; col.offset_right = -10
+	col.offset_top = 12; col.offset_bottom = 300
 	hud_layer.add_child(col)
 
 	pile_deck_btn = Button.new()
-	pile_deck_btn.custom_minimum_size = Vector2(120, 54)
+	pile_deck_btn.custom_minimum_size = Vector2(140, 40)
 	pile_deck_btn.disabled = true # el mazo de robo es secreto
 	col.add_child(pile_deck_btn)
 
 	pile_discard_btn = Button.new()
-	pile_discard_btn.custom_minimum_size = Vector2(120, 54)
+	pile_discard_btn.custom_minimum_size = Vector2(140, 40)
 	pile_discard_btn.pressed.connect(func(): _request_pile_view("discard"))
 	col.add_child(pile_discard_btn)
 
 	pile_nursery_btn = Button.new()
-	pile_nursery_btn.custom_minimum_size = Vector2(120, 54)
+	pile_nursery_btn.custom_minimum_size = Vector2(140, 40)
 	pile_nursery_btn.pressed.connect(func(): _request_pile_view("nursery"))
 	col.add_child(pile_nursery_btn)
+
+	var sep := Control.new()
+	sep.custom_minimum_size = Vector2(0, 8)
+	col.add_child(sep)
+
+	btn_end_turn = Button.new()
+	btn_end_turn.text = "✔ Finalizar Turno"
+	btn_end_turn.custom_minimum_size = Vector2(140, 44)
+	btn_end_turn.disabled = true
+	btn_end_turn.pressed.connect(_on_end_turn_pressed)
+	col.add_child(btn_end_turn)
+
+	var btn_rules := Button.new()
+	btn_rules.text = "📖 Ver Reglas"
+	btn_rules.custom_minimum_size = Vector2(140, 40)
+	btn_rules.pressed.connect(_show_rules_viewer)
+	col.add_child(btn_rules)
 
 	_refresh_pile_labels()
 
@@ -206,6 +233,65 @@ func _refresh_pile_labels():
 		pile_discard_btn.text = "🗑 Descarte\n%d" % _count_discard
 	if is_instance_valid(pile_nursery_btn):
 		pile_nursery_btn.text = "👶 Guardería\n%d" % _count_nursery
+
+# Visor de TODAS las reglas/cartas (nombre + tipo + efecto), desplazable.
+func _show_rules_viewer():
+	_close_modal()
+	var panel = _make_modal_panel("📖 Reglas de las cartas")
+	active_modal = panel
+	modal_layer.add_child(panel)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(740, 420)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_modal_vbox(panel).add_child(scroll)
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 10)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	var ids = CardDatabase.database.keys()
+	ids.sort()
+	for id in ids:
+		var c: CardData = CardDatabase.get_card_data(id)
+		if not c: continue
+		var rt := RichTextLabel.new()
+		rt.bbcode_enabled = true
+		rt.fit_content = true
+		rt.custom_minimum_size = Vector2(700, 0)
+		rt.add_theme_color_override("default_color", Color.WHITE)
+		rt.text = "[b][color=#ffe070]%s[/color][/b]  [color=#9aa]( %s )[/color]\n%s" % [
+			c.name_es, _pretty_type(c.type), _colorize_keywords(c.description_es)]
+		list.add_child(rt)
+	var btn_close := Button.new()
+	btn_close.text = "Cerrar"
+	btn_close.pressed.connect(_close_modal)
+	_modal_vbox(panel).add_child(btn_close)
+
+# Colorea las palabras clave (colores brillantes para fondo oscuro).
+func _colorize_keywords(text: String) -> String:
+	var t = text
+	var rules = [
+		["DESTRUYE", "#ff6b5e"], ["DESTRUIR", "#ff6b5e"],
+		["SACRIFICA", "#ff9d5c"], ["SACRIFICAR", "#ff9d5c"],
+		["ROBA", "#6bdb6b"], ["ROBAR", "#6bdb6b"],
+		["DESCARTA", "#9fb8ff"], ["DESCARTAR", "#9fb8ff"],
+		["HURTA", "#cf8bff"], ["HURTAR", "#cf8bff"],
+	]
+	for r in rules:
+		t = t.replace(r[0], "[b][color=%s]%s[/color][/b]" % [r[1], r[0]])
+	return t
+
+func _pretty_type(t: GameEnums.CardType) -> String:
+	match t:
+		GameEnums.CardType.BABY_UNICORN: return "Bebé Unicornio"
+		GameEnums.CardType.BASIC_UNICORN: return "Unicornio Básico"
+		GameEnums.CardType.MAGICAL_UNICORN: return "Unicornio Mágico"
+		GameEnums.CardType.MAGIC_SPELL: return "Magia"
+		GameEnums.CardType.INSTANT: return "Relincho"
+		GameEnums.CardType.UPGRADE: return "Ventaja"
+		GameEnums.CardType.DOWNGRADE: return "Desventaja"
+		_: return "Otro"
 
 # Abre el visor de pila SOLO para quien lo pidió.
 func _request_pile_view(which: String):
@@ -225,10 +311,11 @@ func _request_pile_view(which: String):
 
 func _build_log_panel():
 	log_panel = PanelContainer.new()
-	log_panel.anchor_left = 1.0; log_panel.anchor_right = 1.0
-	log_panel.anchor_top = 0.0; log_panel.anchor_bottom = 1.0
-	log_panel.offset_left = -224; log_panel.offset_right = -10
-	log_panel.offset_top = 90; log_panel.offset_bottom = -90
+	# IZQUIERDA, justo DEBAJO del HUD. Corto (no llega al rival izquierdo del centro).
+	log_panel.anchor_left = 0.0; log_panel.anchor_right = 0.0
+	log_panel.anchor_top = 0.0; log_panel.anchor_bottom = 0.0
+	log_panel.offset_left = 12; log_panel.offset_right = 252
+	log_panel.offset_top = 145; log_panel.offset_bottom = 360
 	log_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0, 0, 0, 0.45)
@@ -276,11 +363,9 @@ func _toggle_log():
 		_log_toggle_btn.text = "▸" if log_collapsed else "▾"
 	if is_instance_valid(log_panel):
 		if log_collapsed:
-			log_panel.anchor_bottom = 0.0
-			log_panel.offset_bottom = 134.0
+			log_panel.offset_bottom = 190.0
 		else:
-			log_panel.anchor_bottom = 1.0
-			log_panel.offset_bottom = -90.0
+			log_panel.offset_bottom = 360.0
 
 # Añade una línea al registro local y hace auto-scroll al fondo.
 func _add_log_line(text: String, color: Color = Color.WHITE) -> void:
@@ -604,10 +689,16 @@ func _server_restart_match():
 
 @rpc("authority", "call_local", "reliable")
 func client_go_to_lobby():
+	# Servidor dedicado (árbitro): NO cerrar el peer (mataría el servidor). Solo
+	# resetear su estado para volver a aceptar salas; sigue vivo en Render.
+	if GameManager.is_dedicated_referee:
+		OnlineServer.reset_active_game()
+		return
 	# Desconectar limpio para que el Lobby muestre la pantalla de login
 	# (nombre, IP, unirse) como al principio.
 	GameManager.is_game_active = false
 	GameManager.players.clear()
+	GameManager.online_mode = false
 	if multiplayer.multiplayer_peer != null:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
@@ -619,32 +710,75 @@ func client_go_to_lobby():
 
 func setup_table():
 	var my_id = multiplayer.get_unique_id()
-	# Contar rivales para escalar la mesa dinámicamente (2-8 jugadores).
-	var rival_count := 0
+	# Lista ordenada de rivales (para asignarles slots alrededor de la mesa)
+	var rival_ids: Array[int] = []
 	for p_id in GameManager.players:
 		if p_id != my_id:
-			rival_count += 1
-	for p_id in GameManager.players:
-		if p_id == my_id:
-			print("Configurando mi zona: ", GameManager.players[p_id].name)
-		else:
-			_create_rival_zone(p_id, GameManager.players[p_id], rival_count)
-
-# Escala de carta para las zonas rivales según cuántos haya (mesa dinámica).
-func _rival_card_scale(n: int) -> float:
-	if n <= 3:
-		return 1.0
-	elif n <= 5:
-		return 0.8
+			rival_ids.append(p_id)
+	rival_ids.sort()
+	var rival_count := rival_ids.size()
+	for i in range(rival_count):
+		var p_id = rival_ids[i]
+		_create_rival_zone(p_id, GameManager.players[p_id], i, rival_count)
+	# El servidor dedicado (árbitro) NO es jugador: no tiene "mi zona".
+	if GameManager.is_dedicated_referee:
+		print("Servidor árbitro: mesa lista (", rival_count, " jugadores).")
 	else:
-		return 0.62
+		print("Configurando mi zona: ", GameManager.players[my_id].name)
 
-func _create_rival_zone(id: int, data: PlayerData, rival_count: int = 1):
+# Escala de carta para las zonas rivales según cuántos haya.
+func _rival_card_scale(n: int) -> float:
+	return 1.0 if n <= 3 else 0.8
+
+# Devuelve {fx, y} para el slot del rival: reparte ARRIBA / IZQUIERDA / DERECHA.
+#  - 1 rival  → arriba-centro
+#  - 2 rivales → izquierda y derecha
+#  - 3 rivales → izquierda, arriba-centro, derecha
+# Devuelve la POSICIÓN del rival alrededor de la mesa: "top" / "left" / "right".
+#  - 1 rival  → arriba
+#  - 2 rivales → izquierda y derecha
+#  - 3 rivales → arriba, izquierda, derecha
+func _rival_slot(index: int, total: int) -> String:
+	match total:
+		1:
+			return "top"
+		2:
+			return ["left", "right"][index]
+		_:
+			return ["top", "left", "right"][index]
+
+func _create_rival_zone(id: int, data: PlayerData, index: int, rival_count: int = 1):
 	var rival_zone = RIVAL_ZONE_SCENE.instantiate()
-	rivals_container.add_child(rival_zone)
+	rival_layer.add_child(rival_zone)
 	if rival_zone.has_method("set_card_scale"):
 		rival_zone.set_card_scale(_rival_card_scale(rival_count))
 	rival_zone.setup(data.name)
+
+	# Posición ALREDEDOR de la mesa: arriba (centro), izquierda o derecha (centradas
+	# verticalmente). El panel crece hacia abajo según su contenido.
+	var pos := _rival_slot(index, rival_count)
+	var half_w := 150.0
+	rival_zone.grow_vertical = Control.GROW_DIRECTION_END
+	rival_zone.offset_top = 0
+	rival_zone.offset_bottom = 0
+	match pos:
+		"top":
+			rival_zone.anchor_left = 0.5; rival_zone.anchor_right = 0.5
+			rival_zone.anchor_top = 0.0; rival_zone.anchor_bottom = 0.0
+			rival_zone.offset_left = -half_w; rival_zone.offset_right = half_w
+			rival_zone.offset_top = 8.0; rival_zone.offset_bottom = 8.0 # pegado al borde superior
+			rival_zone.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		"left":
+			rival_zone.anchor_left = 0.0; rival_zone.anchor_right = 0.0
+			rival_zone.anchor_top = 0.40; rival_zone.anchor_bottom = 0.40
+			rival_zone.offset_left = 12.0; rival_zone.offset_right = 12.0 + 2.0 * half_w
+			rival_zone.grow_horizontal = Control.GROW_DIRECTION_END
+		"right":
+			rival_zone.anchor_left = 1.0; rival_zone.anchor_right = 1.0
+			rival_zone.anchor_top = 0.40; rival_zone.anchor_bottom = 0.40
+			rival_zone.offset_left = -(12.0 + 2.0 * half_w); rival_zone.offset_right = -12.0
+			rival_zone.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+
 	rival_stables[id] = rival_zone
 
 # ==============================================================================
@@ -684,6 +818,9 @@ func _server_deal_initial_hands():
 
 @rpc("authority", "call_local", "reliable")
 func client_start_baby_selection(available_babies: Array):
+	# El servidor árbitro no elige bebé (no es jugador).
+	if GameManager.is_dedicated_referee:
+		return
 	print("Cliente: Abriendo selector de bebés...")
 	_play_sfx("shuffle") # las cartas se barajan al empezar
 	card_selector.open_selection(available_babies, "¡Elige tu Bebé Inicial!")
@@ -912,16 +1049,28 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 	var card_data = CardDatabase.get_card_data(card_id)
 	var new_card = CARD_SCENE.instantiate()
 	var is_top := card_data.is_upgrade() or card_data.is_downgrade()
+	var added := false
 	if player_id == my_id:
 		if is_top:
 			my_upgrades_row.add_child(new_card)
 		else:
 			my_unicorns_row.add_child(new_card)
-		new_card.custom_minimum_size = Vector2(120, 165)
-		new_card.scale = Vector2(0.8, 0.8)
-	else:
-		if rival_stables.has(player_id):
-			rival_stables[player_id].add_card_to_stable(new_card, is_top)
+		# Footprint real más pequeño (sin truco de 'scale' que dejaba huecos y
+		# encimaba filas). Las ventajas/desventajas (fila de arriba) un poco más
+		# chicas aún, para que se vean limpias sobre los unicornios.
+		if is_top:
+			new_card.custom_minimum_size = Vector2(64, 88) # ventajas/desventajas (más chicas)
+		else:
+			new_card.custom_minimum_size = Vector2(78, 107) # unicornios
+		added = true
+	elif rival_stables.has(player_id):
+		rival_stables[player_id].add_card_to_stable(new_card, is_top)
+		added = true
+	# Si la carta no se agregó a ningún contenedor (jugador sin zona),
+	# la descartamos para NO llamar setup_card fuera del árbol (evita crash de textura null).
+	if not added:
+		new_card.queue_free()
+		return
 	new_card.setup_card(card_data)
 	new_card.name = "Stable_%d_%d" % [player_id, card_id]
 	new_card.set_meta("card_id", card_id) # para localizar/quitar (soporta duplicados)
@@ -1085,12 +1234,8 @@ func _show_card_picker(card_ids: Array, prompt: String, allow_cancel: bool, call
 		hbox.add_child(card_ui)
 		card_ui.setup_card(data)
 		card_ui.custom_minimum_size = Vector2(140, 195)
-		card_ui.play_button.text = "ELEGIR"
-		card_ui.discard_button.hide()
-		card_ui.play_requested.connect(func(_c):
-			call(callback_name, cid)
-		)
-		card_ui.info_requested.connect(_on_card_info_requested)
+		var cap_cid: int = cid
+		card_ui.enable_pick_mode(func(): call(callback_name, cap_cid))
 	if allow_cancel:
 		var btn_cancel = Button.new()
 		btn_cancel.text = "Cancelar"
@@ -1118,12 +1263,9 @@ func _show_stable_picker(candidates: Array, prompt: String):
 		vb.add_child(card_ui)
 		card_ui.setup_card(data)
 		card_ui.custom_minimum_size = Vector2(130, 180)
-		card_ui.play_button.text = "ELEGIR"
-		card_ui.discard_button.hide()
-		card_ui.play_requested.connect(func(_c):
-			_send_stable_pick(cid, owner_id)
-		)
-		card_ui.info_requested.connect(_on_card_info_requested)
+		var cap_cid: int = cid
+		var cap_owner: int = owner_id
+		card_ui.enable_pick_mode(func(): _send_stable_pick(cap_cid, cap_owner))
 	var btn_cancel = Button.new()
 	btn_cancel.text = "Cancelar"
 	btn_cancel.pressed.connect(func(): _send_stable_pick(-1, -1))
@@ -1162,19 +1304,20 @@ func _show_cost_picker(action: int, amount: int, filter: int, msg: String, optio
 	var panel = _make_modal_panel(msg)
 	active_modal = panel
 	modal_layer.add_child(panel)
-	# Listar opciones válidas según action + filter
+	# Listar opciones válidas leyendo MIS cartas visuales (en cliente la data
+	# autoritativa está vacía; la fuente fiable son los nodos en pantalla).
 	var candidates: Array = []
-	var my_id = multiplayer.get_unique_id()
-	var p = GameManager.players.get(my_id)
 	var action_enum := action as GameEnums.Action
 	var filter_enum := filter as GameEnums.Filter
-	if p:
-		if action_enum == GameEnums.Action.DISCARD:
-			for c in p.hand:
-				if c.matches_filter(filter_enum): candidates.append(c.id)
-		elif action_enum == GameEnums.Action.SACRIFICE:
-			for c in p.stable:
-				if c.matches_filter(filter_enum): candidates.append(c.id)
+	var source_ids: Array = []
+	if action_enum == GameEnums.Action.DISCARD:
+		source_ids = _my_hand_card_ids()
+	elif action_enum == GameEnums.Action.SACRIFICE:
+		source_ids = _my_stable_card_ids()
+	for cid in source_ids:
+		var cd := CardDatabase.get_card_data(cid)
+		if cd and cd.matches_filter(filter_enum):
+			candidates.append(cid)
 	pending_cost_payload["candidates"] = candidates
 	pending_cost_payload["needed"] = amount
 	pending_cost_payload["picked"] = []
@@ -1203,12 +1346,9 @@ func _show_cost_picker(action: int, amount: int, filter: int, msg: String, optio
 		hbox.add_child(card_ui)
 		card_ui.setup_card(data)
 		card_ui.custom_minimum_size = Vector2(120, 165)
-		card_ui.play_button.text = "Marcar"
-		card_ui.discard_button.hide()
-		card_ui.play_requested.connect(func(c_ui):
-			_toggle_cost_card(cid, c_ui)
-		)
-		card_ui.info_requested.connect(_on_card_info_requested)
+		var cap_cid: int = cid
+		var cap_ui: CardUI = card_ui
+		card_ui.enable_pick_mode(func(): _toggle_cost_card(cap_cid, cap_ui))
 
 	var hbtn = HBoxContainer.new()
 	_modal_vbox(panel).add_child(hbtn)
@@ -1274,12 +1414,29 @@ func _skip_cost_pay():
 func client_open_discard_to_limit(amount: int):
 	_show_discard_to_limit_picker(amount)
 
+# IDs de las cartas en MI mano, leídos de los nodos visuales (fuente fiable en
+# cliente; GameManager.players[mi_id].hand solo está poblado en el servidor).
+func _my_hand_card_ids() -> Array:
+	var ids: Array = []
+	for c in my_hand_container.get_children():
+		if c is CardUI and c.card_data:
+			ids.append(c.card_data.id)
+	return ids
+
+# IDs de las cartas en MI establo (filas visuales).
+func _my_stable_card_ids() -> Array:
+	var ids: Array = []
+	for row in [my_upgrades_row, my_unicorns_row]:
+		for c in row.get_children():
+			if c is CardUI and c.card_data:
+				ids.append(c.card_data.id)
+	return ids
+
 func _show_discard_to_limit_picker(amount: int):
 	_close_modal()
-	var my_id = multiplayer.get_unique_id()
-	var p = GameManager.players.get(my_id)
-	if not p:
-		_send_discard_chosen([]) # sin mano: el server completará por FIFO
+	var hand_ids := _my_hand_card_ids()
+	if hand_ids.is_empty():
+		_send_discard_chosen([]) # sin mano visible: el server completará por FIFO
 		return
 	_discard_limit_picked = []
 	var panel = _make_modal_panel("Tu mano supera el límite. Elige %d carta(s) para descartar." % amount)
@@ -1293,20 +1450,16 @@ func _show_discard_to_limit_picker(amount: int):
 	_modal_vbox(panel).add_child(info_lbl)
 
 	var hbox = _make_scrollable_hbox(_modal_vbox(panel))
-	for c in p.hand:
-		var cid = c.id
+	for cid in hand_ids:
 		var data = CardDatabase.get_card_data(cid)
 		if not data: continue
 		var card_ui = CARD_SCENE.instantiate()
 		hbox.add_child(card_ui)
 		card_ui.setup_card(data)
 		card_ui.custom_minimum_size = Vector2(120, 165)
-		card_ui.play_button.text = "Marcar"
-		card_ui.discard_button.hide()
-		card_ui.play_requested.connect(func(c_ui):
-			_toggle_discard_limit_card(cid, c_ui)
-		)
-		card_ui.info_requested.connect(_on_card_info_requested)
+		var cap_cid: int = cid
+		var cap_ui: CardUI = card_ui
+		card_ui.enable_pick_mode(func(): _toggle_discard_limit_card(cap_cid, cap_ui))
 
 	var btn_confirm = Button.new()
 	btn_confirm.text = "Descartar (0/%d)" % amount
@@ -1360,6 +1513,13 @@ func _make_modal_panel(title: String) -> PanelContainer:
 	panel.anchor_top = 0.5; panel.anchor_bottom = 0.5
 	panel.offset_left = -400; panel.offset_right = 400
 	panel.offset_top = -250; panel.offset_bottom = 250
+	# Fondo SÓLIDO oscuro (no transparente) con borde.
+	var msb := StyleBoxFlat.new()
+	msb.bg_color = Color(0.10, 0.10, 0.13, 1.0)
+	msb.set_corner_radius_all(12)
+	msb.set_border_width_all(3)
+	msb.border_color = Color(0.45, 0.45, 0.55, 1.0)
+	panel.add_theme_stylebox_override("panel", msb)
 	var margin = MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 20)
 	margin.add_theme_constant_override("margin_right", 20)
@@ -1436,14 +1596,14 @@ var neigh_window_panel: Control = null
 
 @rpc("authority", "call_local", "reliable")
 func client_open_neigh_window(card_id: int, playing_player_id: int, secs: float):
-	# Solo abrir UI si tengo Neigh en mano
+	# Solo abrir UI si tengo Neigh en mano. Leemos la mano VISUAL (la data
+	# GameManager.players[mi_id].hand está vacía en cliente).
 	var my_id = multiplayer.get_unique_id()
 	if my_id == playing_player_id: return
-	var p = GameManager.players.get(my_id)
-	if not p: return
 	var neigh_in_hand: Array = []
-	for c in p.hand:
-		if c.is_instant(): neigh_in_hand.append(c.id)
+	for cid in _my_hand_card_ids():
+		var cd := CardDatabase.get_card_data(cid)
+		if cd and cd.is_instant(): neigh_in_hand.append(cid)
 	if neigh_in_hand.is_empty(): return
 
 	# Marcar ventana activa para permitir click desde la mano también
@@ -1459,52 +1619,103 @@ func client_open_neigh_window(card_id: int, playing_player_id: int, secs: float)
 func _show_neigh_panel(card_name: String, player_name: String, neighs: Array, secs: float):
 	if is_instance_valid(neigh_window_panel): neigh_window_panel.queue_free()
 	neigh_window_panel = PanelContainer.new()
+	# Panel GRANDE y centrado-arriba, imposible de no ver
 	neigh_window_panel.anchor_left = 0.5; neigh_window_panel.anchor_right = 0.5
 	neigh_window_panel.anchor_top = 0.0; neigh_window_panel.anchor_bottom = 0.0
-	neigh_window_panel.offset_left = -300; neigh_window_panel.offset_right = 300
-	neigh_window_panel.offset_top = 90; neigh_window_panel.offset_bottom = 230
+	neigh_window_panel.offset_left = -360; neigh_window_panel.offset_right = 360
+	neigh_window_panel.offset_top = 70; neigh_window_panel.offset_bottom = 300
 	var nsb := StyleBoxFlat.new()
-	nsb.bg_color = Color(0.1, 0.06, 0.06, 0.95)
-	nsb.set_corner_radius_all(10)
-	nsb.set_content_margin_all(14)
-	nsb.set_border_width_all(3)
-	nsb.border_color = Color(1, 0.27, 0.2, 0.95) # rojo "Relincho"
+	nsb.bg_color = Color(0.12, 0.05, 0.05, 0.97)
+	nsb.set_corner_radius_all(14)
+	nsb.set_content_margin_all(18)
+	nsb.set_border_width_all(5)
+	nsb.border_color = Color(1, 0.27, 0.2)
 	neigh_window_panel.add_theme_stylebox_override("panel", nsb)
+
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 12)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	neigh_window_panel.add_child(vbox)
+
+	# Encabezado llamativo
+	var header = Label.new()
+	header.text = "⚡ ¡PUEDES RELINCHAR! ⚡"
+	header.add_theme_font_size_override("font_size", 28)
+	header.add_theme_color_override("font_color", Color(1, 0.4, 0.3))
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(header)
+
 	var lbl = Label.new()
-	lbl.text = "🐴 %s está jugando %s\n¿Relinchar? (%.0fs)" % [player_name, card_name, secs]
-	lbl.add_theme_font_size_override("font_size", 17)
+	lbl.text = "🐴 %s juega: %s" % [player_name, card_name]
+	lbl.add_theme_font_size_override("font_size", 18)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(lbl)
+
+	# Cuenta regresiva en vivo
+	var countdown = Label.new()
+	countdown.name = "Countdown"
+	countdown.add_theme_font_size_override("font_size", 22)
+	countdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(countdown)
+
+	var hint = Label.new()
+	hint.text = "(también puedes clickear tu Relincho resaltado en la mano)"
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.modulate = Color(0.8, 0.8, 0.8)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(hint)
+
 	var hb = HBoxContainer.new()
 	hb.alignment = BoxContainer.ALIGNMENT_CENTER
+	hb.add_theme_constant_override("separation", 14)
 	vbox.add_child(hb)
 	for nid in neighs:
 		var btn = Button.new()
 		var data = CardDatabase.get_card_data(nid)
 		btn.text = "¡%s!" % data.name_es
+		btn.custom_minimum_size = Vector2(150, 56)
 		var captured_nid = nid
 		btn.pressed.connect(func():
 			if multiplayer.is_server():
 				NeighManager.server_receive_neigh(multiplayer.get_unique_id(), captured_nid)
 			else:
 				NeighManager.rpc_id(1, "server_receive_neigh_rpc", captured_nid)
-			neigh_window_panel.queue_free()
+			if is_instance_valid(neigh_window_panel): neigh_window_panel.queue_free()
 		)
 		hb.add_child(btn)
 	var btn_skip = Button.new()
 	btn_skip.text = "Pasar"
-	btn_skip.pressed.connect(func(): neigh_window_panel.queue_free())
-	vbox.add_child(btn_skip)
-	modal_layer.add_child(neigh_window_panel)
-	# Auto-cerrar tras secs
-	var t := get_tree().create_timer(secs)
-	t.timeout.connect(func():
-		if is_instance_valid(neigh_window_panel):
-			neigh_window_panel.queue_free()
+	btn_skip.custom_minimum_size = Vector2(110, 56)
+	btn_skip.pressed.connect(func():
+		if is_instance_valid(neigh_window_panel): neigh_window_panel.queue_free()
 	)
+	hb.add_child(btn_skip)
+
+	modal_layer.add_child(neigh_window_panel)
+
+	# Pulso del borde para llamar la atención
+	var pulse := neigh_window_panel.create_tween().set_loops().set_trans(Tween.TRANS_SINE)
+	pulse.tween_property(neigh_window_panel, "modulate", Color(1.25, 1.25, 1.25), 0.5)
+	pulse.tween_property(neigh_window_panel, "modulate", Color.WHITE, 0.5)
+
+	# Cuenta regresiva en vivo (Timer hijo → se libera con el panel)
+	var secs_left := [int(ceil(secs))]
+	countdown.text = "⏳ %d segundos" % secs_left[0]
+	var ticker := Timer.new()
+	ticker.wait_time = 1.0
+	ticker.one_shot = false
+	neigh_window_panel.add_child(ticker)
+	ticker.timeout.connect(func():
+		secs_left[0] -= 1
+		if not is_instance_valid(countdown): return
+		if secs_left[0] <= 0:
+			if is_instance_valid(neigh_window_panel): neigh_window_panel.queue_free()
+		else:
+			countdown.text = "⏳ %d segundos" % secs_left[0]
+			if secs_left[0] <= 5:
+				countdown.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+	)
+	ticker.start()
 
 @rpc("authority", "call_local", "reliable")
 func client_close_neigh_window():

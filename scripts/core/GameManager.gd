@@ -46,13 +46,21 @@ var _pending_discard_done: bool = false
 # Referencia global a la mesa de juego (la setea game_table en su _ready)
 var game_table: Node = null
 
+# --- ONLINE (servidor dedicado / Render) ---
+# online_mode: el cliente se conectó por OnlineServer (salas con código). En este
+#   modo NO se hace el auto-registro local; los jugadores entran por la sala.
+var online_mode: bool = false
+# is_dedicated_referee: true SOLO en el servidor dedicado mientras corre una partida.
+#   El servidor NO es jugador (no está en `players`); solo arbitra y retransmite RPCs.
+var is_dedicated_referee: bool = false
+
 # Cola de turnos extra (Change of Luck etc.)
 var extra_turn_queue: Array[int] = []
 
 # Configuración de Red
 const PORT = 7777
-const MAX_CLIENTS = 7 # 7 clientes + host = 8 jugadores máximo
-const JOIN_TIMEOUT_SECONDS = 8.0
+const MAX_CLIENTS = 3 # 3 clientes + host = 4 jugadores máximo (1 arriba, 2 a los lados)
+const JOIN_TIMEOUT_SECONDS = 15.0
 
 func _ready():
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -370,40 +378,54 @@ func host_game(player_name: String, rules: GameRules):
 	local_player_info["name"] = player_name
 	current_rules = rules
 
-	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_server(PORT, MAX_CLIENTS)
+	# Red por WebSocket (funciona en escritorio, móvil y web; y permite el
+	# servidor en la nube tipo Render).
+	var peer = WebSocketMultiplayerPeer.new()
+	var error = peer.create_server(PORT)
 
 	if error != OK:
 		game_error.emit("No se pudo crear el servidor: " + str(error))
 		return
 
 	multiplayer.multiplayer_peer = peer
-	print("Servidor iniciado. Esperando jugadores...")
+	print("Servidor WebSocket iniciado en puerto ", PORT)
 
 	_register_player(1, local_player_info)
+
+# Convierte una entrada del usuario en una URL WebSocket válida.
+#   "127.0.0.1"           -> "ws://127.0.0.1:7777"
+#   "192.168.1.5:7777"    -> "ws://192.168.1.5:7777"
+#   "ws://x" / "wss://x"  -> se usa tal cual (para servidores en la nube)
+func _make_ws_url(addr: String) -> String:
+	addr = addr.strip_edges()
+	if addr.is_empty():
+		addr = "127.0.0.1"
+	if addr.begins_with("ws://") or addr.begins_with("wss://"):
+		return addr
+	# Si no trae puerto, le agregamos el por defecto
+	if not addr.contains(":"):
+		addr = "%s:%d" % [addr, PORT]
+	return "ws://" + addr
 
 func join_game(player_name: String, ip: String):
 	local_player_info["name"] = player_name
 
-	# IP vacía → asumimos misma máquina (cómodo para pruebas locales)
-	ip = ip.strip_edges()
-	if ip.is_empty():
-		ip = "127.0.0.1"
+	var url := _make_ws_url(ip)
 
-	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_client(ip, PORT)
+	var peer = WebSocketMultiplayerPeer.new()
+	var error = peer.create_client(url)
 
 	if error != OK:
 		game_error.emit("No se pudo conectar: " + str(error))
 		return
 
 	multiplayer.multiplayer_peer = peer
-	print("Intentando conectar a ", ip)
+	print("Intentando conectar a ", url)
 	_watch_join_timeout(peer)
 
 # Si tras JOIN_TIMEOUT_SECONDS seguimos en estado CONNECTING con este mismo peer,
-# la conexión nunca se estableció (IP mal, host caído, firewall): abortamos con aviso.
-func _watch_join_timeout(peer: ENetMultiplayerPeer) -> void:
+# la conexión nunca se estableció (URL mal, servidor caído, firewall): abortamos.
+func _watch_join_timeout(peer: MultiplayerPeer) -> void:
 	await get_tree().create_timer(JOIN_TIMEOUT_SECONDS).timeout
 	if multiplayer.multiplayer_peer == peer and peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTING:
 		printerr("Timeout de conexión al servidor")
@@ -436,6 +458,10 @@ func _on_peer_connected(id: int):
 
 func _on_connected_ok():
 	print("¡Conexión exitosa al servidor!")
+	# En modo online (salas con código) NO se auto-registra: el flujo de sala
+	# (OnlineServer) gestiona quién entra a la partida.
+	if online_mode:
+		return
 	rpc_id(1, "register_player_request", local_player_info)
 
 func _on_connected_fail():
@@ -453,6 +479,14 @@ func register_player_request(info: Dictionary):
 	var sender_id = multiplayer.get_remote_sender_id()
 	print("Solicitud de registro recibida de: ", sender_id)
 
+	# Límite de jugadores (WebSocket no lo limita solo). host + MAX_CLIENTS.
+	if players.size() >= (MAX_CLIENTS + 1) or is_game_active:
+		print("Servidor: sala llena o partida en curso, rechazando ", sender_id)
+		rpc_id(sender_id, "kicked_from_server", "La sala está llena o la partida ya empezó.")
+		if multiplayer.multiplayer_peer:
+			multiplayer.multiplayer_peer.disconnect_peer(sender_id)
+		return
+
 	_register_player(sender_id, info)
 
 	for p_id in players:
@@ -460,9 +494,25 @@ func register_player_request(info: Dictionary):
 
 	rpc_id(sender_id, "sync_rules", current_rules.to_dictionary())
 
+# El servidor avisa al cliente que fue rechazado (sala llena / partida en curso).
+@rpc("authority", "reliable")
+func kicked_from_server(reason: String):
+	game_error.emit(reason)
+	multiplayer.multiplayer_peer = null
+
 @rpc("authority", "reliable")
 func register_player_client(id: int, info: Dictionary):
 	_register_player(id, info)
+
+# ONLINE (servidor dedicado): el servidor envía el roster COMPLETO a cada cliente
+# antes de cargar la mesa, para que GameManager.players exista igual en todos.
+# roster = [{ "id": int, "name": String }, ...]
+@rpc("authority", "reliable")
+func online_sync_roster(roster: Array):
+	players.clear()
+	for entry in roster:
+		_register_player(int(entry["id"]), {"name": String(entry["name"])})
+	print("Roster online sincronizado: ", players.size(), " jugadores.")
 
 @rpc("authority", "reliable")
 func sync_rules(rules_dict: Dictionary):

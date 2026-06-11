@@ -2,6 +2,9 @@ extends Node
 # Adjunta este script a cualquier nodo en una escena vacía y dale Play para probar
 
 func _ready():
+	# En el servidor dedicado no corremos el chequeo de integridad (es solo ruido).
+	if "--dedicated" in OS.get_cmdline_args() or OS.has_environment("UU_DEDICATED"):
+		return
 	print("--- INICIANDO TEST DE INTEGRIDAD DE DATOS ---")
 
 	# Esperamos un frame para asegurar que el Autoload cargó
