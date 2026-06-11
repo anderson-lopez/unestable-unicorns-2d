@@ -237,36 +237,63 @@ func _refresh_pile_labels():
 # Visor de TODAS las reglas/cartas (nombre + tipo + efecto), desplazable.
 func _show_rules_viewer():
 	_close_modal()
-	var panel = _make_modal_panel("📖 Reglas de las cartas")
+	var panel = _make_modal_panel("📖 Reglas del juego")
 	active_modal = panel
 	modal_layer.add_child(panel)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(740, 420)
+	scroll.custom_minimum_size = Vector2(740, 440)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_modal_vbox(panel).add_child(scroll)
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 10)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	var ids = CardDatabase.database.keys()
-	ids.sort()
-	for id in ids:
-		var c: CardData = CardDatabase.get_card_data(id)
-		if not c: continue
-		var rt := RichTextLabel.new()
-		rt.bbcode_enabled = true
-		rt.fit_content = true
-		rt.custom_minimum_size = Vector2(700, 0)
-		rt.add_theme_color_override("default_color", Color.WHITE)
-		rt.text = "[b][color=#ffe070]%s[/color][/b]  [color=#9aa]( %s )[/color]\n%s" % [
-			c.name_es, _pretty_type(c.type), _colorize_keywords(c.description_es)]
-		list.add_child(rt)
+
+	var rt := RichTextLabel.new()
+	rt.bbcode_enabled = true
+	rt.fit_content = true
+	rt.custom_minimum_size = Vector2(700, 0)
+	rt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rt.add_theme_color_override("default_color", Color.WHITE)
+	rt.text = _rules_card_text()
+	scroll.add_child(rt)
+
 	var btn_close := Button.new()
 	btn_close.text = "Cerrar"
 	btn_close.pressed.connect(_close_modal)
 	_modal_vbox(panel).add_child(btn_close)
+
+# Texto de la tarjeta de reglas (objetivo + fases del turno + tipos + relincho).
+# Usa la meta de Unicornios CONFIGURADA en esta partida.
+func _rules_card_text() -> String:
+	var goal: int = GameManager.current_rules.unicorns_to_win
+	return "\n".join([
+		"[b][color=#ffe070]🎯 OBJETIVO[/color][/b]",
+		"Sé el primero en reunir [b][color=#ffe070]%d Unicornios[/color][/b] en tu Establo." % goal,
+		"",
+		"[b][color=#9ad0ff]🔄 TU TURNO (en orden)[/color][/b]",
+		"[b]1. Inicio:[/b] se activan los efectos de \"al inicio de tu turno\".",
+		"[b]2. Robo:[/b] roba 1 carta del mazo.",
+		"[b]3. Acción:[/b] haz UNA sola cosa:",
+		"      • Juega una carta de tu mano, [i]o[/i]",
+		"      • Roba una carta (en vez de jugar).",
+		"[b]4. Fin:[/b] si tienes más de 7 cartas en mano, descarta hasta quedar en 7.",
+		"",
+		"[b][color=#c9a0ff]🃏 TIPOS DE CARTA[/color][/b]",
+		"[color=#584f8e]●[/color] [b]Unicornio Básico[/b]: sin efectos especiales.",
+		"[color=#54b0e5]●[/color] [b]Unicornio Mágico[/b]: tiene un efecto especial.",
+		"[color=#c05e97]●[/color] [b]Unicornio Bebé[/b]: viene de la Guardería; cuenta como Unicornio.",
+		"[color=#8ed247]●[/color] [b]Magia[/b]: efecto único; luego va al descarte.",
+		"[color=#f8752e]●[/color] [b]Ventaja[/b]: efecto positivo permanente en un Establo.",
+		"[color=#fbcb44]●[/color] [b]Desventaja[/b]: efecto negativo permanente en un Establo.",
+		"[color=#ff4034]●[/color] [b]Relincho[/b]: instantánea; cancela una carta.",
+		"",
+		"[b][color=#ff6b5e]🔴 RELINCHO (Neigh)[/color][/b]",
+		"Juégalo en cualquier momento, [b]incluso fuera de tu turno[/b], para CANCELAR la carta que alguien está jugando. La carta cancelada va al descarte.",
+		"Un Relincho puede ser relinchado. El [b]Súperrelincho[/b] no se puede anular.",
+		"",
+		"[b][color=#9ad0ff]🧩 TÉRMINOS[/color][/b]",
+		"[b]Establo[/b]: tu zona de Unicornios y Ventajas/Desventajas.",
+		"[b]Guardería[/b]: la pila de Unicornios Bebé.",
+	])
 
 # Colorea las palabras clave (colores brillantes para fondo oscuro).
 func _colorize_keywords(text: String) -> String:
