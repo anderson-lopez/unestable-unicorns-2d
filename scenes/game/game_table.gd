@@ -523,8 +523,7 @@ func _animate_card_into_hand(card: CardUI) -> void:
 		to_size = Vector2(100, 140)
 	_fly_card(_card_texture(card.card_data.id), from, to, Vector2(70, 96), to_size, 1.0, func():
 		if is_instance_valid(card):
-			var tw := card.create_tween()
-			tw.tween_property(card, "modulate:a", 1.0, 0.3)
+			card.modulate.a = 1.0 # aparece EXACTO al terminar el vuelo (fusión)
 	)
 
 # Una carta jugada desde la mano.
