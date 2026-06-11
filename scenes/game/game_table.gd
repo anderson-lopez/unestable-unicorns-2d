@@ -527,23 +527,24 @@ func _animate_card_into_hand(card: CardUI) -> void:
 			tw.tween_property(card, "modulate:a", 1.0, 0.3)
 	)
 
-# Una carta jugada desde la mano: vuela hacia su destino (establo o descarte).
+# Una carta jugada desde la mano.
+#  - PERMANENTES (unicornios/ventajas/desventajas): NO volamos aquí. La animación
+#    limpia de "entrar al establo" la hace client_card_entered_stable_visual (la
+#    carta del establo nace oculta y se revela justo al aterrizar el vuelo). Así
+#    no se ve la carta colocada antes de que termine la animación.
+#  - MAGIA/INSTANTÁNEA: vuela al descarte (no deja carta permanente, no hay doble).
 func _animate_card_play(card_ui: CardUI) -> void:
 	if not is_instance_valid(card_ui) or not card_ui.card_data:
 		if is_instance_valid(card_ui): card_ui.queue_free()
 		return
 	var data: CardData = card_ui.card_data
+	if data.is_permanent():
+		card_ui.queue_free() # solo sale de la mano; el establo anima la entrada
+		return
 	var from := _node_center(card_ui)
 	var from_size := card_ui.size
-	var to: Vector2
-	if data.is_downgrade():
-		to = _first_rival_center() # los Downgrades van al establo rival
-	elif data.is_permanent():
-		to = _node_center(my_upgrades_row if data.is_upgrade() else my_unicorns_row)
-	else:
-		to = _node_center(pile_discard_btn) # magias/instantáneas → descarte
 	card_ui.queue_free() # sale de la mano ya
-	_fly_card(_card_texture(data.id), from, to, from_size, Vector2(95, 130), 1.0)
+	_fly_card(_card_texture(data.id), from, _node_center(pile_discard_btn), from_size, Vector2(95, 130), 1.0)
 
 # Una carta que sale de MI establo: vuela hacia la pila de descarte.
 func _animate_card_to_discard(card: Control) -> void:
@@ -1147,6 +1148,9 @@ func client_force_discard(card_id: int):
 
 @rpc("authority", "call_local", "reliable")
 func client_card_entered_stable_visual(player_id: int, card_id: int):
+	# El servidor árbitro no dibuja la mesa; evita trabajo visual innecesario.
+	if GameManager.is_dedicated_referee:
+		return
 	var my_id = multiplayer.get_unique_id()
 	var card_data = CardDatabase.get_card_data(card_id)
 	var new_card = CARD_SCENE.instantiate()
@@ -1179,13 +1183,43 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 	# Las cartas del establo nunca se juegan/descartan, pero SÍ se pueden inspeccionar:
 	new_card.info_requested.connect(_on_card_info_requested)
 	new_card.set_disabled(true)
-	# Animación "pop": entra escalando desde pequeño
-	_animate_pop_in(new_card)
-	# El que juega ya escuchó "play" al clickear; los demás lo oyen al aterrizar.
-	if player_id != my_id:
-		_play_sfx("play")
+	# LIMPIO: la carta nace OCULTA; un fantasma vuela hasta su sitio y la carta
+	# real se REVELA justo al aterrizar (se "fusiona", sin verse antes).
+	new_card.modulate.a = 0.0
+	await _fly_into_stable(new_card, player_id, card_id)
 	GameManager.stable_changed.emit(player_id)
 	_update_hud()
+
+# Vuela un fantasma desde la zona del dueño hasta el sitio de la carta del establo
+# y, al aterrizar, REVELA la carta real (alfa instantáneo = fusión perfecta).
+func _fly_into_stable(stable_card: Control, owner_id: int, card_id: int) -> void:
+	if not is_instance_valid(stable_card):
+		return
+	# Esperar el layout para apuntar a la posición FINAL real de la carta.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not is_instance_valid(stable_card):
+		return
+	if not is_instance_valid(anim_layer):
+		stable_card.modulate.a = 1.0
+		return
+	var to := _node_center(stable_card)
+	var to_size := stable_card.size
+	if to_size == Vector2.ZERO:
+		to_size = Vector2(78, 107)
+	var my_id = multiplayer.get_unique_id()
+	var from: Vector2
+	if owner_id == my_id and has_node("HandZone"):
+		from = _node_center($HandZone) # viene de mi mano (abajo)
+	elif rival_stables.has(owner_id):
+		from = _node_center(rival_stables[owner_id]) # viene de la zona del rival
+	else:
+		from = get_viewport_rect().size * 0.5
+	_play_sfx("play")
+	_fly_card(_card_texture(card_id), from, to, Vector2(90, 124), to_size, 1.0, func():
+		if is_instance_valid(stable_card):
+			stable_card.modulate.a = 1.0 # aparece EXACTO al terminar el vuelo
+	)
 
 # Animación de entrada: fade-in suave.
 # NO tocamos 'scale' porque las cartas viven dentro de contenedores (HBox) que
