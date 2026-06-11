@@ -61,13 +61,13 @@ func _build_visuals():
 		vb.alignment = BoxContainer.ALIGNMENT_CENTER
 		vb.add_theme_constant_override("separation", 10)
 		var title := Label.new()
-		title.text = "🦄 UNSTABLE UNICORNS 2D"
+		title.text = ""
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		title.add_theme_font_size_override("font_size", 52)
 		title.add_theme_color_override("font_color", Color(0.95, 0.85, 1.0))
 		vb.add_child(title)
 		var sub := Label.new()
-		sub.text = "El juego de cartas de unicornios"
+		sub.text = ""
 		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		sub.add_theme_font_size_override("font_size", 22)
 		sub.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))

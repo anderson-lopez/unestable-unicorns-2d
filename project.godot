@@ -21,8 +21,8 @@ CardDatabase="*uid://3qih4fil7ujq"
 GameManager="*uid://30hcw1oqx4kk"
 EffectProcessor="*res://scripts/core/EffectProcessor.gd"
 NeighManager="*res://scripts/core/NeighManager.gd"
-OnlineServer="*res://scripts/core/OnlineServer.gd"
 TestLoader="*uid://ca2jkkyoxhpap"
+OnlineServer="*res://scripts/core/OnlineServer.gd"
 
 [display]
 
