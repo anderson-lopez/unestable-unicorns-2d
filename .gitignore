@@ -10,3 +10,8 @@
 /unestableunicorns2dHTML5/
 *.exe
 *.pck
+*.apk
+*.idsig
+*.zip
+/UnstableUnicorns2D.apk
+/UnstableUnicorns2D.apk.idsig
