@@ -10,7 +10,7 @@ const SFX_FILES := {
 	"click": "res://assets/audio/click.wav",
 	"draw": "res://assets/audio/draw.wav",
 	"play": "res://assets/audio/play.wav",
-	"neigh": "res://assets/audio/neigh.wav",
+	"neigh": "res://sounds/cards/relincho.ogg",
 	"destroy": "res://assets/audio/destroy.wav",
 	"turn": "res://assets/audio/turn.wav",
 	"win": "res://assets/audio/win.wav",

@@ -24,6 +24,18 @@ NeighManager="*res://scripts/core/NeighManager.gd"
 TestLoader="*uid://ca2jkkyoxhpap"
 OnlineServer="*res://scripts/core/OnlineServer.gd"
 
+[gui]
+
+; Tema por defecto: fuente base (Noto Sans) + emojis A COLOR como respaldo, para
+; que los iconos (🦄⚡📖...) se vean también en WEB (que no tiene fuentes del
+; sistema). En escritorio ya se veían por la fuente del SO.
+theme/custom="res://assets/fonts/ui_theme.tres"
+
+[input_devices]
+
+; Móvil/APK: convierte cada toque en clic (los botones dependen de esto).
+pointing/emulate_mouse_from_touch=true
+
 [display]
 
 window/size/viewport_width=1280
