@@ -1147,7 +1147,7 @@
 	  "effects": [
 		{
 		  "order": 1,
-		  "trigger": "on_enter_stable",
+		  "trigger": "passive",
 		  "condition": "or_on_leave_stable",
 		  "cost": {
 			"required": false,
