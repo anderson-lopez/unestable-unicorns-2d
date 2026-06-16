@@ -195,6 +195,12 @@ func _start_game_for_room(code: String):
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.refuse_new_connections = true
 
+	# Reglas FRESCAS para la partida online (meta = 7 unicornios por defecto). El
+	# servidor de Render vive mucho tiempo y, sin esto, podría arrastrar reglas
+	# viejas (p. ej. meta = 0/1 → alguien "gana" al instante en la selección de bebés).
+	GameManager.current_rules = GameRules.new()
+	print("OnlineServer: meta de la partida = ", GameManager.current_rules.unicorns_to_win, " unicornios")
+
 	# Registrar a los jugadores reales en GameManager (el servidor/peer 1 NO).
 	GameManager.players.clear()
 	GameManager.is_dedicated_referee = true
@@ -208,6 +214,8 @@ func _start_game_for_room(code: String):
 	# mesa) para que GameManager.players exista igual en todos.
 	for pid in rooms[code]["players"]:
 		GameManager.rpc_id(pid, "online_sync_roster", roster)
+		# También las reglas (para que el HUD muestre la meta correcta).
+		GameManager.rpc_id(pid, "sync_rules", GameManager.current_rules.to_dictionary())
 
 	# Avisar a los clientes de la sala para que carguen su mesa (llega después del
 	# roster por ser RPCs fiables y ordenados).

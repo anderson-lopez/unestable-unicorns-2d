@@ -358,6 +358,7 @@ func check_win_condition() -> bool:
 		for card in players[p_id].stable:
 			unicorn_count += card.unicorn_count_value()
 		if unicorn_count >= current_rules.unicorns_to_win:
+			print("check_win: ", players[p_id].name, " tiene ", unicorn_count, " unicornios >= meta ", current_rules.unicorns_to_win, " -> GANA")
 			rpc("announce_winner", p_id, players[p_id].name)
 			return true
 	return false
