@@ -160,17 +160,48 @@ func _update_highlight_color(type: GameEnums.CardType):
 # Toda la carta se vuelve un botón: un click/tap la elige directamente.
 # Evita el "hover para ver el botón" (incómodo en escritorio, imposible en móvil).
 func enable_pick_mode(on_pick: Callable):
-	var btn := Button.new()
-	btn.flat = true
-	btn.focus_mode = Control.FOCUS_NONE
-	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-	btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	btn.pressed.connect(on_pick)
-	add_child(btn)
+	# Overlay a toda la carta que distingue TAP (elegir) de ARRASTRE (scrollear el modal).
+	# Con emulate_mouse_from_touch el dedo llega como eventos de mouse, así que manejando
+	# mouse alcanza para escritorio Y móvil. Sin esto, en el APK no se podía hacer scroll
+	# horizontal en los pickers (la carta se "comía" el arrastre).
+	var overlay := Control.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	add_child(overlay)
+	var st := {"pressed": false, "dragging": false, "start": Vector2.ZERO}
+	overlay.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+			if e.pressed:
+				st["pressed"] = true
+				st["dragging"] = false
+				st["start"] = e.position
+			elif st["pressed"]:
+				st["pressed"] = false
+				if not st["dragging"] and on_pick.is_valid():
+					on_pick.call()
+		elif e is InputEventMouseMotion and st["pressed"]:
+			if e.position.distance_to(st["start"]) > 12.0:
+				st["dragging"] = true
+			if st["dragging"]:
+				var sc := _find_scroll_ancestor()
+				if sc:
+					sc.scroll_horizontal -= int(e.relative.x)
+					sc.scroll_vertical -= int(e.relative.y)
+	)
 	# En modo picker no usamos hover/zoom ni los botones internos.
 	if hover_detector: hover_detector.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if ui_container: ui_container.visible = false
 	if highlight: highlight.show()
+
+# Sube por el árbol buscando el ScrollContainer que contiene a esta carta.
+func _find_scroll_ancestor() -> ScrollContainer:
+	var n: Node = get_parent()
+	while n != null:
+		if n is ScrollContainer:
+			return n
+		n = n.get_parent()
+	return null
 
 func _on_info_pressed():
 	if card_data: info_requested.emit(card_data)

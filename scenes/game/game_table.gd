@@ -254,7 +254,10 @@ func _show_rules_viewer():
 	rt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rt.add_theme_color_override("default_color", Color.WHITE)
 	rt.text = _rules_card_text()
+	# Dejar pasar el arrastre al ScrollContainer para poder scrollear el texto en móvil.
+	rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	scroll.add_child(rt)
+	_enable_touch_drag_scroll(scroll)
 
 	var btn_close := Button.new()
 	btn_close.text = "Cerrar"
@@ -1691,8 +1694,25 @@ func _make_scrollable_hbox(parent: Container) -> HBoxContainer:
 	parent.add_child(scroll)
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 12)
+	# Los huecos del hbox dejan pasar el arrastre al ScrollContainer (las cartas
+	# manejan su propio tap/arrastre en CardUI.enable_pick_mode).
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	scroll.add_child(hbox)
+	_enable_touch_drag_scroll(scroll)
 	return hbox
+
+# Permite scrollear un ScrollContainer arrastrando con el dedo/mouse (clave en APK).
+# Funciona sobre zonas que dejan pasar el evento (texto, huecos). Las cartas de los
+# pickers ya reenvían su propio arrastre al scroll.
+func _enable_touch_drag_scroll(scroll: ScrollContainer) -> void:
+	var st := {"pressed": false}
+	scroll.gui_input.connect(func(e: InputEvent):
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+			st["pressed"] = e.pressed
+		elif e is InputEventMouseMotion and st["pressed"]:
+			scroll.scroll_horizontal -= int(e.relative.x)
+			scroll.scroll_vertical -= int(e.relative.y)
+	)
 
 # --- Envío de respuesta de picker al servidor ---
 
