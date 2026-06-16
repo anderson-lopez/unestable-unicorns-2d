@@ -4228,7 +4228,7 @@
 		  "primary_action": {
 			"type": "destroy",
 			"amount": 1,
-			"target_scope": "chosen_opponent",
+			"target_scope": "any_player",
 			"target_zone": "stable",
 			"target_filter": "unicorn_card"
 		  },
