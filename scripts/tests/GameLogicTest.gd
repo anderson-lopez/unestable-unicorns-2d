@@ -26,6 +26,11 @@ func _ready():
 	else:
 		printerr("❌ HAY FALLOS — revisar arriba")
 
+	# En modo headless (--headless), cerrar limpio con el código adecuado en vez de
+	# quedar colgado (lo que antes provocaba que el sistema lo matara = error 4).
+	if DisplayServer.get_name() == "headless":
+		get_tree().quit(0 if _failed == 0 else 1)
+
 # ----------------- helpers de aserción -----------------
 func _ok(cond: bool, label: String):
 	if cond: _passed += 1
