@@ -101,7 +101,7 @@ func _open():
 	is_hovered = true
 	card_hovered.emit(self)
 
-	z_index = 10
+	z_index = 100 # bien al frente: en la mano en abanico no debe taparla la vecina
 	highlight.show()
 	_set_buttons_interactive(true)
 

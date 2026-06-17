@@ -2371,6 +2371,11 @@ func add_card_to_hand(card_id: int) -> CardUI:
 	new_card.info_requested.connect(_on_card_info_requested)
 	new_card.play_requested.connect(_on_card_play_requested)
 	new_card.discard_requested.connect(_on_card_discard_requested)
+	# Al abrir/cerrar (hover o tap) reordenamos: la carta abierta se endereza,
+	# sube y salta al frente (z alto). Sin esto el hover NO re-acomodaba y la
+	# carta abierta quedaba inclinada y por debajo de la vecina (robaba el clic).
+	new_card.card_hovered.connect(func(_c): _layout_hand_fan())
+	new_card.card_exited.connect(func(_c): _layout_hand_fan())
 	new_card.set_disabled(true)
 	_refresh_hand_interactivity()
 	return new_card
