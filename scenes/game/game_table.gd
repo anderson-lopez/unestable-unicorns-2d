@@ -2314,20 +2314,49 @@ func _layout_hand_fan():
 	var n := cards.size()
 	if n == 0:
 		return
-	# Ángulo por carta (menos si hay muchas). Pivote MUY abajo para que radien
-	# desde un punto común (abanico real).
-	var per := deg_to_rad(clampf(36.0 / float(n), 4.0, 9.0))
+
+	# El HBoxContainer pone las cartas en una FILA recta y la rotación sola no
+	# basta para curvarlas. Aquí las recolocamos A MANO: separación horizontal
+	# uniforme + curva en Y (parábola) + rotación con pivote abajo-centro. Esto
+	# sí dibuja un abanico de verdad. Se reaplica en cada 'sort_children'.
+	var first: CardUI = cards[0]
+	var w: float = first.size.x
+	var h: float = first.size.y
+	if w <= 1.0:
+		w = maxf(first.custom_minimum_size.x, 104.0)
+		h = maxf(first.custom_minimum_size.y, 146.0)
+
+	var cont_w := my_hand_container.size.x
+	if cont_w <= 1.0:
+		cont_w = get_viewport_rect().size.x
+
 	var mid := (n - 1) / 2.0
+	# Separación entre CENTROS: solapadas pero legibles (más solape si hay muchas).
+	var step := minf(w * 0.62, (cont_w - w) / maxf(1.0, float(n - 1)))
+	# Ángulo total del abanico (grados), repartido entre las cartas.
+	var max_tilt := deg_to_rad(clampf(7.0 * (n - 1), 0.0, 30.0))
+	var per := 0.0 if n <= 1 else max_tilt / float(n - 1)
+	# Cuánto caen los extremos respecto al centro (arco).
+	var arc := clampf(2.2 * (n - 1), 0.0, 26.0)
+	var denom := maxf(1.0, mid * mid)
+
 	for i in range(n):
 		var card: CardUI = cards[i]
-		# La carta abierta (hover/tap) se queda recta y al frente para leerla.
+		var t := i - mid
+		# Pivote abajo-centro: la base queda fija y la carta gira en abanico.
+		card.pivot_offset = Vector2(w * 0.5, h)
+		# Orden de capas: la de la derecha encima (lectura natural del abanico).
+		card.z_index = 5 if card.is_open else i
 		if card.is_open:
+			# La carta abierta (hover/tap) se endereza y sube para leerla bien.
 			card.rotation = 0.0
+			card.position = Vector2(cont_w * 0.5 + t * step - w * 0.5, -18.0)
 			continue
-		# Pivote MUY por debajo del centro: al rotar, las cartas radian en arco
-		# desde un punto común (abanico real), sin necesidad de mover la Y.
-		card.pivot_offset = Vector2(card.size.x * 0.5, card.size.y * 1.7)
-		card.rotation = (i - mid) * per
+		card.rotation = t * per
+		card.position = Vector2(
+			cont_w * 0.5 + t * step - w * 0.5,
+			(t * t) * (arc / denom)
+		)
 
 func add_card_to_hand(card_id: int) -> CardUI:
 	var data = CardDatabase.get_card_data(card_id)
