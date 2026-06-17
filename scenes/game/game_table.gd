@@ -2346,14 +2346,12 @@ func _layout_hand_fan():
 		# Pivote abajo-centro: la base queda fija y la carta gira en abanico.
 		card.pivot_offset = Vector2(w * 0.5, h)
 		# Orden de capas: la de la derecha encima (lectura natural del abanico).
-		# La carta ABIERTA salta SIEMPRE al frente para que sus botones (?, Jugar)
-		# no queden tapados por la carta vecina y reciban el clic correctamente.
-		card.z_index = 200 if card.is_open else i
-		if card.is_open:
-			# La carta abierta (hover/tap) se endereza y sube para leerla bien.
-			card.rotation = 0.0
-			card.position = Vector2(cont_w * 0.5 + t * step - w * 0.5, -18.0)
-			continue
+		card.z_index = i
+		# IMPORTANTE: tratamos a TODAS las cartas igual (no movemos la abierta a
+		# otra posición). El énfasis del hover lo da la escala/z de card_ui._open.
+		# Antes la carta abierta se subía a y=-18 y, como al cerrar NO se restauraba
+		# la posición, quedaba "clavada arriba" si llegaba otra carta mientras hacías
+		# hover (p. ej. durante el reparto). Así ya no pasa.
 		card.rotation = t * per
 		card.position = Vector2(
 			cont_w * 0.5 + t * step - w * 0.5,
