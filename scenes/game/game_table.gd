@@ -2314,23 +2314,26 @@ func _layout_hand_fan():
 	var n := cards.size()
 	if n == 0:
 		return
-	# Menos ángulo cuando hay muchas cartas (para que no se amontonen feo).
-	var per := deg_to_rad(min(7.0, 44.0 / float(n)))
+	# Ángulo por carta (menos si hay muchas). Pivote MUY abajo para que radien
+	# desde un punto común (abanico real).
+	var per := deg_to_rad(clampf(36.0 / float(n), 4.0, 9.0))
 	var mid := (n - 1) / 2.0
 	for i in range(n):
 		var card: CardUI = cards[i]
-		# La carta abierta (hover/tap) se queda recta para leerla bien.
+		# La carta abierta (hover/tap) se queda recta y al frente para leerla.
 		if card.is_open:
 			card.rotation = 0.0
 			continue
-		card.pivot_offset = Vector2(card.size.x * 0.5, card.size.y * 0.92)
+		# Pivote MUY por debajo del centro: al rotar, las cartas radian en arco
+		# desde un punto común (abanico real), sin necesidad de mover la Y.
+		card.pivot_offset = Vector2(card.size.x * 0.5, card.size.y * 1.7)
 		card.rotation = (i - mid) * per
-		card.position.y += absf(i - mid) * 5.0 # leve arco: extremos un poco más abajo
 
 func add_card_to_hand(card_id: int) -> CardUI:
 	var data = CardDatabase.get_card_data(card_id)
 	if not data: return null
 	var new_card = CARD_SCENE.instantiate()
+	new_card.custom_minimum_size = Vector2(104, 146) # mano más compacta
 	my_hand_container.add_child(new_card)
 	new_card.setup_card(data)
 	new_card.name = "Card_%d" % card_id
