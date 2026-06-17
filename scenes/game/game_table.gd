@@ -160,10 +160,9 @@ func _build_background():
 	bg.layer = -10
 	add_child(bg)
 
-	# Si el jugador dejó una imagen en assets/branding/table.png, se usa de fondo.
+	# Solo usa imagen propia si existe table.png (NO el arte de UU background.png).
 	var custom_bg := ""
-	for p in ["res://assets/branding/table.png", "res://assets/branding/table.jpg",
-			"res://assets/branding/background.png", "res://assets/branding/background.jpg"]:
+	for p in ["res://assets/branding/table.png", "res://assets/branding/table.jpg"]:
 		if ResourceLoader.exists(p):
 			custom_bg = p; break
 
@@ -352,8 +351,8 @@ func _build_right_column():
 	col.add_theme_constant_override("separation", 5)
 	col.anchor_left = 1.0; col.anchor_right = 1.0
 	col.anchor_top = 0.0; col.anchor_bottom = 0.0
-	col.offset_left = -150; col.offset_right = -10
-	col.offset_top = 12; col.offset_bottom = 300
+	col.offset_left = -172; col.offset_right = -18
+	col.offset_top = 12; col.offset_bottom = 320
 	hud_layer.add_child(col)
 
 	pile_deck_btn = Button.new()

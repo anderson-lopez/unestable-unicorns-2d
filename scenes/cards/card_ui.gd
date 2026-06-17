@@ -226,13 +226,14 @@ func set_disabled(value: bool):
 	if info_button:
 		info_button.disabled = false
 		info_button.visible = true
-	# Play y Discard se OCULTAN cuando la carta no se puede jugar
+	# Play se OCULTA cuando la carta no se puede jugar.
 	if play_button:
 		play_button.visible = not is_disabled
 		play_button.disabled = is_disabled
+	# El botón DESCARTAR ya no se usa (no hay descarte voluntario): siempre oculto.
 	if discard_button:
-		discard_button.visible = not is_disabled
-		discard_button.disabled = is_disabled
+		discard_button.visible = false
+		discard_button.disabled = true
 	# Tinte sutil para indicar visualmente que no se puede jugar.
 	# IMPORTANTE: conservar el ALFA actual; si la carta está oculta por una
 	# animación (modulate.a = 0), no debemos volverla visible aquí.
