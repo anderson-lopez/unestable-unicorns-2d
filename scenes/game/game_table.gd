@@ -2346,7 +2346,9 @@ func _layout_hand_fan():
 		# Pivote abajo-centro: la base queda fija y la carta gira en abanico.
 		card.pivot_offset = Vector2(w * 0.5, h)
 		# Orden de capas: la de la derecha encima (lectura natural del abanico).
-		card.z_index = 5 if card.is_open else i
+		# La carta ABIERTA salta SIEMPRE al frente para que sus botones (?, Jugar)
+		# no queden tapados por la carta vecina y reciban el clic correctamente.
+		card.z_index = 200 if card.is_open else i
 		if card.is_open:
 			# La carta abierta (hover/tap) se endereza y sube para leerla bien.
 			card.rotation = 0.0
