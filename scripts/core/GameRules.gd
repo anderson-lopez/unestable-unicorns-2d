@@ -6,8 +6,11 @@ class_name GameRules extends Resource
 
 # --- CONFIGURACIÓN DE BEBÉS ---
 # Si "matar" bebés es enviarlos a la guardería (true) o eliminarlos del juego (false)
-@export var nursery_is_safe_zone: bool = true 
+@export var nursery_is_safe_zone: bool = true
 @export var starting_baby_count: int = 1
+# Si los Bebés son INMUNES a todo (no se pueden robar, destruir, sacrificar ni
+# devolver). true = nadie te toca los bebés; false = juego normal (vulnerables).
+@export var babies_immune: bool = false
 
 # --- LIMITES ---
 @export var hand_limit: int = 7
@@ -30,6 +33,7 @@ func to_dictionary() -> Dictionary:
 		"double_dutch_enabled": double_dutch_enabled,
 		"nursery_is_safe_zone": nursery_is_safe_zone,
 		"starting_baby_count": starting_baby_count,
+		"babies_immune": babies_immune,
 		"hand_limit": hand_limit,
 		"deck_multiplier": deck_multiplier,
 		"turn_time_seconds": turn_time_seconds
@@ -41,6 +45,7 @@ func from_dictionary(dict: Dictionary):
 	double_dutch_enabled = dict.get("double_dutch_enabled", false)
 	nursery_is_safe_zone = dict.get("nursery_is_safe_zone", true)
 	starting_baby_count = dict.get("starting_baby_count", 1)
+	babies_immune = dict.get("babies_immune", false)
 	hand_limit = dict.get("hand_limit", 7)
 	deck_multiplier = dict.get("deck_multiplier", 1)
 	turn_time_seconds = dict.get("turn_time_seconds", 0)

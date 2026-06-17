@@ -26,6 +26,9 @@ extends Control
 var spin_multiplier: SpinBox
 # Selector de tiempo por turno (0 = infinito). Valores en segundos.
 var opt_turn_time: OptionButton
+# Check: bebés inmunes a todo (no se pueden robar/matar). Local y online.
+var check_babies_immune: CheckBox
+var o_check_babies: CheckBox
 const TURN_TIME_LABELS := ["∞ Infinito", "30 seg", "45 seg", "1 min", "1.5 min", "2 min", "3 min", "5 min"]
 const TURN_TIME_VALUES := [0, 30, 45, 60, 90, 120, 180, 300]
 # Controles de reglas en la SALA ONLINE (los edita el host).
@@ -114,6 +117,96 @@ func _build_online_button():
 	btn.text = "🌐 JUGAR ONLINE (código de sala)"
 	btn.pressed.connect(_open_online)
 	host_btn.get_parent().add_child(btn)
+	# Botón para ojear TODAS las cartas (sin necesidad de entrar a una partida).
+	var cards_btn := Button.new()
+	cards_btn.text = "🃏 Ver todas las cartas"
+	cards_btn.pressed.connect(_show_card_gallery)
+	host_btn.get_parent().add_child(cards_btn)
+
+# Galería: muestra todas las cartas con su imagen, nombre, tipo y descripción.
+var _gallery_layer: CanvasLayer
+func _show_card_gallery():
+	if is_instance_valid(_gallery_layer):
+		_gallery_layer.queue_free(); _gallery_layer = null; return
+	_gallery_layer = CanvasLayer.new()
+	_gallery_layer.layer = 40
+	add_child(_gallery_layer)
+	var bg := ColorRect.new()
+	bg.color = Color(0.05, 0.05, 0.09, 0.97)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_gallery_layer.add_child(bg)
+
+	var root := VBoxContainer.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.offset_left = 20; root.offset_top = 16; root.offset_right = -20; root.offset_bottom = -16
+	root.add_theme_constant_override("separation", 10)
+	_gallery_layer.add_child(root)
+
+	var header := HBoxContainer.new()
+	root.add_child(header)
+	var title := Label.new()
+	title.text = "🃏 Todas las cartas"
+	title.add_theme_font_size_override("font_size", 26)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
+	var close := Button.new()
+	close.text = "✖ Cerrar"
+	close.pressed.connect(func():
+		if is_instance_valid(_gallery_layer): _gallery_layer.queue_free(); _gallery_layer = null
+	)
+	header.add_child(close)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	root.add_child(scroll)
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(grid)
+
+	var ids = CardDatabase.database.keys()
+	ids.sort()
+	for id in ids:
+		var data = CardDatabase.get_card_data(id)
+		if not data: continue
+		grid.add_child(_make_gallery_tile(data))
+
+func _make_gallery_tile(data) -> Control:
+	var tile := PanelContainer.new()
+	tile.custom_minimum_size = Vector2(300, 0)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.12, 0.12, 0.18, 0.95)
+	sb.set_corner_radius_all(8); sb.set_content_margin_all(8)
+	tile.add_theme_stylebox_override("panel", sb)
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 8)
+	tile.add_child(hb)
+	var img := TextureRect.new()
+	img.custom_minimum_size = Vector2(80, 112)
+	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if data.image_path != "" and ResourceLoader.exists(data.image_path):
+		img.texture = load(data.image_path)
+	hb.add_child(img)
+	var vb := VBoxContainer.new()
+	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hb.add_child(vb)
+	var nm := Label.new()
+	nm.text = data.name_es
+	nm.add_theme_font_size_override("font_size", 16)
+	nm.add_theme_color_override("font_color", Color(1, 0.9, 0.55))
+	nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vb.add_child(nm)
+	var desc := Label.new()
+	desc.text = data.description_es
+	desc.add_theme_font_size_override("font_size", 12)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vb.add_child(desc)
+	return tile
 
 func _open_online():
 	if name_input.text.strip_edges().is_empty():
@@ -253,6 +346,12 @@ func _build_online_rules(parent: Container):
 	o_check_double.toggled.connect(func(_b): _on_online_rules_changed())
 	_online_rules_box.add_child(o_check_double)
 
+	o_check_babies = CheckBox.new()
+	o_check_babies.text = "Bebés inmunes (nadie los roba/mata)"
+	o_check_babies.button_pressed = GameManager.current_rules.babies_immune
+	o_check_babies.toggled.connect(func(_b): _on_online_rules_changed())
+	_online_rules_box.add_child(o_check_babies)
+
 	var h2 := HBoxContainer.new()
 	var l2 := Label.new(); l2.text = "Copias del mazo (x):"; h2.add_child(l2)
 	o_spin_mult = SpinBox.new()
@@ -277,6 +376,8 @@ func _on_online_rules_changed():
 	GameManager.current_rules.double_dutch_enabled = o_check_double.button_pressed
 	GameManager.current_rules.deck_multiplier = int(o_spin_mult.value)
 	GameManager.current_rules.turn_time_seconds = TURN_TIME_VALUES[clampi(o_opt_time.selected, 0, TURN_TIME_VALUES.size() - 1)]
+	if is_instance_valid(o_check_babies):
+		GameManager.current_rules.babies_immune = o_check_babies.button_pressed
 
 # Habilita las opciones solo para el host.
 func _set_online_rules_editable(is_host: bool):
@@ -286,6 +387,8 @@ func _set_online_rules_editable(is_host: bool):
 	o_check_double.disabled = not is_host
 	o_spin_mult.editable = is_host
 	o_opt_time.disabled = not is_host
+	if is_instance_valid(o_check_babies):
+		o_check_babies.disabled = not is_host
 
 func _on_create_room():
 	if not _online_connected:
@@ -368,6 +471,12 @@ func _build_turn_time_control():
 	opt_turn_time.item_selected.connect(func(_i): _on_rules_ui_changed())
 	hb.add_child(opt_turn_time)
 	rules_container.add_child(hb)
+	# Bebés inmunes (no se pueden robar/matar).
+	check_babies_immune = CheckBox.new()
+	check_babies_immune.text = "Bebés inmunes (nadie los roba/mata)"
+	check_babies_immune.button_pressed = GameManager.current_rules.babies_immune
+	check_babies_immune.toggled.connect(func(_b): _on_rules_ui_changed())
+	rules_container.add_child(check_babies_immune)
 
 func _turn_time_value() -> int:
 	if is_instance_valid(opt_turn_time):
@@ -433,6 +542,8 @@ func _go_to_lobby(is_host: bool):
 		spin_multiplier.editable = is_host
 	if is_instance_valid(opt_turn_time):
 		opt_turn_time.disabled = not is_host
+	if is_instance_valid(check_babies_immune):
+		check_babies_immune.disabled = not is_host
 
 	if is_host:
 		_on_rules_ui_changed() # Enviar estado inicial
@@ -461,6 +572,8 @@ func _on_rules_ui_changed():
 	if is_instance_valid(spin_multiplier):
 		GameManager.current_rules.deck_multiplier = int(spin_multiplier.value)
 	GameManager.current_rules.turn_time_seconds = _turn_time_value()
+	if is_instance_valid(check_babies_immune):
+		GameManager.current_rules.babies_immune = check_babies_immune.button_pressed
 
 	# Si agregaste la función update_rules_broadcast en GameManager, úsala:
 	if GameManager.has_method("update_rules_broadcast"):
@@ -478,6 +591,8 @@ func _update_ui_from_manager():
 		spin_multiplier.value = r.deck_multiplier
 	if is_instance_valid(opt_turn_time):
 		opt_turn_time.selected = max(0, TURN_TIME_VALUES.find(r.turn_time_seconds))
+	if is_instance_valid(check_babies_immune):
+		check_babies_immune.button_pressed = r.babies_immune
 
 # --- ACTUALIZACIÓN DE LISTA DE JUGADORES ---
 

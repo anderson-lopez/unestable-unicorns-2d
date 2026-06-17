@@ -310,7 +310,7 @@ func _act_sacrifice(amount: int, scope: GameEnums.Scope, filter: GameEnums.Filte
 			if not player: continue
 			var to_remove: Array[int] = []
 			for card in player.stable:
-				if card.matches_filter(filter):
+				if card.matches_filter(filter) and not (GameManager.current_rules.babies_immune and card.is_baby_unicorn()):
 					to_remove.append(card.id)
 			for cid in to_remove:
 				_remove_from_stable(owner_id, cid, false)
@@ -835,10 +835,14 @@ func _request_stable_target(acting_player_id: int, scope: GameEnums.Scope, filte
 	var wants_unicorn = filter in [GameEnums.Filter.UNICORN_CARD, GameEnums.Filter.BASIC_UNICORN,
 		GameEnums.Filter.MAGICAL_UNICORN, GameEnums.Filter.BABY_UNICORN]
 
+	var babies_immune: bool = GameManager.current_rules.babies_immune
 	var clean: Array = []
 	for cand in candidates:
 		var data = CardDatabase.get_card_data(cand["card_id"])
 		var owner = cand["owner_id"]
+		# Regla "Bebés inmunes": no se pueden robar, destruir, sacrificar ni devolver.
+		if babies_immune and data.is_baby_unicorn():
+			continue
 		# Pandamonio: los unicornios cuentan como pandas → no los afectan efectos que apuntan a Unicornios
 		if data.is_unicorn() and wants_unicorn and passives.unicorns_are_pandas(owner):
 			continue
