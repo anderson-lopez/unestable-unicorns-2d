@@ -43,6 +43,9 @@ var lbl_deck: Label
 var lbl_timer: Label
 var _turn_timer_remaining: int = 0
 var _turn_ticker: Timer
+# Tablero de estado para acciones de varios jugadores (quién ya hizo su parte).
+var _action_board: Control = null
+var _action_board_rows: Dictionary = {}
 var winner_panel: PanelContainer
 
 # --- Registro de jugadas (log lateral, desplegable) ---
@@ -1226,6 +1229,57 @@ func _on_turn_ticker():
 	_update_timer_label()
 	if _turn_timer_remaining <= 0 and is_instance_valid(_turn_ticker):
 		_turn_ticker.stop() # el servidor pasa el turno; aquí solo dejamos de contar
+
+# --- Tablero de acción de varios jugadores (ej. "todos descartan") ---
+@rpc("authority", "call_local", "reliable")
+func client_show_action_board(title: String, player_ids: Array):
+	if GameManager.is_dedicated_referee: return
+	if is_instance_valid(_action_board): _action_board.queue_free()
+	_action_board_rows.clear()
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5; panel.anchor_right = 0.5
+	panel.anchor_top = 0.0; panel.anchor_bottom = 0.0
+	panel.offset_left = -190; panel.offset_right = 190
+	panel.offset_top = 92; panel.offset_bottom = 92
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.07, 0.07, 0.12, 0.95)
+	sb.set_corner_radius_all(10); sb.set_border_width_all(2)
+	sb.border_color = Color(0.55, 0.5, 0.75); sb.set_content_margin_all(10)
+	panel.add_theme_stylebox_override("panel", sb)
+	hud_layer.add_child(panel)
+	_action_board = panel
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 4)
+	panel.add_child(vb)
+	var t := Label.new()
+	t.text = "⏳ " + title
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_font_size_override("font_size", 18)
+	t.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
+	vb.add_child(t)
+	for pid in player_ids:
+		var row := Label.new()
+		var nm = GameManager.players[pid].name if GameManager.players.has(pid) else "?"
+		row.text = "⏳  %s" % nm
+		row.add_theme_font_size_override("font_size", 15)
+		vb.add_child(row)
+		_action_board_rows[int(pid)] = row
+
+@rpc("authority", "call_local", "reliable")
+func client_update_action_board(player_id: int):
+	if _action_board_rows.has(player_id):
+		var row = _action_board_rows[player_id]
+		if is_instance_valid(row):
+			var nm = GameManager.players[player_id].name if GameManager.players.has(player_id) else "?"
+			row.text = "✓  %s" % nm
+			row.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
+
+@rpc("authority", "call_local", "reliable")
+func client_hide_action_board():
+	if is_instance_valid(_action_board): _action_board.queue_free()
+	_action_board = null
+	_action_board_rows.clear()
 
 func _update_timer_label():
 	if not is_instance_valid(lbl_timer): return

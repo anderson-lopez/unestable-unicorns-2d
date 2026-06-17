@@ -243,6 +243,10 @@ func _act_draw(amount: int, player_id: int) -> void:
 
 func _act_discard(amount: int, scope: GameEnums.Scope, filter: GameEnums.Filter, acting_player_id: int) -> void:
 	var targets := _resolve_player_targets(scope, acting_player_id)
+	# Tablero de estado cuando la acción afecta a VARIOS jugadores ("todos descartan").
+	var multi := targets.size() > 1
+	if multi:
+		_begin_action_board("Todos descartan una carta", targets)
 	for target_id in targets:
 		var actual_amount = amount if amount > 0 else 1
 		for i in actual_amount:
@@ -260,6 +264,24 @@ func _act_discard(amount: int, scope: GameEnums.Scope, filter: GameEnums.Filter,
 			GameManager.discard_pile.append(picked)
 			_table_rpc(&"client_card_left_hand", target_id, picked)
 			_table_rpc(&"client_sync_hand_size", target_id, p.hand.size())
+		if multi:
+			_mark_action_board_done(target_id)
+	if multi:
+		_end_action_board()
+
+# --- Tablero de estado para acciones simultáneas de varios jugadores ---
+# Muestra a TODOS quién ya hizo su parte (✓) y quién falta (⏳).
+func _begin_action_board(title: String, player_ids: Array) -> void:
+	var ids: Array = []
+	for pid in player_ids:
+		ids.append(pid)
+	_table_rpc("client_show_action_board", title, ids)
+
+func _mark_action_board_done(player_id: int) -> void:
+	_table_rpc("client_update_action_board", player_id)
+
+func _end_action_board() -> void:
+	_table_rpc("client_hide_action_board")
 
 # ==============================================================================
 # 💥 DESTRUIR / SACRIFICAR
