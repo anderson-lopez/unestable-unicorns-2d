@@ -90,6 +90,8 @@ func _ready():
 	# Botón + pantalla de juego ONLINE (salas con código). Todo por código.
 	_build_online_button()
 	_build_online_overlay()
+	# Reorganiza la pantalla de inicio al diseño mágico (título, nombre, botones).
+	_reorganize_login()
 	# Señales del servidor de salas
 	OnlineServer.room_joined.connect(_on_room_joined)
 	OnlineServer.room_players_updated.connect(_on_room_players_updated)
@@ -165,17 +167,19 @@ func _add_lobby_cloud(layer: CanvasLayer, anchor_pos: Vector2):
 		puff.add_theme_stylebox_override("panel", sb)
 		layer.add_child(puff)
 
+var _btn_online: Button
+var _btn_gallery: Button
 func _build_online_button():
 	# Lo añadimos junto a los botones de login (mismo contenedor que HostBtn).
-	var btn := Button.new()
-	btn.text = "🌐 JUGAR ONLINE (código de sala)"
-	btn.pressed.connect(_open_online)
-	host_btn.get_parent().add_child(btn)
+	_btn_online = Button.new()
+	_btn_online.text = "🌐 Jugar Online (Código de Sala)"
+	_btn_online.pressed.connect(_open_online)
+	host_btn.get_parent().add_child(_btn_online)
 	# Botón para ojear TODAS las cartas (sin necesidad de entrar a una partida).
-	var cards_btn := Button.new()
-	cards_btn.text = "🃏 Ver todas las cartas"
-	cards_btn.pressed.connect(_show_card_gallery)
-	host_btn.get_parent().add_child(cards_btn)
+	_btn_gallery = Button.new()
+	_btn_gallery.text = "🃏 Ver todas las cartas"
+	_btn_gallery.pressed.connect(_show_card_gallery)
+	host_btn.get_parent().add_child(_btn_gallery)
 
 # Galería: muestra todas las cartas con su imagen, nombre, tipo y descripción.
 var _gallery_layer: CanvasLayer
@@ -261,6 +265,69 @@ func _make_gallery_tile(data) -> Control:
 	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vb.add_child(desc)
 	return tile
+
+# Reorganiza la pantalla de inicio al diseño del mockup (título mágico, campo de
+# nombre grande, botones grandes y táctiles). Reusa los nodos existentes para NO
+# romper la lógica ya conectada.
+func _reorganize_login():
+	var vbox := name_input.get_parent()
+	if not is_instance_valid(vbox): return
+	vbox.add_theme_constant_override("separation", 16)
+
+	# Ensanchar el panel de login.
+	var margin := vbox.get_parent()
+	if is_instance_valid(margin) and is_instance_valid(margin.get_parent()):
+		var panel := margin.get_parent()
+		if panel is Control:
+			panel.custom_minimum_size = Vector2(500, 0)
+
+	# Título mágico.
+	var title := vbox.get_node_or_null("Title")
+	if title and title is Label:
+		title.text = "🦄 UNICORNÍOS INESTABLES ✨\n(Fan Adaptation)"
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.add_theme_font_size_override("font_size", 34)
+		title.add_theme_color_override("font_color", Color(1, 0.84, 0.0))
+
+	# Campo de nombre grande.
+	name_input.placeholder_text = "Toca para escribir tu nombre mágico… 🦄"
+	name_input.custom_minimum_size = Vector2(0, 52)
+	name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+	# Botones grandes online + galería.
+	if is_instance_valid(_btn_online):
+		_btn_online.custom_minimum_size = Vector2(0, 64)
+		_btn_online.add_theme_font_size_override("font_size", 22)
+	if is_instance_valid(_btn_gallery):
+		_btn_gallery.custom_minimum_size = Vector2(0, 52)
+
+	# Crear/Unirse en una fila.
+	host_btn.text = "🎮 Crear Partida"
+	join_btn.text = "🔗 Unirse por IP"
+	host_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	join_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	host_btn.custom_minimum_size = Vector2(0, 50)
+	join_btn.custom_minimum_size = Vector2(0, 50)
+	var local_row := HBoxContainer.new()
+	local_row.add_theme_constant_override("separation", 12)
+	vbox.add_child(local_row)
+	host_btn.reparent(local_row)
+	join_btn.reparent(local_row)
+
+	# Ocultar separadores/etiquetas sueltas del diseño viejo.
+	for n in ["OrLabel", "HSeparator"]:
+		var nn = vbox.get_node_or_null(n)
+		if nn: nn.visible = false
+
+	# Orden final: Título, Nombre, Online, Galería, fila Crear/Unirse, IP, estado.
+	var order := [title, name_input, _btn_online, _btn_gallery, local_row, ip_input, status_label]
+	var idx := 0
+	for node in order:
+		if is_instance_valid(node):
+			vbox.move_child(node, idx)
+			idx += 1
+	ip_input.custom_minimum_size = Vector2(0, 40)
+	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _open_online():
 	if name_input.text.strip_edges().is_empty():
