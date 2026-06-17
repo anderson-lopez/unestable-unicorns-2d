@@ -13,6 +13,10 @@ class_name GameRules extends Resource
 @export var hand_limit: int = 7
 @export var deck_count: int = 1 # Cuantos mazos se usan (para muchas personas)
 
+# Tiempo límite por turno en SEGUNDOS (0 = infinito/sin límite). Si se acaba, el
+# turno pasa automáticamente. Configurable en el lobby.
+@export var turn_time_seconds: int = 0
+
 # Copias de CADA carta del mazo (1 = normal; 2-5 = duplicar..quintuplicar).
 # Multiplica TODO por igual (unicornios incluidos) para conservar las proporciones
 # del juego y dar cartas de sobra con muchos jugadores. Los bebés (guardería) y la
@@ -27,7 +31,8 @@ func to_dictionary() -> Dictionary:
 		"nursery_is_safe_zone": nursery_is_safe_zone,
 		"starting_baby_count": starting_baby_count,
 		"hand_limit": hand_limit,
-		"deck_multiplier": deck_multiplier
+		"deck_multiplier": deck_multiplier,
+		"turn_time_seconds": turn_time_seconds
 	}
 
 # Función para cargar desde diccionario (cuando el Cliente recibe las reglas)
@@ -38,3 +43,4 @@ func from_dictionary(dict: Dictionary):
 	starting_baby_count = dict.get("starting_baby_count", 1)
 	hand_limit = dict.get("hand_limit", 7)
 	deck_multiplier = dict.get("deck_multiplier", 1)
+	turn_time_seconds = dict.get("turn_time_seconds", 0)

@@ -40,6 +40,9 @@ var lbl_phase: Label
 var lbl_actions: Label
 var btn_end_turn: Button
 var lbl_deck: Label
+var lbl_timer: Label
+var _turn_timer_remaining: int = 0
+var _turn_ticker: Timer
 var winner_panel: PanelContainer
 
 # --- Registro de jugadas (log lateral, desplegable) ---
@@ -261,6 +264,11 @@ func _build_hud():
 	lbl_deck = Label.new()
 	lbl_deck.add_theme_font_size_override("font_size", 14)
 	vb.add_child(lbl_deck)
+	lbl_timer = Label.new()
+	lbl_timer.add_theme_font_size_override("font_size", 20)
+	lbl_timer.add_theme_color_override("font_color", Color(1, 0.85, 0.3))
+	lbl_timer.visible = false
+	vb.add_child(lbl_timer)
 
 	_build_right_column()
 	_build_my_avatar()
@@ -1192,6 +1200,42 @@ func server_discard_card(card_id: int):
 @rpc("authority", "call_local", "reliable")
 func client_toast(msg: String):
 	_show_toast(msg)
+
+# Temporizador de turno: el servidor manda los segundos (0 = ocultar). El cliente
+# muestra una cuenta atrás visible; el SERVIDOR es quien realmente pasa el turno.
+@rpc("authority", "call_local", "reliable")
+func client_set_turn_timer(seconds: int, _player_id: int):
+	if not is_instance_valid(lbl_timer): return
+	if seconds <= 0:
+		lbl_timer.visible = false
+		lbl_timer.text = ""
+		if is_instance_valid(_turn_ticker): _turn_ticker.stop()
+		return
+	_turn_timer_remaining = seconds
+	lbl_timer.visible = true
+	_update_timer_label()
+	if not is_instance_valid(_turn_ticker):
+		_turn_ticker = Timer.new()
+		_turn_ticker.wait_time = 1.0
+		add_child(_turn_ticker)
+		_turn_ticker.timeout.connect(_on_turn_ticker)
+	_turn_ticker.start()
+
+func _on_turn_ticker():
+	_turn_timer_remaining = max(0, _turn_timer_remaining - 1)
+	_update_timer_label()
+	if _turn_timer_remaining <= 0 and is_instance_valid(_turn_ticker):
+		_turn_ticker.stop() # el servidor pasa el turno; aquí solo dejamos de contar
+
+func _update_timer_label():
+	if not is_instance_valid(lbl_timer): return
+	var s := _turn_timer_remaining
+	if s >= 60:
+		lbl_timer.text = "⏱ %d:%02d" % [s / 60, s % 60]
+	else:
+		lbl_timer.text = "⏱ %ds" % s
+	# Se pone rojo cuando quedan ≤ 10 segundos.
+	lbl_timer.add_theme_color_override("font_color", Color(1, 0.35, 0.3) if s <= 10 else Color(1, 0.85, 0.3))
 
 @rpc("authority", "call_local", "reliable")
 func client_receive_initial_hand(card_ids: Array):

@@ -24,6 +24,10 @@ extends Control
 
 # Control creado por código: multiplicador de copias de cartas de acción.
 var spin_multiplier: SpinBox
+# Selector de tiempo por turno (0 = infinito). Valores en segundos.
+var opt_turn_time: OptionButton
+const TURN_TIME_LABELS := ["∞ Infinito", "30 seg", "45 seg", "1 min", "1.5 min", "2 min", "3 min", "5 min"]
+const TURN_TIME_VALUES := [0, 30, 45, 60, 90, 120, 180, 300]
 # Botón para copiar la IP del host al portapapeles (útil en móvil).
 var _copy_ip_btn: Button
 
@@ -270,6 +274,29 @@ func _build_multiplier_control():
 	spin_multiplier.value_changed.connect(func(_v): _on_rules_ui_changed())
 	hb.add_child(spin_multiplier)
 	rules_container.add_child(hb)
+	_build_turn_time_control()
+
+# Selector del tiempo por turno (de Infinito a varios minutos).
+func _build_turn_time_control():
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 8)
+	var lbl := Label.new()
+	lbl.text = "Tiempo por turno:"
+	hb.add_child(lbl)
+	opt_turn_time = OptionButton.new()
+	for i in range(TURN_TIME_LABELS.size()):
+		opt_turn_time.add_item(TURN_TIME_LABELS[i], i)
+	opt_turn_time.selected = 0 # Infinito por defecto
+	opt_turn_time.tooltip_text = "Si se acaba el tiempo, el turno pasa automáticamente.\nInfinito = sin límite."
+	opt_turn_time.item_selected.connect(func(_i): _on_rules_ui_changed())
+	hb.add_child(opt_turn_time)
+	rules_container.add_child(hb)
+
+func _turn_time_value() -> int:
+	if is_instance_valid(opt_turn_time):
+		var idx: int = clampi(opt_turn_time.selected, 0, TURN_TIME_VALUES.size() - 1)
+		return TURN_TIME_VALUES[idx]
+	return 0
 
 # --- BOTONES DE LOGIN ---
 
@@ -327,6 +354,8 @@ func _go_to_lobby(is_host: bool):
 	check_double.disabled = not is_host
 	if is_instance_valid(spin_multiplier):
 		spin_multiplier.editable = is_host
+	if is_instance_valid(opt_turn_time):
+		opt_turn_time.disabled = not is_host
 
 	if is_host:
 		_on_rules_ui_changed() # Enviar estado inicial
@@ -354,6 +383,7 @@ func _on_rules_ui_changed():
 	GameManager.current_rules.double_dutch_enabled = check_double.button_pressed
 	if is_instance_valid(spin_multiplier):
 		GameManager.current_rules.deck_multiplier = int(spin_multiplier.value)
+	GameManager.current_rules.turn_time_seconds = _turn_time_value()
 
 	# Si agregaste la función update_rules_broadcast en GameManager, úsala:
 	if GameManager.has_method("update_rules_broadcast"):
@@ -369,6 +399,8 @@ func _update_ui_from_manager():
 	check_double.button_pressed = r.double_dutch_enabled
 	if is_instance_valid(spin_multiplier):
 		spin_multiplier.value = r.deck_multiplier
+	if is_instance_valid(opt_turn_time):
+		opt_turn_time.selected = max(0, TURN_TIME_VALUES.find(r.turn_time_seconds))
 
 # --- ACTUALIZACIÓN DE LISTA DE JUGADORES ---
 

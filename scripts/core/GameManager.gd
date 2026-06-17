@@ -57,6 +57,10 @@ var is_dedicated_referee: bool = false
 # Cola de turnos extra (Change of Luck etc.)
 var extra_turn_queue: Array[int] = []
 
+# Temporizador de turno (servidor). El token invalida timers viejos al cambiar de
+# turno/fase, para que un timer atrasado no corte un turno que ya cambió.
+var _turn_timer_token: int = 0
+
 # Configuración de Red
 const PORT = 7777
 const MAX_CLIENTS = 3 # 3 clientes + host = 4 jugadores máximo (1 arriba, 2 a los lados)
@@ -174,6 +178,31 @@ func _server_advance_to_draw_phase():
 func _server_advance_to_action_phase():
 	if not multiplayer.is_server(): return
 	rpc("sync_turn_state", active_player_id, TurnPhase.ACTION, actions_remaining)
+	_start_turn_timer()
+
+# Arranca el temporizador del turno (si está configurado). El servidor manda los
+# segundos a los clientes (para la cuenta atrás visible) y, al agotarse, pasa el
+# turno automáticamente. 0 = infinito (sin límite).
+func _start_turn_timer():
+	if not multiplayer.is_server(): return
+	_turn_timer_token += 1
+	var secs: int = current_rules.turn_time_seconds
+	if game_table:
+		game_table.rpc("client_set_turn_timer", secs, active_player_id)
+	if secs > 0:
+		_run_turn_timer(_turn_timer_token, secs)
+
+func _run_turn_timer(token: int, secs: int) -> void:
+	await get_tree().create_timer(float(secs)).timeout
+	if token != _turn_timer_token or not is_game_active: return
+	# No cortar a mitad de un efecto: esperar a que se resuelva.
+	while is_resolving:
+		await get_tree().create_timer(0.5).timeout
+		if token != _turn_timer_token or not is_game_active: return
+	if token == _turn_timer_token and is_game_active and current_phase == TurnPhase.ACTION:
+		if game_table:
+			game_table.rpc("client_log_event", "⏱ Tiempo agotado — el turno pasa automáticamente", Color(1, 0.7, 0.4))
+		_server_advance_to_end_phase()
 
 @rpc("any_peer", "call_local", "reliable")
 func request_end_turn():
@@ -192,6 +221,10 @@ func request_end_turn():
 
 func _server_advance_to_end_phase():
 	if not multiplayer.is_server(): return
+	# Invalida el temporizador del turno actual y lo oculta en los clientes.
+	_turn_timer_token += 1
+	if game_table:
+		game_table.rpc("client_set_turn_timer", 0, active_player_id)
 	rpc("sync_turn_state", active_player_id, TurnPhase.END, 0)
 
 	# Aplicar límite de mano: el jugador ELIGE qué descartar (antes era FIFO).
