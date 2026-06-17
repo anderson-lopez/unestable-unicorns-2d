@@ -49,6 +49,19 @@ func _ready():
 	ui_container.modulate.a = 0.0 # Botones invisibles al inicio
 	_set_buttons_interactive(false) # cerrados: no capturan el toque
 
+	# 4. Botones compactos: con el padding grande del tema, "Jugar Carta" hacía
+	# que la carta no pudiera achicarse. Los hacemos pequeños para que la mano
+	# quede compacta y en abanico apretado.
+	_compact_button(play_button, 11)
+	if info_button:
+		info_button.add_theme_font_size_override("font_size", 12)
+		info_button.custom_minimum_size = Vector2(24, 24)
+	if ui_container:
+		ui_container.add_theme_constant_override("margin_left", 5)
+		ui_container.add_theme_constant_override("margin_right", 5)
+		ui_container.add_theme_constant_override("margin_top", 5)
+		ui_container.add_theme_constant_override("margin_bottom", 5)
+
 	# Pivote al centro para que el zoom se vea bien
 	pivot_offset = size / 2
 
@@ -205,6 +218,22 @@ func _find_scroll_ancestor() -> ScrollContainer:
 			return n
 		n = n.get_parent()
 	return null
+
+# Reduce el padding del botón (el tema usa márgenes grandes) conservando
+# colores/borde. Así "Jugar Carta" ocupa mucho menos y la carta se encoge.
+func _compact_button(b: Button, fs: int):
+	if not b: return
+	b.add_theme_font_size_override("font_size", fs)
+	b.custom_minimum_size = Vector2(0, 0)
+	for s in ["normal", "hover", "pressed", "disabled"]:
+		var sb := b.get_theme_stylebox(s, "Button")
+		if sb is StyleBoxFlat:
+			var c: StyleBoxFlat = sb.duplicate()
+			c.content_margin_left = 8.0
+			c.content_margin_right = 8.0
+			c.content_margin_top = 4.0
+			c.content_margin_bottom = 4.0
+			b.add_theme_stylebox_override(s, c)
 
 func _on_info_pressed():
 	if card_data: info_requested.emit(card_data)

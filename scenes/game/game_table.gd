@@ -2331,8 +2331,8 @@ func _layout_hand_fan():
 		cont_w = get_viewport_rect().size.x
 
 	var mid := (n - 1) / 2.0
-	# Separación entre CENTROS: solapadas pero legibles (más solape si hay muchas).
-	var step := minf(w * 0.62, (cont_w - w) / maxf(1.0, float(n - 1)))
+	# Separación entre CENTROS: bien solapadas (abanico apretado como el mockup).
+	var step := minf(w * 0.48, (cont_w - w) / maxf(1.0, float(n - 1)))
 	# Ángulo total del abanico (grados), repartido entre las cartas.
 	var max_tilt := deg_to_rad(clampf(7.0 * (n - 1), 0.0, 30.0))
 	var per := 0.0 if n <= 1 else max_tilt / float(n - 1)
@@ -2362,7 +2362,7 @@ func add_card_to_hand(card_id: int) -> CardUI:
 	var data = CardDatabase.get_card_data(card_id)
 	if not data: return null
 	var new_card = CARD_SCENE.instantiate()
-	new_card.custom_minimum_size = Vector2(104, 146) # mano más compacta
+	new_card.custom_minimum_size = Vector2(96, 134) # mano más compacta
 	my_hand_container.add_child(new_card)
 	new_card.setup_card(data)
 	new_card.name = "Card_%d" % card_id
