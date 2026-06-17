@@ -344,48 +344,55 @@ func _count_row_unicorns(row: Node) -> int:
 			if d: total += d.unicorn_count_value()
 	return total
 
-# Columna DERECHA: pilas (Mazo/Descarte/Guardería) + botones (Finalizar Turno, Ver Reglas).
+# Pilas al CENTRO (Mazo · Guardería · Descarte) + botones de acción a un lado,
+# acercándonos al tablero de referencia.
 func _build_right_column():
-	# Compacta y arriba a la derecha, para dejar libre el CENTRO-derecho al rival.
-	var col = VBoxContainer.new()
-	col.add_theme_constant_override("separation", 5)
-	col.anchor_left = 1.0; col.anchor_right = 1.0
-	col.anchor_top = 0.0; col.anchor_bottom = 0.0
-	col.offset_left = -172; col.offset_right = -18
-	col.offset_top = 12; col.offset_bottom = 320
-	hud_layer.add_child(col)
+	# --- Pilas en el CENTRO (un poco arriba del medio) ---
+	var piles := HBoxContainer.new()
+	piles.add_theme_constant_override("separation", 16)
+	piles.alignment = BoxContainer.ALIGNMENT_CENTER
+	piles.anchor_left = 0.5; piles.anchor_right = 0.5
+	piles.anchor_top = 0.5; piles.anchor_bottom = 0.5
+	piles.offset_left = -210; piles.offset_right = 210
+	piles.offset_top = -78; piles.offset_bottom = 70
+	hud_layer.add_child(piles)
 
 	pile_deck_btn = Button.new()
-	pile_deck_btn.custom_minimum_size = Vector2(140, 40)
+	pile_deck_btn.custom_minimum_size = Vector2(96, 130)
 	pile_deck_btn.disabled = true # el mazo de robo es secreto
-	col.add_child(pile_deck_btn)
-
-	pile_discard_btn = Button.new()
-	pile_discard_btn.custom_minimum_size = Vector2(140, 40)
-	pile_discard_btn.pressed.connect(func(): _request_pile_view("discard"))
-	col.add_child(pile_discard_btn)
+	piles.add_child(pile_deck_btn)
 
 	pile_nursery_btn = Button.new()
-	pile_nursery_btn.custom_minimum_size = Vector2(140, 40)
+	pile_nursery_btn.custom_minimum_size = Vector2(96, 130)
 	pile_nursery_btn.pressed.connect(func(): _request_pile_view("nursery"))
-	col.add_child(pile_nursery_btn)
+	piles.add_child(pile_nursery_btn)
 
-	var sep := Control.new()
-	sep.custom_minimum_size = Vector2(0, 8)
-	col.add_child(sep)
+	pile_discard_btn = Button.new()
+	pile_discard_btn.custom_minimum_size = Vector2(96, 130)
+	pile_discard_btn.pressed.connect(func(): _request_pile_view("discard"))
+	piles.add_child(pile_discard_btn)
+
+	# --- Botones de acción a la DERECHA de las pilas: END TURN + Reglas ---
+	var actions := VBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	actions.anchor_left = 0.5; actions.anchor_right = 0.5
+	actions.anchor_top = 0.5; actions.anchor_bottom = 0.5
+	actions.offset_left = 226; actions.offset_right = 372
+	actions.offset_top = -48; actions.offset_bottom = 60
+	hud_layer.add_child(actions)
 
 	btn_end_turn = Button.new()
-	btn_end_turn.text = "✔ Finalizar Turno"
-	btn_end_turn.custom_minimum_size = Vector2(140, 44)
+	btn_end_turn.text = "END TURN"
+	btn_end_turn.custom_minimum_size = Vector2(140, 52)
 	btn_end_turn.disabled = true
 	btn_end_turn.pressed.connect(_on_end_turn_pressed)
-	col.add_child(btn_end_turn)
+	actions.add_child(btn_end_turn)
 
 	var btn_rules := Button.new()
 	btn_rules.text = "📖 Ver Reglas"
-	btn_rules.custom_minimum_size = Vector2(140, 40)
+	btn_rules.custom_minimum_size = Vector2(140, 42)
 	btn_rules.pressed.connect(_show_rules_viewer)
-	col.add_child(btn_rules)
+	actions.add_child(btn_rules)
 
 	_refresh_pile_labels()
 
