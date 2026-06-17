@@ -88,6 +88,7 @@ func _ready():
 	GameManager.game_table = self
 
 	_clear_debug_cards()
+	_build_background()
 	_build_hud()
 	_build_modal_layer()
 	_build_anim_layer()
@@ -137,6 +138,90 @@ func _ready():
 	GameManager.phase_changed.connect(_on_phase_changed)
 	GameManager.actions_changed.connect(_on_actions_changed)
 	GameManager.game_won.connect(_on_game_won)
+	# Marcadores X/7: se actualizan cada vez que cambia algún establo.
+	GameManager.stable_changed.connect(func(_pid): _refresh_scores())
+
+# ==============================================================================
+# 🌌 FONDO (placeholder: cielo nocturno + nubes + tapete central)
+# ==============================================================================
+
+func _build_background():
+	# Oculta el fondo plano de la escena; usamos uno propio detrás de todo.
+	if has_node("Background"):
+		$Background.visible = false
+
+	var bg := CanvasLayer.new()
+	bg.layer = -10
+	add_child(bg)
+
+	# Si el jugador dejó una imagen en assets/branding/table.png, se usa de fondo.
+	var custom_bg := ""
+	for p in ["res://assets/branding/table.png", "res://assets/branding/table.jpg",
+			"res://assets/branding/background.png", "res://assets/branding/background.jpg"]:
+		if ResourceLoader.exists(p):
+			custom_bg = p; break
+
+	if custom_bg != "":
+		var img := TextureRect.new()
+		img.texture = load(custom_bg)
+		img.set_anchors_preset(Control.PRESET_FULL_RECT)
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bg.add_child(img)
+	else:
+		# Cielo en degradado (azul noche → morado).
+		var grad := Gradient.new()
+		grad.set_color(0, Color(0.07, 0.09, 0.20))
+		grad.set_color(1, Color(0.15, 0.10, 0.24))
+		var gtex := GradientTexture2D.new()
+		gtex.gradient = grad
+		gtex.fill_from = Vector2(0.5, 0.0); gtex.fill_to = Vector2(0.5, 1.0)
+		gtex.width = 8; gtex.height = 256
+		var sky := TextureRect.new()
+		sky.texture = gtex
+		sky.set_anchors_preset(Control.PRESET_FULL_RECT)
+		sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sky.stretch_mode = TextureRect.STRETCH_SCALE
+		sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bg.add_child(sky)
+		# Nubes suaves (placeholder).
+		for c in [Vector2(0.18, 0.18), Vector2(0.78, 0.12), Vector2(0.30, 0.80),
+				Vector2(0.85, 0.72), Vector2(0.55, 0.10)]:
+			_add_cloud(bg, c)
+
+	# Tapete central (zona de juego) con marco redondeado.
+	var felt := Panel.new()
+	felt.set_anchors_preset(Control.PRESET_FULL_RECT)
+	felt.offset_left = 70; felt.offset_top = 56
+	felt.offset_right = -70; felt.offset_bottom = -56
+	felt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fsb := StyleBoxFlat.new()
+	fsb.bg_color = Color(0.09, 0.12, 0.22, 0.80)
+	fsb.set_corner_radius_all(26)
+	fsb.set_border_width_all(4)
+	fsb.border_color = Color(0.45, 0.40, 0.70, 0.55)
+	fsb.shadow_color = Color(0, 0, 0, 0.4)
+	fsb.shadow_size = 18
+	felt.add_theme_stylebox_override("panel", fsb)
+	bg.add_child(felt)
+
+# Nube placeholder: 3 círculos blancos translúcidos solapados.
+func _add_cloud(layer: CanvasLayer, anchor_pos: Vector2):
+	var sizes := [Vector2(150, 150), Vector2(110, 110), Vector2(95, 95)]
+	var offs := [Vector2(0, 0), Vector2(80, 20), Vector2(-60, 25)]
+	for i in range(sizes.size()):
+		var puff := Panel.new()
+		puff.anchor_left = anchor_pos.x; puff.anchor_right = anchor_pos.x
+		puff.anchor_top = anchor_pos.y; puff.anchor_bottom = anchor_pos.y
+		puff.offset_left = offs[i].x; puff.offset_top = offs[i].y
+		puff.offset_right = offs[i].x + sizes[i].x; puff.offset_bottom = offs[i].y + sizes[i].y
+		puff.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(1, 1, 1, 0.05)
+		sb.set_corner_radius_all(int(sizes[i].x / 2))
+		puff.add_theme_stylebox_override("panel", sb)
+		layer.add_child(puff)
 
 # ==============================================================================
 # 🖼️ HUD
@@ -178,8 +263,76 @@ func _build_hud():
 	vb.add_child(lbl_deck)
 
 	_build_right_column()
+	_build_my_avatar()
 	_build_log_panel()
 	_update_hud()
+
+# Mi avatar (círculo placeholder) + nombre + marcador X/7, abajo a la izquierda.
+var my_score_label: Label
+func _build_my_avatar():
+	var box := PanelContainer.new()
+	box.anchor_left = 0.0; box.anchor_right = 0.0
+	box.anchor_top = 1.0; box.anchor_bottom = 1.0
+	box.offset_left = 12; box.offset_right = 210
+	box.offset_top = -84; box.offset_bottom = -14
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0.5)
+	sb.set_corner_radius_all(10); sb.set_content_margin_all(8)
+	box.add_theme_stylebox_override("panel", sb)
+	hud_layer.add_child(box)
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 10)
+	box.add_child(hb)
+	# Círculo de avatar
+	var circ := Panel.new()
+	circ.custom_minimum_size = Vector2(50, 50)
+	var csb := StyleBoxFlat.new()
+	csb.bg_color = Color(0.22, 0.18, 0.34)
+	csb.set_corner_radius_all(25); csb.set_border_width_all(2)
+	csb.border_color = Color(0.75, 0.62, 0.95)
+	circ.add_theme_stylebox_override("panel", csb)
+	var em := Label.new()
+	em.text = "🦄"
+	em.set_anchors_preset(Control.PRESET_FULL_RECT)
+	em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	em.add_theme_font_size_override("font_size", 28)
+	em.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	circ.add_child(em)
+	hb.add_child(circ)
+	# Nombre + marcador
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 0)
+	hb.add_child(vb)
+	var my_id = multiplayer.get_unique_id()
+	var nm := Label.new()
+	nm.text = GameManager.players[my_id].name if GameManager.players.has(my_id) else "Tú"
+	nm.add_theme_font_size_override("font_size", 16)
+	vb.add_child(nm)
+	my_score_label = Label.new()
+	my_score_label.text = "0/%d" % GameManager.current_rules.unicorns_to_win
+	my_score_label.add_theme_font_size_override("font_size", 20)
+	my_score_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
+	vb.add_child(my_score_label)
+
+# Recalcula y muestra los marcadores X/7 (mío + rivales) desde las cartas visibles.
+func _refresh_scores():
+	var goal: int = GameManager.current_rules.unicorns_to_win
+	if is_instance_valid(my_score_label):
+		my_score_label.text = "%d/%d" % [_count_row_unicorns(my_unicorns_row), goal]
+	for pid in rival_stables:
+		var z = rival_stables[pid]
+		if is_instance_valid(z) and z.has_method("set_score"):
+			z.set_score(z.count_unicorns(), goal)
+
+func _count_row_unicorns(row: Node) -> int:
+	var total := 0
+	if not is_instance_valid(row): return 0
+	for child in row.get_children():
+		if child.has_meta("card_id"):
+			var d = CardDatabase.get_card_data(int(child.get_meta("card_id")))
+			if d: total += d.unicorn_count_value()
+	return total
 
 # Columna DERECHA: pilas (Mazo/Descarte/Guardería) + botones (Finalizar Turno, Ver Reglas).
 func _build_right_column():

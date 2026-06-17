@@ -15,10 +15,58 @@ const CARD_BACK_TEXTURE = preload("res://assets/textures/cards/reverso/1_reverso
 var upgrades_row: HBoxContainer
 # Escala de cartas (se reduce cuando hay muchos jugadores para que quepan).
 var card_scale: float = 1.0
+# Avatar (círculo placeholder) + marcador de unicornios "X/7".
+var avatar_circle: Panel
+var score_label: Label
 
 func _ready():
 	_build_upgrades_row()
+	_build_avatar()
 	_apply_panel_style()
+
+# Círculo de avatar (placeholder 🦄, luego se reemplaza por imagen) + marcador X/7.
+func _build_avatar():
+	var top := name_label.get_parent() # TopInfo (HBox)
+	top.add_theme_constant_override("separation", 8)
+	avatar_circle = Panel.new()
+	avatar_circle.custom_minimum_size = Vector2(40, 40)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.22, 0.18, 0.34)
+	sb.set_corner_radius_all(20)
+	sb.set_border_width_all(2)
+	sb.border_color = Color(0.75, 0.62, 0.95)
+	avatar_circle.add_theme_stylebox_override("panel", sb)
+	var em := Label.new()
+	em.text = "🦄"
+	em.set_anchors_preset(Control.PRESET_FULL_RECT)
+	em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	em.add_theme_font_size_override("font_size", 22)
+	em.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	avatar_circle.add_child(em)
+	top.add_child(avatar_circle)
+	top.move_child(avatar_circle, 0)
+	score_label = Label.new()
+	score_label.text = "0/7"
+	score_label.add_theme_font_size_override("font_size", 16)
+	score_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
+	top.add_child(score_label)
+	top.move_child(score_label, 2) # avatar, nombre, marcador, mano
+
+# Actualiza el marcador "X/7".
+func set_score(count: int, goal: int):
+	if is_instance_valid(score_label):
+		score_label.text = "%d/%d" % [count, goal]
+
+# Cuenta los unicornios en el establo de este rival (Gordicornio cuenta 2).
+func count_unicorns() -> int:
+	var total := 0
+	for child in stable_container.get_children():
+		if child.has_meta("card_id"):
+			var d = CardDatabase.get_card_data(int(child.get_meta("card_id")))
+			if d:
+				total += d.unicorn_count_value()
+	return total
 
 # Fondo sólido oscuro con borde para que cada establo rival se distinga de la mesa.
 func _apply_panel_style():
