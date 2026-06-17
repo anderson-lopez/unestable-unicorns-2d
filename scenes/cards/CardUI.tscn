@@ -50,7 +50,7 @@ theme_override_constants/margin_bottom = 10
 [node name="InfoButton" type="Button" parent="MarginContainer" unique_id=363644431]
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 0
 size_flags_vertical = 0
 text = "?"
 
