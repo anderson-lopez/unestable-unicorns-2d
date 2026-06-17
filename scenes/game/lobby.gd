@@ -106,9 +106,10 @@ const ONLINE_SERVER_URL := "wss://unstable-unicorns-server.onrender.com"
 
 var _online_layer: CanvasLayer
 var _online_panel: PanelContainer
+var _online_connect_box: CenterContainer
 var _online_status: Label
 var _online_code_input: LineEdit
-var _online_room_box: VBoxContainer
+var _online_room_box: Control
 var _online_code_label: Label
 var _online_players_box: VBoxContainer
 var _online_start_btn: Button
@@ -369,6 +370,7 @@ func _open_online():
 		status_label.text = "¡Necesitas un nombre!"
 		return
 	_online_layer.visible = true
+	_online_connect_box.visible = true
 	_online_room_box.visible = false
 	_online_status.text = "Conectando al servidor..."
 	# Modo online: el registro de jugadores lo gestiona la sala, no el flujo local.
@@ -379,93 +381,159 @@ func _open_online():
 	_online_connected = true
 	_online_status.text = "Conectado. Crea una sala o únete con un código."
 
+# PÁGINA ONLINE COMPLETA (no es un modal): tiene 2 estados —
+#  (1) CONECTAR: crear sala / unirse con código.
+#  (2) SALA: 2 columnas (código + jugadores | opciones del host) con Iniciar.
 func _build_online_overlay():
 	_online_layer = CanvasLayer.new()
 	_online_layer.layer = 30
 	_online_layer.visible = false
 	add_child(_online_layer)
 
-	# Fondo oscuro semitransparente
-	var bg := ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.6)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_online_layer.add_child(bg)
+	# Fondo de página completa (morado mágico).
+	var page_bg := ColorRect.new()
+	page_bg.color = Color(0.13, 0.08, 0.24, 1.0)
+	page_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_online_layer.add_child(page_bg)
 
-	_online_panel = PanelContainer.new()
-	_online_panel.anchor_left = 0.5; _online_panel.anchor_right = 0.5
-	_online_panel.anchor_top = 0.5; _online_panel.anchor_bottom = 0.5
-	_online_panel.offset_left = -260; _online_panel.offset_right = 260
-	_online_panel.offset_top = -230; _online_panel.offset_bottom = 230
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.10, 0.10, 0.14, 1.0)
-	sb.set_corner_radius_all(12); sb.set_border_width_all(3)
-	sb.border_color = Color(0.5, 0.5, 0.6); sb.set_content_margin_all(18)
-	_online_panel.add_theme_stylebox_override("panel", sb)
-	_online_layer.add_child(_online_panel)
-
+	# ===== Estado 1: CONECTAR =====
+	_online_connect_box = CenterContainer.new()
+	_online_connect_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_online_layer.add_child(_online_connect_box)
+	var cpanel := PanelContainer.new()
+	cpanel.custom_minimum_size = Vector2(460, 0)
+	_online_connect_box.add_child(cpanel)
+	var cmar := MarginContainer.new()
+	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		cmar.add_theme_constant_override(m, 22)
+	cpanel.add_child(cmar)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 12)
-	_online_panel.add_child(v)
-
-	var title := Label.new()
-	title.text = "🌐 Jugar Online"
-	title.add_theme_font_size_override("font_size", 24)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	v.add_child(title)
-
+	v.add_theme_constant_override("separation", 14)
+	cmar.add_child(v)
+	var ctitle := Label.new()
+	ctitle.text = "🌐 Jugar Online"
+	ctitle.add_theme_font_size_override("font_size", 30)
+	ctitle.add_theme_color_override("font_color", Color(1, 0.84, 0.3))
+	ctitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(ctitle)
 	_online_status = Label.new()
 	_online_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_online_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_online_status)
-
-	# Crear sala
 	var create_btn := Button.new()
 	create_btn.text = "➕ Crear sala"
-	create_btn.custom_minimum_size = Vector2(0, 44)
+	create_btn.custom_minimum_size = Vector2(0, 56)
 	create_btn.pressed.connect(_on_create_room)
 	v.add_child(create_btn)
-
 	v.add_child(_hsep())
-
-	# Unirse con código
 	_online_code_input = LineEdit.new()
 	_online_code_input.placeholder_text = "Código de sala (ej. ABCD)"
 	_online_code_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_online_code_input.max_length = 6
+	_online_code_input.custom_minimum_size = Vector2(0, 48)
 	v.add_child(_online_code_input)
 	var join_btn := Button.new()
 	join_btn.text = "🚪 Unirse con código"
-	join_btn.custom_minimum_size = Vector2(0, 44)
+	join_btn.custom_minimum_size = Vector2(0, 56)
 	join_btn.pressed.connect(_on_join_room)
 	v.add_child(join_btn)
+	var back1 := Button.new()
+	back1.text = "⬅ Volver"
+	back1.pressed.connect(_close_online_page)
+	v.add_child(back1)
 
-	# Vista de SALA (oculta hasta crear/unirse)
-	_online_room_box = VBoxContainer.new()
-	_online_room_box.add_theme_constant_override("separation", 8)
+	# ===== Estado 2: SALA (página, 2 columnas) =====
+	_online_room_box = MarginContainer.new()
+	_online_room_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		_online_room_box.add_theme_constant_override(m, 24)
 	_online_room_box.visible = false
-	v.add_child(_online_room_box)
+	_online_layer.add_child(_online_room_box)
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 16)
+	_online_room_box.add_child(hb)
 
+	# --- Columna izquierda: código + jugadores ---
+	var left := VBoxContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_stretch_ratio = 2.0
+	left.add_theme_constant_override("separation", 16)
+	hb.add_child(left)
+	var code_panel := PanelContainer.new()
+	left.add_child(code_panel)
+	var cv := VBoxContainer.new()
+	var cvm := MarginContainer.new()
+	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		cvm.add_theme_constant_override(m, 12)
+	code_panel.add_child(cvm); cvm.add_child(cv)
+	var clab := Label.new()
+	clab.text = "CÓDIGO DE SALA:"
+	clab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cv.add_child(clab)
 	_online_code_label = Label.new()
-	_online_code_label.add_theme_font_size_override("font_size", 26)
+	_online_code_label.add_theme_font_size_override("font_size", 42)
+	_online_code_label.add_theme_color_override("font_color", Color(1, 0.84, 0.3))
 	_online_code_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_online_room_box.add_child(_online_code_label)
-
+	cv.add_child(_online_code_label)
+	var players_panel := PanelContainer.new()
+	players_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.add_child(players_panel)
+	var pvm := MarginContainer.new()
+	for m in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
+		pvm.add_theme_constant_override(m, 12)
+	players_panel.add_child(pvm)
+	var pv := VBoxContainer.new()
+	pvm.add_child(pv)
+	var plab := Label.new()
+	plab.text = "Jugadores 🦄"
+	plab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	plab.add_theme_font_size_override("font_size", 20)
+	pv.add_child(plab)
+	var pscroll := ScrollContainer.new()
+	pscroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	pscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	pv.add_child(pscroll)
 	_online_players_box = VBoxContainer.new()
-	_online_room_box.add_child(_online_players_box)
+	_online_players_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_online_players_box.add_theme_constant_override("separation", 8)
+	pscroll.add_child(_online_players_box)
 
-	# Opciones de la partida (las mismas que en local). Solo el host las edita.
-	_build_online_rules(_online_room_box)
-
+	# --- Columna derecha: opciones + botones ---
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_stretch_ratio = 3.0
+	right.add_theme_constant_override("separation", 12)
+	hb.add_child(right)
+	var opt_panel := PanelContainer.new()
+	opt_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(opt_panel)
+	var opt_scroll := ScrollContainer.new()
+	opt_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	opt_panel.add_child(opt_scroll)
+	var opt_v := VBoxContainer.new()
+	opt_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	opt_v.add_theme_constant_override("separation", 12)
+	opt_scroll.add_child(opt_v)
+	_build_online_rules(opt_v)
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 12)
+	btn_row.custom_minimum_size = Vector2(0, 60)
+	right.add_child(btn_row)
+	var back2 := Button.new()
+	back2.text = "⬅ Volver"
+	back2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	back2.pressed.connect(_close_online_page)
+	btn_row.add_child(back2)
 	_online_start_btn = Button.new()
-	_online_start_btn.text = "¡INICIAR PARTIDA!"
-	_online_start_btn.custom_minimum_size = Vector2(0, 44)
+	_online_start_btn.text = "¡INICIAR PARTIDA! 🚀"
+	_online_start_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_online_start_btn.size_flags_stretch_ratio = 2.0
 	_online_start_btn.pressed.connect(func(): OnlineServer.start_room())
-	_online_room_box.add_child(_online_start_btn)
+	btn_row.add_child(_online_start_btn)
 
-	var close_btn := Button.new()
-	close_btn.text = "Volver"
-	close_btn.pressed.connect(func(): _online_layer.visible = false)
-	v.add_child(close_btn)
+# Cierra la página online y vuelve a la pantalla de inicio.
+func _close_online_page():
+	_online_layer.visible = false
 
 func _hsep() -> HSeparator:
 	return HSeparator.new()
@@ -564,8 +632,9 @@ func _on_join_room():
 
 func _on_room_joined(code: String, players: Array):
 	_online_status.text = "¡En la sala!"
+	_online_connect_box.visible = false
 	_online_room_box.visible = true
-	_online_code_label.text = "Código: %s" % code
+	_online_code_label.text = code
 	_render_online_players(players)
 
 func _on_room_players_updated(players: Array):
@@ -576,9 +645,30 @@ func _render_online_players(players: Array):
 	var is_host := false
 	var my_id := multiplayer.get_unique_id()
 	for p in players:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		# Círculo de avatar (placeholder 🦄).
+		var circ := Panel.new()
+		circ.custom_minimum_size = Vector2(34, 34)
+		var csb := StyleBoxFlat.new()
+		csb.bg_color = Color(0.30, 0.22, 0.45)
+		csb.set_corner_radius_all(17); csb.set_border_width_all(2)
+		csb.border_color = Color(0.85, 0.7, 1.0)
+		circ.add_theme_stylebox_override("panel", csb)
+		var em := Label.new()
+		em.text = "🦄"
+		em.set_anchors_preset(Control.PRESET_FULL_RECT)
+		em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		em.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		circ.add_child(em)
+		row.add_child(circ)
 		var lbl := Label.new()
-		lbl.text = p["name"] + ("  (HOST)" if p.get("host", false) else "") + ("  (TÚ)" if p["id"] == my_id else "")
-		_online_players_box.add_child(lbl)
+		lbl.text = p["name"] + ("  👑 HOST" if p.get("host", false) else "") + ("  (TÚ)" if p["id"] == my_id else "")
+		lbl.add_theme_font_size_override("font_size", 17)
+		lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(lbl)
+		_online_players_box.add_child(row)
 		if p["id"] == my_id and p.get("host", false):
 			is_host = true
 	_online_start_btn.visible = is_host
