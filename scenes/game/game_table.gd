@@ -388,11 +388,27 @@ func _refresh_pile_labels():
 		pile_nursery_btn.text = "👶 Guardería\n%d" % _count_nursery
 
 # Visor de TODAS las reglas/cartas (nombre + tipo + efecto), desplazable.
+var _rules_layer: CanvasLayer = null
 func _show_rules_viewer():
-	_close_modal()
+	# INDEPENDIENTE de los modales de efectos: NO usa active_modal ni _close_modal,
+	# así abrir las reglas NO cierra un picker que esté esperando respuesta (antes
+	# eso dejaba el turno colgado). Es toggle: si ya está abierto, se cierra.
+	if is_instance_valid(_rules_layer):
+		_rules_layer.queue_free()
+		_rules_layer = null
+		return
+	_rules_layer = CanvasLayer.new()
+	_rules_layer.layer = 25 # por encima de cualquier modal/picker
+	add_child(_rules_layer)
+	# Fondo oscuro que bloquea clicks detrás mientras lees (no afecta al picker).
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_rules_layer.add_child(dim)
+
 	var panel = _make_modal_panel("📖 Reglas del juego")
-	active_modal = panel
-	modal_layer.add_child(panel)
+	_rules_layer.add_child(panel)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(740, 440)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -407,14 +423,17 @@ func _show_rules_viewer():
 	rt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rt.add_theme_color_override("default_color", Color.WHITE)
 	rt.text = _rules_card_text()
-	# Dejar pasar el arrastre al ScrollContainer para poder scrollear el texto en móvil.
 	rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	scroll.add_child(rt)
 	_enable_touch_drag_scroll(scroll)
 
 	var btn_close := Button.new()
 	btn_close.text = "Cerrar"
-	btn_close.pressed.connect(_close_modal)
+	btn_close.pressed.connect(func():
+		if is_instance_valid(_rules_layer):
+			_rules_layer.queue_free()
+			_rules_layer = null
+	)
 	_modal_vbox(panel).add_child(btn_close)
 
 # Texto de la tarjeta de reglas (objetivo + fases del turno + tipos + relincho).
