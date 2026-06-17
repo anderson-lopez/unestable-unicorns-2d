@@ -149,6 +149,8 @@ func _ready():
 	GameManager.game_won.connect(_on_game_won)
 	# Marcadores X/7: se actualizan cada vez que cambia algún establo.
 	GameManager.stable_changed.connect(func(_pid): _refresh_scores())
+	# Mano en ABANICO: re-acomoda (inclina) las cartas cada vez que cambian.
+	my_hand_container.sort_children.connect(_layout_hand_fan)
 
 # ==============================================================================
 # 🌌 FONDO (placeholder: cielo nocturno + nubes + tapete central)
@@ -2301,6 +2303,29 @@ func _play_neigh_cinematic(neigh_card_id: int, neigher_name: String) -> void:
 # ==============================================================================
 # 🛠️ UTILIDADES
 # ==============================================================================
+
+# Acomoda las cartas de la mano en ABANICO (inclinación + leve arco). Se llama
+# tras cada reordenado del HBox; la rotación/posición persisten hasta el próximo.
+func _layout_hand_fan():
+	var cards: Array = []
+	for c in my_hand_container.get_children():
+		if c is CardUI:
+			cards.append(c)
+	var n := cards.size()
+	if n == 0:
+		return
+	# Menos ángulo cuando hay muchas cartas (para que no se amontonen feo).
+	var per := deg_to_rad(min(7.0, 44.0 / float(n)))
+	var mid := (n - 1) / 2.0
+	for i in range(n):
+		var card: CardUI = cards[i]
+		# La carta abierta (hover/tap) se queda recta para leerla bien.
+		if card.is_open:
+			card.rotation = 0.0
+			continue
+		card.pivot_offset = Vector2(card.size.x * 0.5, card.size.y * 0.92)
+		card.rotation = (i - mid) * per
+		card.position.y += absf(i - mid) * 5.0 # leve arco: extremos un poco más abajo
 
 func add_card_to_hand(card_id: int) -> CardUI:
 	var data = CardDatabase.get_card_data(card_id)
