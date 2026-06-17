@@ -178,10 +178,13 @@ func enable_pick_mode(on_pick: Callable):
 				st["start"] = e.position
 			elif st["pressed"]:
 				st["pressed"] = false
-				if not st["dragging"] and on_pick.is_valid():
+				# TAP = soltar CERCA de donde se tocó (tolerante al micro-movimiento
+				# del dedo). Antes, cualquier jitter > umbral lo marcaba como arrastre
+				# y NO seleccionaba → el efecto quedaba esperando y el turno se colgaba.
+				if e.position.distance_to(st["start"]) <= 24.0 and on_pick.is_valid():
 					on_pick.call()
 		elif e is InputEventMouseMotion and st["pressed"]:
-			if e.position.distance_to(st["start"]) > 12.0:
+			if e.position.distance_to(st["start"]) > 18.0:
 				st["dragging"] = true
 			if st["dragging"]:
 				var sc := _find_scroll_ancestor()
