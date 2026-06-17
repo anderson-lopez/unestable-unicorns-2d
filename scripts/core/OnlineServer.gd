@@ -165,7 +165,7 @@ func req_join_room(code: String, player_name: String):
 	_broadcast_room_players(code)
 
 @rpc("any_peer", "reliable")
-func req_start_room():
+func req_start_room(rules_dict: Dictionary = {}):
 	if not is_dedicated: return
 	var sender := multiplayer.get_remote_sender_id()
 	if not peer_room.has(sender): return
@@ -179,13 +179,13 @@ func req_start_room():
 	if game_in_progress:
 		rpc_id(sender, "_recv_room_error", "Ya hay una partida en curso.")
 		return
-	_start_game_for_room(code)
+	_start_game_for_room(code, rules_dict)
 
 # Arranca la partida de una sala EN EL SERVIDOR DEDICADO (Opción 🅰️):
 #  - Registra a los jugadores de la sala en GameManager (el servidor NO es jugador).
 #  - El servidor carga la mesa para correr la lógica y RETRANSMITIR los RPCs visuales.
 #  - Los clientes de la sala cargan su mesa al recibir _recv_room_started.
-func _start_game_for_room(code: String):
+func _start_game_for_room(code: String, rules_dict: Dictionary = {}):
 	if not rooms.has(code): return
 	game_in_progress = true
 	active_room_code = code
@@ -195,11 +195,12 @@ func _start_game_for_room(code: String):
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.refuse_new_connections = true
 
-	# Reglas FRESCAS para la partida online (meta = 7 unicornios por defecto). El
-	# servidor de Render vive mucho tiempo y, sin esto, podría arrastrar reglas
-	# viejas (p. ej. meta = 0/1 → alguien "gana" al instante en la selección de bebés).
+	# Reglas de la partida: SIEMPRE partimos de frescas (evita arrastrar estado
+	# viejo del servidor) y aplicamos las que configuró el HOST en la sala online.
 	GameManager.current_rules = GameRules.new()
-	print("OnlineServer: meta de la partida = ", GameManager.current_rules.unicorns_to_win, " unicornios")
+	if not rules_dict.is_empty():
+		GameManager.current_rules.from_dictionary(rules_dict)
+	print("OnlineServer: meta = ", GameManager.current_rules.unicorns_to_win, " | tiempo/turno = ", GameManager.current_rules.turn_time_seconds, "s")
 
 	# Registrar a los jugadores reales en GameManager (el servidor/peer 1 NO).
 	GameManager.players.clear()
@@ -257,7 +258,8 @@ func join_room(code: String, player_name: String):
 	rpc_id(1, "req_join_room", code, player_name)
 
 func start_room():
-	rpc_id(1, "req_start_room")
+	# El host envía las reglas que configuró (unicornios, tiempo por turno, etc.).
+	rpc_id(1, "req_start_room", GameManager.current_rules.to_dictionary())
 
 # --- RPCs cliente (servidor → cliente) ---
 

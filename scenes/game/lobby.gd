@@ -28,6 +28,13 @@ var spin_multiplier: SpinBox
 var opt_turn_time: OptionButton
 const TURN_TIME_LABELS := ["∞ Infinito", "30 seg", "45 seg", "1 min", "1.5 min", "2 min", "3 min", "5 min"]
 const TURN_TIME_VALUES := [0, 30, 45, 60, 90, 120, 180, 300]
+# Controles de reglas en la SALA ONLINE (los edita el host).
+var _online_rules_box: VBoxContainer
+var o_spin_unicorns: SpinBox
+var o_check_nursery: CheckBox
+var o_check_double: CheckBox
+var o_spin_mult: SpinBox
+var o_opt_time: OptionButton
 # Botón para copiar la IP del host al portapapeles (útil en móvil).
 var _copy_ip_btn: Button
 
@@ -197,6 +204,9 @@ func _build_online_overlay():
 	_online_players_box = VBoxContainer.new()
 	_online_room_box.add_child(_online_players_box)
 
+	# Opciones de la partida (las mismas que en local). Solo el host las edita.
+	_build_online_rules(_online_room_box)
+
 	_online_start_btn = Button.new()
 	_online_start_btn.text = "¡INICIAR PARTIDA!"
 	_online_start_btn.custom_minimum_size = Vector2(0, 44)
@@ -210,6 +220,72 @@ func _build_online_overlay():
 
 func _hsep() -> HSeparator:
 	return HSeparator.new()
+
+# Construye las MISMAS opciones de partida que en local, dentro de la sala online.
+# Solo el host puede editarlas; al iniciar, el host las envía al servidor.
+func _build_online_rules(parent: Container):
+	parent.add_child(_hsep())
+	_online_rules_box = VBoxContainer.new()
+	_online_rules_box.add_theme_constant_override("separation", 4)
+	parent.add_child(_online_rules_box)
+	var title := Label.new()
+	title.text = "⚙ Opciones de la partida (las elige el host)"
+	title.add_theme_font_size_override("font_size", 13)
+	_online_rules_box.add_child(title)
+
+	var h1 := HBoxContainer.new()
+	var l1 := Label.new(); l1.text = "Unicornios para ganar:"; h1.add_child(l1)
+	o_spin_unicorns = SpinBox.new()
+	o_spin_unicorns.min_value = 3; o_spin_unicorns.max_value = 10; o_spin_unicorns.step = 1
+	o_spin_unicorns.value = GameManager.current_rules.unicorns_to_win
+	o_spin_unicorns.value_changed.connect(func(_v): _on_online_rules_changed())
+	h1.add_child(o_spin_unicorns); _online_rules_box.add_child(h1)
+
+	o_check_nursery = CheckBox.new()
+	o_check_nursery.text = "Guardería como zona segura"
+	o_check_nursery.button_pressed = GameManager.current_rules.nursery_is_safe_zone
+	o_check_nursery.toggled.connect(func(_b): _on_online_rules_changed())
+	_online_rules_box.add_child(o_check_nursery)
+
+	o_check_double = CheckBox.new()
+	o_check_double.text = "Comba Doble (2 cartas por turno)"
+	o_check_double.button_pressed = GameManager.current_rules.double_dutch_enabled
+	o_check_double.toggled.connect(func(_b): _on_online_rules_changed())
+	_online_rules_box.add_child(o_check_double)
+
+	var h2 := HBoxContainer.new()
+	var l2 := Label.new(); l2.text = "Copias del mazo (x):"; h2.add_child(l2)
+	o_spin_mult = SpinBox.new()
+	o_spin_mult.min_value = 1; o_spin_mult.max_value = 5; o_spin_mult.step = 1
+	o_spin_mult.value = GameManager.current_rules.deck_multiplier
+	o_spin_mult.value_changed.connect(func(_v): _on_online_rules_changed())
+	h2.add_child(o_spin_mult); _online_rules_box.add_child(h2)
+
+	var h3 := HBoxContainer.new()
+	var l3 := Label.new(); l3.text = "Tiempo por turno:"; h3.add_child(l3)
+	o_opt_time = OptionButton.new()
+	for i in range(TURN_TIME_LABELS.size()):
+		o_opt_time.add_item(TURN_TIME_LABELS[i], i)
+	o_opt_time.selected = max(0, TURN_TIME_VALUES.find(GameManager.current_rules.turn_time_seconds))
+	o_opt_time.item_selected.connect(func(_i): _on_online_rules_changed())
+	h3.add_child(o_opt_time); _online_rules_box.add_child(h3)
+
+func _on_online_rules_changed():
+	if not is_instance_valid(o_spin_unicorns): return
+	GameManager.current_rules.unicorns_to_win = int(o_spin_unicorns.value)
+	GameManager.current_rules.nursery_is_safe_zone = o_check_nursery.button_pressed
+	GameManager.current_rules.double_dutch_enabled = o_check_double.button_pressed
+	GameManager.current_rules.deck_multiplier = int(o_spin_mult.value)
+	GameManager.current_rules.turn_time_seconds = TURN_TIME_VALUES[clampi(o_opt_time.selected, 0, TURN_TIME_VALUES.size() - 1)]
+
+# Habilita las opciones solo para el host.
+func _set_online_rules_editable(is_host: bool):
+	if not is_instance_valid(o_spin_unicorns): return
+	o_spin_unicorns.editable = is_host
+	o_check_nursery.disabled = not is_host
+	o_check_double.disabled = not is_host
+	o_spin_mult.editable = is_host
+	o_opt_time.disabled = not is_host
 
 func _on_create_room():
 	if not _online_connected:
@@ -247,6 +323,7 @@ func _render_online_players(players: Array):
 		if p["id"] == my_id and p.get("host", false):
 			is_host = true
 	_online_start_btn.visible = is_host
+	_set_online_rules_editable(is_host)
 
 func _on_online_error(message: String):
 	_online_status.text = "⚠ " + message
