@@ -45,6 +45,7 @@ var _copy_ip_btn: Button
 var player_item_style = StyleBoxFlat.new()
 
 func _ready():
+	_build_lobby_background()
 	# Configurar estilo básico de items de lista
 	player_item_style.bg_color = Color("2b2b2b")
 	player_item_style.set_corner_radius_all(5)
@@ -110,6 +111,59 @@ var _online_code_label: Label
 var _online_players_box: VBoxContainer
 var _online_start_btn: Button
 var _online_connected := false
+
+# Fondo del lobby: cielo nocturno + nubes (mismo estilo mágico que la mesa).
+func _build_lobby_background():
+	if has_node("Background"):
+		$Background.visible = false
+	var bg := CanvasLayer.new()
+	bg.layer = -10
+	add_child(bg)
+	var custom := ""
+	for p in ["res://assets/branding/lobby.png", "res://assets/branding/background.png", "res://assets/branding/table.png"]:
+		if ResourceLoader.exists(p):
+			custom = p; break
+	if custom != "":
+		var img := TextureRect.new()
+		img.texture = load(custom)
+		img.set_anchors_preset(Control.PRESET_FULL_RECT)
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bg.add_child(img)
+		return
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0.10, 0.043, 0.18))
+	grad.set_color(1, Color(0.176, 0.086, 0.31))
+	var gtex := GradientTexture2D.new()
+	gtex.gradient = grad
+	gtex.fill_from = Vector2(0.5, 0.0); gtex.fill_to = Vector2(0.5, 1.0)
+	gtex.width = 8; gtex.height = 256
+	var sky := TextureRect.new()
+	sky.texture = gtex
+	sky.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sky.stretch_mode = TextureRect.STRETCH_SCALE
+	sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.add_child(sky)
+	for c in [Vector2(0.16, 0.20), Vector2(0.80, 0.15), Vector2(0.28, 0.82), Vector2(0.86, 0.74)]:
+		_add_lobby_cloud(bg, c)
+
+func _add_lobby_cloud(layer: CanvasLayer, anchor_pos: Vector2):
+	var sizes := [Vector2(150, 150), Vector2(110, 110), Vector2(95, 95)]
+	var offs := [Vector2(0, 0), Vector2(80, 20), Vector2(-60, 25)]
+	for i in range(sizes.size()):
+		var puff := Panel.new()
+		puff.anchor_left = anchor_pos.x; puff.anchor_right = anchor_pos.x
+		puff.anchor_top = anchor_pos.y; puff.anchor_bottom = anchor_pos.y
+		puff.offset_left = offs[i].x; puff.offset_top = offs[i].y
+		puff.offset_right = offs[i].x + sizes[i].x; puff.offset_bottom = offs[i].y + sizes[i].y
+		puff.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(1, 1, 1, 0.05)
+		sb.set_corner_radius_all(int(sizes[i].x / 2))
+		puff.add_theme_stylebox_override("panel", sb)
+		layer.add_child(puff)
 
 func _build_online_button():
 	# Lo añadimos junto a los botones de login (mismo contenedor que HostBtn).
