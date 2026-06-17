@@ -114,29 +114,27 @@ var _online_players_box: VBoxContainer
 var _online_start_btn: Button
 var _online_connected := false
 
-# Fondo del lobby: cielo nocturno + nubes (mismo estilo mágico que la mesa).
+# Fondo del lobby: CIELO PASTEL con nubes suaves (como el mockup). Solo usa una
+# imagen propia si existe res://assets/branding/lobby.png (NO el arte de UU).
 func _build_lobby_background():
 	if has_node("Background"):
 		$Background.visible = false
 	var bg := CanvasLayer.new()
 	bg.layer = -10
 	add_child(bg)
-	var custom := ""
-	for p in ["res://assets/branding/lobby.png", "res://assets/branding/background.png", "res://assets/branding/table.png"]:
-		if ResourceLoader.exists(p):
-			custom = p; break
-	if custom != "":
+	if ResourceLoader.exists("res://assets/branding/lobby.png"):
 		var img := TextureRect.new()
-		img.texture = load(custom)
+		img.texture = load("res://assets/branding/lobby.png")
 		img.set_anchors_preset(Control.PRESET_FULL_RECT)
 		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bg.add_child(img)
 		return
+	# Cielo pastel: azul cielo arriba → lavanda abajo.
 	var grad := Gradient.new()
-	grad.set_color(0, Color(0.10, 0.043, 0.18))
-	grad.set_color(1, Color(0.176, 0.086, 0.31))
+	grad.set_color(0, Color(0.62, 0.74, 0.93))
+	grad.set_color(1, Color(0.78, 0.72, 0.90))
 	var gtex := GradientTexture2D.new()
 	gtex.gradient = grad
 	gtex.fill_from = Vector2(0.5, 0.0); gtex.fill_to = Vector2(0.5, 1.0)
@@ -148,12 +146,14 @@ func _build_lobby_background():
 	sky.stretch_mode = TextureRect.STRETCH_SCALE
 	sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bg.add_child(sky)
-	for c in [Vector2(0.16, 0.20), Vector2(0.80, 0.15), Vector2(0.28, 0.82), Vector2(0.86, 0.74)]:
+	# Nubes blancas suaves repartidas (varias, grandes).
+	for c in [Vector2(0.10, 0.16), Vector2(0.72, 0.10), Vector2(0.20, 0.86),
+			Vector2(0.88, 0.80), Vector2(0.5, 0.5), Vector2(0.05, 0.6), Vector2(0.92, 0.40)]:
 		_add_lobby_cloud(bg, c)
 
 func _add_lobby_cloud(layer: CanvasLayer, anchor_pos: Vector2):
-	var sizes := [Vector2(150, 150), Vector2(110, 110), Vector2(95, 95)]
-	var offs := [Vector2(0, 0), Vector2(80, 20), Vector2(-60, 25)]
+	var sizes := [Vector2(190, 190), Vector2(140, 140), Vector2(130, 130), Vector2(110, 110)]
+	var offs := [Vector2(0, 0), Vector2(110, 28), Vector2(-90, 35), Vector2(40, 55)]
 	for i in range(sizes.size()):
 		var puff := Panel.new()
 		puff.anchor_left = anchor_pos.x; puff.anchor_right = anchor_pos.x
@@ -162,7 +162,7 @@ func _add_lobby_cloud(layer: CanvasLayer, anchor_pos: Vector2):
 		puff.offset_right = offs[i].x + sizes[i].x; puff.offset_bottom = offs[i].y + sizes[i].y
 		puff.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(1, 1, 1, 0.05)
+		sb.bg_color = Color(1, 1, 1, 0.5)
 		sb.set_corner_radius_all(int(sizes[i].x / 2))
 		puff.add_theme_stylebox_override("panel", sb)
 		layer.add_child(puff)
@@ -286,8 +286,10 @@ func _reorganize_login():
 	if title and title is Label:
 		title.text = "🦄 UNICORNÍOS INESTABLES ✨\n(Fan Adaptation)"
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.add_theme_font_size_override("font_size", 34)
+		title.add_theme_font_size_override("font_size", 40)
 		title.add_theme_color_override("font_color", Color(1, 0.84, 0.0))
+		title.add_theme_color_override("font_outline_color", Color(0.2, 0.08, 0.3))
+		title.add_theme_constant_override("outline_size", 6)
 
 	# Campo de nombre grande.
 	name_input.placeholder_text = "Toca para escribir tu nombre mágico… 🦄"
@@ -308,6 +310,9 @@ func _reorganize_login():
 	join_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	host_btn.custom_minimum_size = Vector2(0, 50)
 	join_btn.custom_minimum_size = Vector2(0, 50)
+	# Colores del mockup: Crear = coral, Unirse = turquesa.
+	_style_color_button(host_btn, Color(0.94, 0.63, 0.48))
+	_style_color_button(join_btn, Color(0.50, 0.85, 0.75))
 	var local_row := HBoxContainer.new()
 	local_row.add_theme_constant_override("separation", 12)
 	vbox.add_child(local_row)
@@ -328,6 +333,23 @@ func _reorganize_login():
 			idx += 1
 	ip_input.custom_minimum_size = Vector2(0, 40)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+# Pinta un botón de un color sólido (coral/turquesa del mockup) con texto oscuro.
+func _style_color_button(btn: Button, base: Color):
+	var hover := base.lightened(0.12)
+	var pressed := base.darkened(0.12)
+	for state in [["normal", base], ["hover", hover], ["pressed", pressed], ["focus", base]]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = state[1]
+		sb.set_corner_radius_all(14)
+		sb.set_border_width_all(2)
+		sb.border_color = Color(1, 1, 1, 0.35)
+		sb.content_margin_left = 14; sb.content_margin_right = 14
+		sb.content_margin_top = 10; sb.content_margin_bottom = 10
+		btn.add_theme_stylebox_override(state[0], sb)
+	btn.add_theme_color_override("font_color", Color(0.15, 0.07, 0.2))
+	btn.add_theme_color_override("font_hover_color", Color(0.1, 0.04, 0.15))
+	btn.add_theme_color_override("font_pressed_color", Color(0.1, 0.04, 0.15))
 
 func _open_online():
 	if name_input.text.strip_edges().is_empty():
