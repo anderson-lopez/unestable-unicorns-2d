@@ -274,22 +274,35 @@ func _reorganize_login():
 	if not is_instance_valid(vbox): return
 	vbox.add_theme_constant_override("separation", 16)
 
-	# Ensanchar el panel de login.
+	# Panel morado mágico con borde dorado brillante (como el mockup).
 	var margin := vbox.get_parent()
 	if is_instance_valid(margin) and is_instance_valid(margin.get_parent()):
 		var panel := margin.get_parent()
 		if panel is Control:
-			panel.custom_minimum_size = Vector2(500, 0)
+			panel.custom_minimum_size = Vector2(520, 0)
+			var psb := StyleBoxFlat.new()
+			psb.bg_color = Color(0.17, 0.09, 0.33, 0.96)
+			psb.set_corner_radius_all(24)
+			psb.set_border_width_all(3)
+			psb.border_color = Color(1, 0.84, 0.3, 0.95)
+			psb.shadow_color = Color(0.55, 0.35, 1.0, 0.45)
+			psb.shadow_size = 16
+			panel.add_theme_stylebox_override("panel", psb)
 
-	# Título mágico.
+	# Título ARCOÍRIS (como el mockup) usando RichTextLabel animado.
 	var title := vbox.get_node_or_null("Title")
 	if title and title is Label:
-		title.text = "🦄 UNICORNÍOS INESTABLES ✨\n(Fan Adaptation)"
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.add_theme_font_size_override("font_size", 40)
-		title.add_theme_color_override("font_color", Color(1, 0.84, 0.0))
-		title.add_theme_color_override("font_outline_color", Color(0.2, 0.08, 0.3))
-		title.add_theme_constant_override("outline_size", 6)
+		title.visible = false
+	var rt_title := RichTextLabel.new()
+	rt_title.name = "RainbowTitle"
+	rt_title.bbcode_enabled = true
+	rt_title.fit_content = true
+	rt_title.scroll_active = false
+	rt_title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	rt_title.custom_minimum_size = Vector2(0, 110)
+	rt_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rt_title.text = "[center][font_size=40][rainbow freq=0.2 sat=0.5 val=1]🦄 UNICORNÍOS INESTABLES ✨[/rainbow][/font_size]\n[font_size=24][color=#F5C469](Fan Adaptation)[/color][/font_size][/center]"
+	vbox.add_child(rt_title)
 
 	# Campo de nombre grande.
 	name_input.placeholder_text = "Toca para escribir tu nombre mágico… 🦄"
@@ -325,7 +338,7 @@ func _reorganize_login():
 		if nn: nn.visible = false
 
 	# Orden final: Título, Nombre, Online, Galería, fila Crear/Unirse, IP, estado.
-	var order := [title, name_input, _btn_online, _btn_gallery, local_row, ip_input, status_label]
+	var order := [rt_title, name_input, _btn_online, _btn_gallery, local_row, ip_input, status_label]
 	var idx := 0
 	for node in order:
 		if is_instance_valid(node):
