@@ -56,9 +56,12 @@ var log_collapsed: bool = false
 var _log_toggle_btn: Button
 
 # --- Pilas visibles (Mazo / Descarte / Guardería) ---
-var pile_deck_btn: Button
-var pile_discard_btn: Button
-var pile_nursery_btn: Button
+var pile_deck_btn: Control
+var pile_discard_btn: Control
+var pile_nursery_btn: Control
+var _lbl_deck_count: Label
+var _lbl_discard_count: Label
+var _lbl_nursery_count: Label
 var _count_deck: int = 0
 var _count_discard: int = 0
 var _count_nursery: int = 0
@@ -357,19 +360,16 @@ func _build_right_column():
 	piles.offset_top = -78; piles.offset_bottom = 70
 	hud_layer.add_child(piles)
 
-	pile_deck_btn = Button.new()
-	pile_deck_btn.custom_minimum_size = Vector2(96, 130)
-	pile_deck_btn.disabled = true # el mazo de robo es secreto
+	pile_deck_btn = _make_pile_card("Mazo", false, "")
+	_lbl_deck_count = pile_deck_btn.find_child("Count", true, false)
 	piles.add_child(pile_deck_btn)
 
-	pile_nursery_btn = Button.new()
-	pile_nursery_btn.custom_minimum_size = Vector2(96, 130)
-	pile_nursery_btn.pressed.connect(func(): _request_pile_view("nursery"))
+	pile_nursery_btn = _make_pile_card("Guardería", true, "nursery")
+	_lbl_nursery_count = pile_nursery_btn.find_child("Count", true, false)
 	piles.add_child(pile_nursery_btn)
 
-	pile_discard_btn = Button.new()
-	pile_discard_btn.custom_minimum_size = Vector2(96, 130)
-	pile_discard_btn.pressed.connect(func(): _request_pile_view("discard"))
+	pile_discard_btn = _make_pile_card("Descarte", true, "discard")
+	_lbl_discard_count = pile_discard_btn.find_child("Count", true, false)
 	piles.add_child(pile_discard_btn)
 
 	# --- Botones de acción a la DERECHA de las pilas: END TURN + Reglas ---
@@ -396,13 +396,70 @@ func _build_right_column():
 
 	_refresh_pile_labels()
 
+# Una pila como CARTA boca abajo con efecto de "muchas apiladas" + contador.
+# Sin iconos. Si clickable, toda la carta abre el visor de esa pila.
+func _make_pile_card(caption: String, clickable: bool, view_kind: String) -> Control:
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 2)
+	var stack := Control.new()
+	stack.custom_minimum_size = Vector2(92, 128)
+	root.add_child(stack)
+	# Cartas de atrás (efecto de pila): reversos desplazados y más oscuros.
+	for off in [Vector2(8, 8), Vector2(4, 4)]:
+		var back := TextureRect.new()
+		back.texture = CARD_BACK_TEX
+		back.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		back.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		back.set_anchors_preset(Control.PRESET_FULL_RECT)
+		back.offset_left = off.x; back.offset_top = off.y
+		back.offset_right = off.x; back.offset_bottom = off.y
+		back.modulate = Color(0.55, 0.55, 0.62)
+		back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		stack.add_child(back)
+	# Carta de arriba (reverso).
+	var top := TextureRect.new()
+	top.texture = CARD_BACK_TEX
+	top.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	top.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	top.set_anchors_preset(Control.PRESET_FULL_RECT)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.add_child(top)
+	# Contador sobre la carta.
+	var cnt := Label.new()
+	cnt.name = "Count"
+	cnt.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cnt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cnt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cnt.add_theme_font_size_override("font_size", 30)
+	cnt.add_theme_color_override("font_color", Color(1, 1, 1))
+	cnt.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	cnt.add_theme_constant_override("outline_size", 6)
+	cnt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.add_child(cnt)
+	# Click (toda la carta) para abrir el visor de la pila.
+	if clickable:
+		var btn := Button.new()
+		btn.flat = true
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+		var empty := StyleBoxEmpty.new()
+		for st in ["normal", "hover", "pressed", "focus", "disabled"]:
+			btn.add_theme_stylebox_override(st, empty)
+		btn.pressed.connect(func(): _request_pile_view(view_kind))
+		stack.add_child(btn)
+	# Rótulo pequeño debajo (sin icono).
+	var cap := Label.new()
+	cap.text = caption
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cap.add_theme_font_size_override("font_size", 13)
+	cap.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
+	root.add_child(cap)
+	return root
+
 func _refresh_pile_labels():
-	if is_instance_valid(pile_deck_btn):
-		pile_deck_btn.text = "🂠 Mazo\n%d" % _count_deck
-	if is_instance_valid(pile_discard_btn):
-		pile_discard_btn.text = "🗑 Descarte\n%d" % _count_discard
-	if is_instance_valid(pile_nursery_btn):
-		pile_nursery_btn.text = "👶 Guardería\n%d" % _count_nursery
+	if is_instance_valid(_lbl_deck_count): _lbl_deck_count.text = str(_count_deck)
+	if is_instance_valid(_lbl_discard_count): _lbl_discard_count.text = str(_count_discard)
+	if is_instance_valid(_lbl_nursery_count): _lbl_nursery_count.text = str(_count_nursery)
 
 # Visor de TODAS las reglas/cartas (nombre + tipo + efecto), desplazable.
 var _rules_layer: CanvasLayer = null
