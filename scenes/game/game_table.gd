@@ -356,10 +356,12 @@ func _build_right_column():
 	var piles := HBoxContainer.new()
 	piles.add_theme_constant_override("separation", 16)
 	piles.alignment = BoxContainer.ALIGNMENT_CENTER
+	# Ancladas ARRIBA (debajo de la banda de rivales), no al centro: así no se
+	# pisan con la banda de MI establo, que va abajo sobre la mano.
 	piles.anchor_left = 0.5; piles.anchor_right = 0.5
-	piles.anchor_top = 0.5; piles.anchor_bottom = 0.5
+	piles.anchor_top = 0.0; piles.anchor_bottom = 0.0
 	piles.offset_left = -210; piles.offset_right = 210
-	piles.offset_top = -78; piles.offset_bottom = 70
+	piles.offset_top = 150; piles.offset_bottom = 298
 	hud_layer.add_child(piles)
 
 	pile_deck_btn = _make_pile_card("Mazo", false, "")
@@ -378,9 +380,9 @@ func _build_right_column():
 	var actions := VBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	actions.anchor_left = 0.5; actions.anchor_right = 0.5
-	actions.anchor_top = 0.5; actions.anchor_bottom = 0.5
+	actions.anchor_top = 0.0; actions.anchor_bottom = 0.0
 	actions.offset_left = 226; actions.offset_right = 372
-	actions.offset_top = -48; actions.offset_bottom = 60
+	actions.offset_top = 172; actions.offset_bottom = 280
 	hud_layer.add_child(actions)
 
 	btn_end_turn = Button.new()
