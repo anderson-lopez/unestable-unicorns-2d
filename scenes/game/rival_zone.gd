@@ -19,8 +19,10 @@ var card_scale: float = 1.0
 var avatar_circle: Panel
 var score_label: Label
 
+var stable_sep: VSeparator
+
 func _ready():
-	_build_upgrades_row()
+	_build_content_row()
 	_build_avatar()
 	_apply_panel_style()
 
@@ -46,12 +48,19 @@ func _build_avatar():
 	avatar_circle.add_child(em)
 	top.add_child(avatar_circle)
 	top.move_child(avatar_circle, 0)
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	score_label = Label.new()
 	score_label.text = "0/7"
 	score_label.add_theme_font_size_override("font_size", 16)
 	score_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
+	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	top.add_child(score_label)
-	top.move_child(score_label, 2) # avatar, nombre, marcador, mano
+	top.move_child(score_label, 2) # avatar, nombre, marcador, [espaciador], mano
+	# Espaciador para empujar la mano (dorsos) a la derecha de la cabecera.
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(spacer)
+	top.move_child(spacer, 3)
 
 # Actualiza el marcador "X/7".
 func set_score(count: int, goal: int):
@@ -71,25 +80,39 @@ func count_unicorns() -> int:
 # Fondo sólido oscuro con borde para que cada establo rival se distinga de la mesa.
 func _apply_panel_style():
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.10, 0.11, 0.15, 0.96)
-	sb.set_corner_radius_all(8)
+	sb.bg_color = Color(0.106, 0.075, 0.22, 0.96)
+	sb.set_corner_radius_all(10)
 	sb.set_border_width_all(2)
-	sb.border_color = Color(0.35, 0.37, 0.48, 0.9)
+	sb.border_color = Color(0.55, 0.46, 0.82, 0.95) # violeta (los míos van en dorado)
 	sb.set_content_margin_all(8)
 	add_theme_stylebox_override("panel", sb)
 
-# Crea la fila de ventajas/desventajas y la coloca justo debajo del nombre/mano,
-# por ENCIMA de la fila de unicornios (stable_container).
-func _build_upgrades_row():
-	upgrades_row = HBoxContainer.new()
-	upgrades_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	upgrades_row.add_theme_constant_override("separation", 4)
+# Pone ventajas/desventajas y unicornios en UNA sola fila, separadas por una
+# línea (como el mockup): [ventajas/desventajas] | [unicornios].
+func _build_content_row():
 	var vbox := stable_container.get_parent()
-	# Separación clara entre nombre/mano, ventajas/desventajas y unicornios.
-	vbox.add_theme_constant_override("separation", 8)
-	vbox.add_child(upgrades_row)
-	vbox.move_child(upgrades_row, stable_container.get_index()) # justo arriba de unicornios
+	vbox.add_theme_constant_override("separation", 6)
+	var content := HBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 8)
+	vbox.add_child(content)
+	# Fila de ventajas/desventajas (izquierda).
+	upgrades_row = HBoxContainer.new()
+	upgrades_row.add_theme_constant_override("separation", 4)
+	content.add_child(upgrades_row)
+	# Línea separadora (oculta hasta que haya alguna ventaja/desventaja).
+	stable_sep = VSeparator.new()
+	stable_sep.visible = false
+	content.add_child(stable_sep)
+	# Reubicamos la fila de unicornios (del escenario) dentro de la misma fila.
+	stable_container.get_parent().remove_child(stable_container)
 	stable_container.add_theme_constant_override("separation", 4)
+	content.add_child(stable_container)
+
+# Muestra la línea solo si hay ventajas/desventajas (si no, sería una rayita suelta).
+func _update_sep():
+	if is_instance_valid(stable_sep) and is_instance_valid(upgrades_row):
+		stable_sep.visible = upgrades_row.get_child_count() > 0
 
 # Ajusta el tamaño de las cartas (1.0 normal; <1 para muchos jugadores).
 func set_card_scale(s: float):
@@ -154,11 +177,12 @@ func add_card_to_stable(card_node: Node, is_top_row: bool = false):
 	# Tamaño compacto (escalado según cantidad de jugadores).
 	if card_node is Control:
 		card_node.custom_minimum_size = Vector2(58 * card_scale, 78 * card_scale)
-	# Ventajas/desventajas arriba; unicornios abajo.
+	# Ventajas/desventajas a la izquierda; unicornios a la derecha.
 	if is_top_row and is_instance_valid(upgrades_row):
 		upgrades_row.add_child(card_node)
 	else:
 		stable_container.add_child(card_node)
+	_update_sep()
 
 # Elimina visualmente una carta del establo del rival por su card_id.
 # Busca por metadata "card_id" (soporta cartas duplicadas por el multiplicador)
@@ -184,3 +208,4 @@ func _fade_and_free(node: Node) -> void:
 	var tw = node.create_tween()
 	tw.tween_property(node, "modulate:a", 0.0, 0.2)
 	tw.tween_callback(node.queue_free)
+	tw.tween_callback(_update_sep)
