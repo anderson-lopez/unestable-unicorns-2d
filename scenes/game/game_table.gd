@@ -120,11 +120,8 @@ func _ready():
 	# El HBox original ya no se usa para posicionar (lo dejamos oculto).
 	$RivalsContainer.visible = false
 
-	# Separación clara entre la fila de Ventajas/Desventajas (arriba) y la de
-	# Unicornios (abajo) para que no se encimen y se vean limpias.
-	$MyStable.add_theme_constant_override("separation", 18)
-	$MyStable/UpgradesRow.add_theme_constant_override("separation", 8)
-	$MyStable/UnicornsRow.add_theme_constant_override("separation", 8)
+	# (Las separaciones del establo ahora se definen en la escena: Body/Header/
+	# ContentRow con UpgradesRow | Sep | UnicornsRow.)
 
 	# Capa libre para posicionar a los rivales ALREDEDOR de la mesa
 	# (arriba / izquierda / derecha). No usa auto-layout.
