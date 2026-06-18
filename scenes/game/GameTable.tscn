@@ -49,7 +49,7 @@ grow_horizontal = 2
 theme_override_constants/separation = -10
 alignment = 1
 
-[node name="MyStable" type="VBoxContainer" parent="." unique_id=2031328842]
+[node name="MyStable" type="PanelContainer" parent="." unique_id=2031328842]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -61,15 +61,30 @@ offset_right = -20.0
 offset_bottom = -196.0
 grow_horizontal = 2
 grow_vertical = 0
+
+[node name="Body" type="VBoxContainer" parent="MyStable"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="MyStable/Body"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ContentRow" type="HBoxContainer" parent="MyStable/Body"]
+layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="UpgradesRow" type="HBoxContainer" parent="MyStable" unique_id=512314525]
+[node name="UpgradesRow" type="HBoxContainer" parent="MyStable/Body/ContentRow" unique_id=512314525]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
 
-[node name="UnicornsRow" type="HBoxContainer" parent="MyStable" unique_id=1060063165]
+[node name="Sep" type="VSeparator" parent="MyStable/Body/ContentRow"]
+layout_mode = 2
+
+[node name="UnicornsRow" type="HBoxContainer" parent="MyStable/Body/ContentRow" unique_id=1060063165]
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1

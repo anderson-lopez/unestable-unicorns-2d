@@ -19,9 +19,11 @@ const SFX_FILES := {
 
 # --- REFERENCIAS DE UI ---
 @onready var my_hand_container: HBoxContainer = $HandZone/CardsContainer
-@onready var my_stable_container: VBoxContainer = $MyStable
-@onready var my_upgrades_row: HBoxContainer = $MyStable/UpgradesRow
-@onready var my_unicorns_row: HBoxContainer = $MyStable/UnicornsRow
+@onready var my_stable_container: PanelContainer = $MyStable
+@onready var my_stable_header: HBoxContainer = $MyStable/Body/Header
+@onready var my_upgrades_row: HBoxContainer = $MyStable/Body/ContentRow/UpgradesRow
+@onready var my_stable_sep: VSeparator = $MyStable/Body/ContentRow/Sep
+@onready var my_unicorns_row: HBoxContainer = $MyStable/Body/ContentRow/UnicornsRow
 
 @onready var rivals_container: Control = $RivalsContainer
 @onready var info_panel: CardInfoPanel = $UILayer/CardInfoPanel
@@ -147,8 +149,11 @@ func _ready():
 	GameManager.phase_changed.connect(_on_phase_changed)
 	GameManager.actions_changed.connect(_on_actions_changed)
 	GameManager.game_won.connect(_on_game_won)
-	# Marcadores X/7: se actualizan cada vez que cambia algún establo.
-	GameManager.stable_changed.connect(func(_pid): _refresh_scores())
+	# Marcadores X/7 + línea separadora: se refrescan cuando cambia algún establo.
+	GameManager.stable_changed.connect(func(_pid):
+		_refresh_scores()
+		_update_my_stable_sep()
+	)
 	# Mano en ABANICO: re-acomoda (inclina) las cartas cada vez que cambian.
 	my_hand_container.sort_children.connect(_layout_hand_fan)
 
@@ -282,53 +287,65 @@ func _build_hud():
 	_build_log_panel()
 	_update_hud()
 
-# Mi avatar (círculo placeholder) + nombre + marcador X/7, abajo a la izquierda.
+# Cabecera de MI establo (panel con borde dorado): avatar + nombre + marcador
+# X/7 a la izquierda y la etiqueta "TU ESTABLO" a la derecha, como el mockup.
 var my_score_label: Label
 func _build_my_avatar():
-	var box := PanelContainer.new()
-	box.anchor_left = 0.0; box.anchor_right = 0.0
-	box.anchor_top = 1.0; box.anchor_bottom = 1.0
-	box.offset_left = 12; box.offset_right = 210
-	box.offset_top = -84; box.offset_bottom = -14
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0.5)
-	sb.set_corner_radius_all(10); sb.set_content_margin_all(8)
-	box.add_theme_stylebox_override("panel", sb)
-	hud_layer.add_child(box)
-	var hb := HBoxContainer.new()
-	hb.add_theme_constant_override("separation", 10)
-	box.add_child(hb)
+	# Borde dorado al panel de mi establo (lo distingue del de los rivales).
+	var psb := StyleBoxFlat.new()
+	psb.bg_color = Color(0.106, 0.075, 0.22, 0.96)
+	psb.set_corner_radius_all(10)
+	psb.set_border_width_all(2)
+	psb.border_color = Color(0.96, 0.77, 0.41, 0.95) # dorado
+	psb.set_content_margin_all(10)
+	my_stable_container.add_theme_stylebox_override("panel", psb)
+
+	# --- Cabecera ---
 	# Círculo de avatar
 	var circ := Panel.new()
-	circ.custom_minimum_size = Vector2(50, 50)
+	circ.custom_minimum_size = Vector2(34, 34)
 	var csb := StyleBoxFlat.new()
 	csb.bg_color = Color(0.22, 0.18, 0.34)
-	csb.set_corner_radius_all(25); csb.set_border_width_all(2)
-	csb.border_color = Color(0.75, 0.62, 0.95)
+	csb.set_corner_radius_all(17); csb.set_border_width_all(2)
+	csb.border_color = Color(1, 0.85, 0.42)
 	circ.add_theme_stylebox_override("panel", csb)
 	var em := Label.new()
 	em.text = "🦄"
 	em.set_anchors_preset(Control.PRESET_FULL_RECT)
 	em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	em.add_theme_font_size_override("font_size", 28)
+	em.add_theme_font_size_override("font_size", 18)
 	em.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	circ.add_child(em)
-	hb.add_child(circ)
-	# Nombre + marcador
-	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 0)
-	hb.add_child(vb)
+	my_stable_header.add_child(circ)
+	# Nombre
 	var my_id = multiplayer.get_unique_id()
 	var nm := Label.new()
-	nm.text = GameManager.players[my_id].name if GameManager.players.has(my_id) else "Tú"
-	nm.add_theme_font_size_override("font_size", 16)
-	vb.add_child(nm)
+	nm.text = (GameManager.players[my_id].name if GameManager.players.has(my_id) else "Tú") + "  (TÚ)"
+	nm.add_theme_font_size_override("font_size", 15)
+	nm.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
+	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	my_stable_header.add_child(nm)
+	# Marcador X/7
 	my_score_label = Label.new()
 	my_score_label.text = "0/%d" % GameManager.current_rules.unicorns_to_win
-	my_score_label.add_theme_font_size_override("font_size", 20)
+	my_score_label.add_theme_font_size_override("font_size", 15)
 	my_score_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
-	vb.add_child(my_score_label)
+	my_score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	my_stable_header.add_child(my_score_label)
+	# Espaciador + etiqueta "TU ESTABLO" a la derecha
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	my_stable_header.add_child(spacer)
+	var tag := Label.new()
+	tag.text = "TU ESTABLO"
+	tag.add_theme_font_size_override("font_size", 11)
+	tag.add_theme_color_override("font_color", Color(0.62, 0.56, 0.78))
+	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	my_stable_header.add_child(tag)
+	# La línea separadora arranca oculta (no hay ventajas/desventajas al inicio).
+	if is_instance_valid(my_stable_sep):
+		my_stable_sep.visible = false
 
 # Recalcula y muestra los marcadores X/7 (mío + rivales) desde las cartas visibles.
 func _refresh_scores():
@@ -339,6 +356,12 @@ func _refresh_scores():
 		var z = rival_stables[pid]
 		if is_instance_valid(z) and z.has_method("set_score"):
 			z.set_score(z.count_unicorns(), goal)
+
+# La línea separadora entre ventajas/desventajas y unicornios solo se ve si hay
+# al menos una ventaja/desventaja (si no, quedaría una rayita suelta).
+func _update_my_stable_sep():
+	if is_instance_valid(my_stable_sep) and is_instance_valid(my_upgrades_row):
+		my_stable_sep.visible = my_upgrades_row.get_child_count() > 0
 
 func _count_row_unicorns(row: Node) -> int:
 	var total := 0
