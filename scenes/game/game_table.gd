@@ -381,7 +381,7 @@ func _build_right_column():
 	piles.anchor_left = 0.5; piles.anchor_right = 0.5
 	piles.anchor_top = 0.0; piles.anchor_bottom = 0.0
 	piles.offset_left = -210; piles.offset_right = 210
-	piles.offset_top = 150; piles.offset_bottom = 298
+	piles.offset_top = 168; piles.offset_bottom = 316
 	hud_layer.add_child(piles)
 
 	pile_deck_btn = _make_pile_card("Mazo", false, "")
@@ -402,7 +402,7 @@ func _build_right_column():
 	actions.anchor_left = 0.5; actions.anchor_right = 0.5
 	actions.anchor_top = 0.0; actions.anchor_bottom = 0.0
 	actions.offset_left = 226; actions.offset_right = 372
-	actions.offset_top = 172; actions.offset_bottom = 280
+	actions.offset_top = 190; actions.offset_bottom = 298
 	hud_layer.add_child(actions)
 
 	btn_end_turn = Button.new()
@@ -1525,9 +1525,9 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 		# encimaba filas). Las ventajas/desventajas (fila de arriba) un poco más
 		# chicas aún, para que se vean limpias sobre los unicornios.
 		if is_top:
-			new_card.custom_minimum_size = Vector2(64, 88) # ventajas/desventajas (más chicas)
+			new_card.custom_minimum_size = Vector2(52, 72) # ventajas/desventajas (más chicas)
 		else:
-			new_card.custom_minimum_size = Vector2(78, 107) # unicornios
+			new_card.custom_minimum_size = Vector2(72, 100) # unicornios
 		added = true
 	elif rival_stables.has(player_id):
 		rival_stables[player_id].add_card_to_stable(new_card, is_top)
@@ -1566,7 +1566,7 @@ func _fly_into_stable(stable_card: Control, owner_id: int, card_id: int) -> void
 	var to := _node_center(stable_card)
 	var to_size := stable_card.size
 	if to_size == Vector2.ZERO:
-		to_size = Vector2(78, 107)
+		to_size = Vector2(72, 100)
 	var my_id = multiplayer.get_unique_id()
 	var from: Vector2
 	if owner_id == my_id and has_node("HandZone"):
