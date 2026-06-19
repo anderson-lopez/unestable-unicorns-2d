@@ -113,13 +113,14 @@ func _room_players_array(code: String) -> Array:
 	if not rooms.has(code): return list
 	var host_id: int = rooms[code]["host"]
 	for pid in rooms[code]["players"]:
-		list.append({"id": pid, "name": rooms[code]["players"][pid], "host": pid == host_id})
+		var pdata = rooms[code]["players"][pid]
+		list.append({"id": pid, "name": pdata["name"], "avatar_id": pdata.get("avatar_id", 1), "host": pid == host_id})
 	return list
 
 # --- RPCs servidor (cliente → servidor) ---
 
 @rpc("any_peer", "reliable")
-func req_create_room(player_name: String):
+func req_create_room(player_name: String, avatar_id: int = 1):
 	if not is_dedicated: return
 	var sender := multiplayer.get_remote_sender_id()
 	# Una partida a la vez: si ya hay una sala/partida, no se crean más.
@@ -129,7 +130,7 @@ func req_create_room(player_name: String):
 	var code := _generate_code()
 	# Cada sala lleva su propio RoomState (estado de partida por-sala, Fase 3.3).
 	var state := RoomState.new(code, sender)
-	rooms[code] = {"host": sender, "players": {sender: player_name}, "started": false, "state": state}
+	rooms[code] = {"host": sender, "players": {sender: {"name": player_name, "avatar_id": avatar_id}}, "started": false, "state": state}
 	peer_room[sender] = code
 	print("OnlineServer: sala creada ", code, " por ", sender)
 	rpc_id(sender, "_recv_room_joined", code, _room_players_array(code))
@@ -146,7 +147,7 @@ func room_state_by_code(code: String) -> RoomState:
 	return rooms[code].get("state")
 
 @rpc("any_peer", "reliable")
-func req_join_room(code: String, player_name: String):
+func req_join_room(code: String, player_name: String, avatar_id: int = 1):
 	if not is_dedicated: return
 	var sender := multiplayer.get_remote_sender_id()
 	code = code.strip_edges().to_upper()
@@ -159,7 +160,7 @@ func req_join_room(code: String, player_name: String):
 	if rooms[code]["players"].size() >= MAX_PER_ROOM:
 		rpc_id(sender, "_recv_room_error", "La sala '%s' está llena." % code)
 		return
-	rooms[code]["players"][sender] = player_name
+	rooms[code]["players"][sender] = {"name": player_name, "avatar_id": avatar_id}
 	peer_room[sender] = code
 	rpc_id(sender, "_recv_room_joined", code, _room_players_array(code))
 	_broadcast_room_players(code)
@@ -208,8 +209,9 @@ func _start_game_for_room(code: String, rules_dict: Dictionary = {}):
 	GameManager.is_game_active = true
 	var roster: Array = []
 	for pid in rooms[code]["players"]:
-		GameManager._register_player(pid, {"name": rooms[code]["players"][pid]})
-		roster.append({"id": pid, "name": rooms[code]["players"][pid]})
+		var pdata = rooms[code]["players"][pid]
+		GameManager._register_player(pid, {"name": pdata["name"], "avatar_id": pdata.get("avatar_id", 1)})
+		roster.append({"id": pid, "name": pdata["name"], "avatar_id": pdata.get("avatar_id", 1)})
 
 	# Sincronizar el roster COMPLETO a cada cliente de la sala (antes de cargar la
 	# mesa) para que GameManager.players exista igual en todos.
@@ -251,11 +253,11 @@ func connect_to_server(url: String):
 		return
 	multiplayer.multiplayer_peer = peer
 
-func create_room(player_name: String):
-	rpc_id(1, "req_create_room", player_name)
+func create_room(player_name: String, avatar_id: int = 1):
+	rpc_id(1, "req_create_room", player_name, avatar_id)
 
-func join_room(code: String, player_name: String):
-	rpc_id(1, "req_join_room", code, player_name)
+func join_room(code: String, player_name: String, avatar_id: int = 1):
+	rpc_id(1, "req_join_room", code, player_name, avatar_id)
 
 func start_room():
 	# El host envía las reglas que configuró (unicornios, tiempo por turno, etc.).

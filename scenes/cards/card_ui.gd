@@ -19,7 +19,6 @@ signal card_exited(card_ui)
 @onready var ui_container: MarginContainer = $MarginContainer
 
 # Botones
-@onready var info_button: BaseButton = $MarginContainer/InfoButton
 @onready var play_button: BaseButton = $MarginContainer/ActionButtons/Play
 @onready var discard_button: BaseButton = $MarginContainer/ActionButtons/Discard
 
@@ -35,7 +34,6 @@ func _ready():
 	_is_touch = OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
 
 	# 1. Conexiones de Botones
-	info_button.pressed.connect(_on_info_pressed)
 	play_button.pressed.connect(_on_play_pressed)
 	discard_button.pressed.connect(_on_discard_pressed)
 
@@ -46,6 +44,7 @@ func _ready():
 
 	# 3. Estado inicial visual
 	highlight.hide()
+	highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE  # visual puro, no bloquea clics
 	ui_container.modulate.a = 0.0 # Botones invisibles al inicio
 	_set_buttons_interactive(false) # cerrados: no capturan el toque
 
@@ -53,9 +52,6 @@ func _ready():
 	# que la carta no pudiera achicarse. Los hacemos pequeños para que la mano
 	# quede compacta y en abanico apretado.
 	_compact_button(play_button, 11)
-	if info_button:
-		info_button.add_theme_font_size_override("font_size", 12)
-		info_button.custom_minimum_size = Vector2(24, 24)
 	if ui_container:
 		ui_container.add_theme_constant_override("margin_left", 5)
 		ui_container.add_theme_constant_override("margin_right", 5)
@@ -70,6 +66,10 @@ func _ready():
 func _on_detector_input(event: InputEvent):
 	if event is InputEventScreenTouch and event.pressed:
 		_toggle_open()
+		hover_detector.accept_event()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if card_data:
+			info_requested.emit(card_data)
 		hover_detector.accept_event()
 
 func _toggle_open():
@@ -143,7 +143,6 @@ func _force_close():
 # capturar el toque — así el primer tap abre la carta. Al abrir, sí reciben.
 func _set_buttons_interactive(on: bool):
 	var f := Control.MOUSE_FILTER_STOP if on else Control.MOUSE_FILTER_IGNORE
-	if info_button: info_button.mouse_filter = f
 	if play_button: play_button.mouse_filter = f
 	if discard_button: discard_button.mouse_filter = f
 
@@ -235,9 +234,6 @@ func _compact_button(b: Button, fs: int):
 			c.content_margin_bottom = 4.0
 			b.add_theme_stylebox_override(s, c)
 
-func _on_info_pressed():
-	if card_data: info_requested.emit(card_data)
-
 func _on_play_pressed():
 	play_requested.emit(self)
 
@@ -249,23 +245,14 @@ func _on_discard_pressed():
 # Cuando está disabled solo se muestra el botón Info (Play/Discard se ocultan).
 func set_disabled(value: bool):
 	is_disabled = value
-	# El detector captura hover Y taps (necesario para móvil).
 	hover_detector.mouse_filter = Control.MOUSE_FILTER_STOP
-	# Info siempre activo y visible (para leer descripción de cualquier carta)
-	if info_button:
-		info_button.disabled = false
-		info_button.visible = true
-	# Play se OCULTA cuando la carta no se puede jugar.
+	# Play se OCULTA cuando la carta no se puede jugar; el detalle se abre con clic.
 	if play_button:
 		play_button.visible = not is_disabled
 		play_button.disabled = is_disabled
-	# El botón DESCARTAR ya no se usa (no hay descarte voluntario): siempre oculto.
 	if discard_button:
 		discard_button.visible = false
 		discard_button.disabled = true
-	# Tinte sutil para indicar visualmente que no se puede jugar.
-	# IMPORTANTE: conservar el ALFA actual; si la carta está oculta por una
-	# animación (modulate.a = 0), no debemos volverla visible aquí.
 	var a := modulate.a
 	if is_disabled:
 		modulate = Color(0.85, 0.85, 0.85, a)

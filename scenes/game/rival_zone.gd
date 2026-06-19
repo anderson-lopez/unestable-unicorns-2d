@@ -6,61 +6,21 @@ signal reveal_card_clicked(card_id: int)
 
 @onready var name_label: Label = $VBoxContainer/TopInfo/NameLabel
 @onready var hand_container: HBoxContainer = $VBoxContainer/TopInfo/HandContainer
-@onready var stable_container: HBoxContainer = $VBoxContainer/StableContainer
+@onready var stable_container: HBoxContainer = $VBoxContainer/ContentRow/StableContainer
+@onready var upgrades_row: HBoxContainer = $VBoxContainer/ContentRow/UpgradesRow
+@onready var score_label: Label = $VBoxContainer/TopInfo/ScoreLabel
+@onready var stable_sep: VSeparator = $VBoxContainer/ContentRow/StableSep
+@onready var hand_count_label: Label = $VBoxContainer/TopInfo/HandCountLabel
+@onready var avatar_image: TextureRect = $VBoxContainer/TopInfo/AvatarCircle/AvatarImage
+@onready var avatar_emoji: Label = $VBoxContainer/TopInfo/AvatarCircle/EmojiLabel
 
-# Carga la textura del reverso (La 1 es la estándar para mano)
 const CARD_BACK_TEXTURE = preload("res://assets/textures/cards/reverso/1_reverso.jpg")
 
-# Fila para ventajas/desventajas, creada por código ENCIMA de la de unicornios.
-var upgrades_row: HBoxContainer
-# Escala de cartas (se reduce cuando hay muchos jugadores para que quepan).
 var card_scale: float = 1.0
-# Avatar (círculo placeholder) + marcador de unicornios "X/7".
-var avatar_circle: Panel
-var score_label: Label
-
-var stable_sep: VSeparator
 
 func _ready():
-	_build_content_row()
-	_build_avatar()
-	_apply_panel_style()
+	update_hand_visuals(0)
 
-# Círculo de avatar (placeholder 🦄, luego se reemplaza por imagen) + marcador X/7.
-func _build_avatar():
-	var top := name_label.get_parent() # TopInfo (HBox)
-	top.add_theme_constant_override("separation", 8)
-	avatar_circle = Panel.new()
-	avatar_circle.custom_minimum_size = Vector2(40, 40)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.22, 0.18, 0.34)
-	sb.set_corner_radius_all(20)
-	sb.set_border_width_all(2)
-	sb.border_color = Color(0.75, 0.62, 0.95)
-	avatar_circle.add_theme_stylebox_override("panel", sb)
-	var em := Label.new()
-	em.text = "🦄"
-	em.set_anchors_preset(Control.PRESET_FULL_RECT)
-	em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	em.add_theme_font_size_override("font_size", 22)
-	em.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	avatar_circle.add_child(em)
-	top.add_child(avatar_circle)
-	top.move_child(avatar_circle, 0)
-	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	score_label = Label.new()
-	score_label.text = "0/7"
-	score_label.add_theme_font_size_override("font_size", 16)
-	score_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
-	score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	top.add_child(score_label)
-	top.move_child(score_label, 2) # avatar, nombre, marcador, [espaciador], mano
-	# Espaciador para empujar la mano (dorsos) a la derecha de la cabecera.
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(spacer)
-	top.move_child(spacer, 3)
 
 # Actualiza el marcador "X/7".
 func set_score(count: int, goal: int):
@@ -77,37 +37,6 @@ func count_unicorns() -> int:
 				total += d.unicorn_count_value()
 	return total
 
-# Fondo sólido oscuro con borde para que cada establo rival se distinga de la mesa.
-func _apply_panel_style():
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.106, 0.075, 0.22, 0.96)
-	sb.set_corner_radius_all(10)
-	sb.set_border_width_all(2)
-	sb.border_color = Color(0.55, 0.46, 0.82, 0.95) # violeta (los míos van en dorado)
-	sb.set_content_margin_all(8)
-	add_theme_stylebox_override("panel", sb)
-
-# Pone ventajas/desventajas y unicornios en UNA sola fila, separadas por una
-# línea (como el mockup): [ventajas/desventajas] | [unicornios].
-func _build_content_row():
-	var vbox := stable_container.get_parent()
-	vbox.add_theme_constant_override("separation", 6)
-	var content := HBoxContainer.new()
-	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 8)
-	vbox.add_child(content)
-	# Fila de ventajas/desventajas (izquierda).
-	upgrades_row = HBoxContainer.new()
-	upgrades_row.add_theme_constant_override("separation", 4)
-	content.add_child(upgrades_row)
-	# Línea separadora (oculta hasta que haya alguna ventaja/desventaja).
-	stable_sep = VSeparator.new()
-	stable_sep.visible = false
-	content.add_child(stable_sep)
-	# Reubicamos la fila de unicornios (del escenario) dentro de la misma fila.
-	stable_container.get_parent().remove_child(stable_container)
-	stable_container.add_theme_constant_override("separation", 4)
-	content.add_child(stable_container)
 
 # Muestra la línea solo si hay ventajas/desventajas (si no, sería una rayita suelta).
 func _update_sep():
@@ -118,13 +47,32 @@ func _update_sep():
 func set_card_scale(s: float):
 	card_scale = s
 
-func setup(player_name: String):
+func setup(player_name: String, avatar_id: int = 1):
 	name_label.text = player_name
+	_apply_avatar(avatar_id)
 	update_hand_visuals(0) # Empieza vacía
+
+func _apply_avatar(avatar_id: int) -> void:
+	var path := _avatar_path(avatar_id)
+	if path != "":
+		avatar_image.texture = load(path)
+		avatar_image.visible = true
+		avatar_emoji.visible = false
+	else:
+		avatar_image.visible = false
+		avatar_emoji.visible = true
+
+static func _avatar_path(id: int) -> String:
+	for ext in ["svg", "png"]:
+		var p := "res://assets/textures/avatars/avatar-%d.%s" % [id, ext]
+		if ResourceLoader.exists(p): return p
+	return ""
 
 var hand_revealed: bool = false
 
 func update_hand_visuals(count: int):
+	if is_instance_valid(hand_count_label):
+		hand_count_label.text = "mano: %d" % count
 	# Si la mano está revelada (Cámara Espía), no pintamos dorsos:
 	# la fuente de verdad es reveal_hand().
 	if hand_revealed:
@@ -145,6 +93,8 @@ func update_hand_visuals(count: int):
 
 # Cámara Espía: muestra la mano del rival BOCA ARRIBA.
 func reveal_hand(card_ids: Array):
+	if is_instance_valid(hand_count_label):
+		hand_count_label.text = "mano: %d" % card_ids.size()
 	hand_revealed = true
 	for child in hand_container.get_children():
 		child.queue_free()

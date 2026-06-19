@@ -1,0 +1,137 @@
+[gd_scene format=3 uid="uid://dhud5mf3jk2rw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
+bg_color = Color(0.07, 0.05, 0.14, 0.97)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.36, 0.62, 0.8)
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_log"]
+bg_color = Color(0.07, 0.05, 0.14, 0.97)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.36, 0.62, 0.8)
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+
+[node name="HUDLayer" type="CanvasLayer"]
+layer = 5
+
+[node name="InfoBox" type="PanelContainer" parent="."]
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 252.0
+offset_bottom = 136.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_info")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="InfoBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TurnLabel" type="Label" parent="InfoBox/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="PhaseLabel" type="Label" parent="InfoBox/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="ActionsLabel" type="Label" parent="InfoBox/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="DeckLabel" type="Label" parent="InfoBox/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="TimerLabel" type="Label" parent="InfoBox/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+
+[node name="LogPanel" type="PanelContainer" parent="."]
+offset_left = 12.0
+offset_top = 145.0
+offset_right = 252.0
+offset_bottom = 522.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_log")
+
+[node name="LogOuter" type="VBoxContainer" parent="LogPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleRow" type="HBoxContainer" parent="LogPanel/LogOuter"]
+layout_mode = 2
+
+[node name="LogTitle" type="Label" parent="LogPanel/LogOuter/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "📜 Registro"
+
+[node name="ToggleBtn" type="Button" parent="LogPanel/LogOuter/TitleRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(30, 0)
+tooltip_text = "Mostrar/ocultar el registro"
+text = "▾"
+
+[node name="LogScroll" type="ScrollContainer" parent="LogPanel/LogOuter"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+vertical_scroll_mode = 1
+
+[node name="LogContainer" type="VBoxContainer" parent="LogPanel/LogOuter/LogScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="PilesContainer" type="HBoxContainer" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -74.0
+offset_top = 208.0
+offset_right = 346.0
+offset_bottom = 356.0
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="ActionsContainer" type="VBoxContainer" parent="."]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 362.0
+offset_top = 230.0
+offset_right = 508.0
+offset_bottom = 338.0
+theme_override_constants/separation = 8
+
+[node name="BtnEndTurn" type="Button" parent="ActionsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 52)
+disabled = true
+text = "END TURN"
+
+[node name="BtnRules" type="Button" parent="ActionsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 42)
+text = "📖 Ver Reglas"

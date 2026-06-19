@@ -523,8 +523,16 @@ func register_player_request(info: Dictionary):
 
 	_register_player(sender_id, info)
 
+	# Enviar todos los jugadores existentes al recién llegado.
 	for p_id in players:
-		rpc_id(sender_id, "register_player_client", p_id, {"name": players[p_id].name})
+		rpc_id(sender_id, "register_player_client", p_id, {"name": players[p_id].name, "avatar_id": players[p_id].avatar_id})
+
+	# Notificar a los peers ya conectados sobre el recién llegado.
+	# (El host ya lo registró localmente, así que se salta p_id == 1.)
+	var new_info := {"name": players[sender_id].name, "avatar_id": players[sender_id].avatar_id}
+	for p_id in players:
+		if p_id != sender_id and p_id != 1:
+			rpc_id(p_id, "register_player_client", sender_id, new_info)
 
 	rpc_id(sender_id, "sync_rules", current_rules.to_dictionary())
 
@@ -545,7 +553,7 @@ func register_player_client(id: int, info: Dictionary):
 func online_sync_roster(roster: Array):
 	players.clear()
 	for entry in roster:
-		_register_player(int(entry["id"]), {"name": String(entry["name"])})
+		_register_player(int(entry["id"]), {"name": String(entry["name"]), "avatar_id": int(entry.get("avatar_id", 1))})
 	print("Roster online sincronizado: ", players.size(), " jugadores.")
 
 @rpc("authority", "reliable")
@@ -563,10 +571,10 @@ func update_rules_broadcast():
 # ==============================================================================
 
 func _register_player(id: int, info: Dictionary):
-	var new_player = PlayerData.new(id, info["name"])
+	var new_player = PlayerData.new(id, info["name"], info.get("avatar_id", 1))
 	players[id] = new_player
 	player_connected.emit(new_player)
-	print("Jugador registrado: ", info["name"], " [ID: ", id, "]")
+	print("Jugador registrado: ", info["name"], " [ID: ", id, "] [avatar: ", new_player.avatar_id, "]")
 
 func _on_peer_disconnected(id: int):
 	var pname := "Un jugador"

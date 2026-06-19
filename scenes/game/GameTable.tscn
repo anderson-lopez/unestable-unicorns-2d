@@ -3,6 +3,35 @@
 [ext_resource type="Script" uid="uid://b4gdc3tbe30ql" path="res://scenes/game/game_table.gd" id="1_wson1"]
 [ext_resource type="PackedScene" uid="uid://c054e5lt67t0v" path="res://scenes/cards/CardInfoPanel.tscn" id="2_1pv7v"]
 [ext_resource type="PackedScene" uid="uid://dfw86fqwhr6er" path="res://scenes/ui/CardSelector.tscn" id="3_1pv7v"]
+[ext_resource type="PackedScene" uid="uid://dhud5mf3jk2rw" path="res://scenes/game/HUD.tscn" id="4_hud01"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mystable"]
+bg_color = Color(0.106, 0.075, 0.22, 0.96)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.96, 0.77, 0.41, 0.95)
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_myavatar"]
+bg_color = Color(0.22, 0.18, 0.34, 1.0)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.42, 1)
 
 [node name="GameTable" type="Control" unique_id=459670352]
 layout_mode = 3
@@ -29,6 +58,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 272.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -39,6 +69,14 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = -10
 alignment = 1
+
+[node name="HandLabel" type="Label" parent="HandZone"]
+layout_mode = 2
+text = "tu mano (abanico)"
+horizontal_alignment = 1
+mouse_filter = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.55, 0.52, 0.75, 1)
 
 [node name="RivalsContainer" type="HBoxContainer" parent="." unique_id=561721397]
 layout_mode = 1
@@ -55,12 +93,13 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
+offset_left = 272.0
 offset_top = -362.0
-offset_right = -20.0
+offset_right = -12.0
 offset_bottom = -190.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_mystable")
 
 [node name="Body" type="VBoxContainer" parent="MyStable"]
 layout_mode = 2
@@ -69,6 +108,62 @@ theme_override_constants/separation = 6
 [node name="Header" type="HBoxContainer" parent="MyStable/Body"]
 layout_mode = 2
 theme_override_constants/separation = 8
+
+[node name="AvatarCircle" type="Panel" parent="MyStable/Body/Header"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_myavatar")
+
+[node name="AvatarImage" type="TextureRect" parent="MyStable/Body/Header/AvatarCircle"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+visible = false
+
+[node name="EmojiLabel" type="Label" parent="MyStable/Body/Header/AvatarCircle"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "🦄"
+
+[node name="NameLabel" type="Label" parent="MyStable/Body/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+vertical_alignment = 1
+text = "Tú  (TÚ)"
+
+[node name="ScoreLabel" type="Label" parent="MyStable/Body/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+vertical_alignment = 1
+text = "0/7"
+
+[node name="Spacer" type="Control" parent="MyStable/Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StableTag" type="Label" parent="MyStable/Body/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.62, 0.56, 0.78, 1)
+vertical_alignment = 1
+text = "TU ESTABLO"
 
 [node name="ContentRow" type="HBoxContainer" parent="MyStable/Body"]
 layout_mode = 2
@@ -110,6 +205,8 @@ text = "Obtener Carta Magica"
 [node name="BtnClear" type="Button" parent="DebugUI" unique_id=1875290698]
 layout_mode = 2
 text = "Limpiar mesa"
+
+[node name="HUDLayer" parent="." instance=ExtResource("4_hud01")]
 
 [node name="UILayer" type="CanvasLayer" parent="." unique_id=297652038]
 

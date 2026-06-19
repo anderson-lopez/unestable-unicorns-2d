@@ -41,6 +41,17 @@ var o_opt_time: OptionButton
 # Botón para copiar la IP del host al portapapeles (útil en móvil).
 var _copy_ip_btn: Button
 
+# Selector de avatar.
+var _selected_avatar_id: int = 1
+var _avatar_btns: Array = []
+const AVATAR_COUNT := 4 # Aumentar aquí al añadir más avatares a assets/textures/avatars/
+
+static func avatar_path(id: int) -> String:
+	for ext in ["svg", "png"]:
+		var p := "res://assets/textures/avatars/avatar-%d.%s" % [id, ext]
+		if ResourceLoader.exists(p): return p
+	return ""
+
 # Plantilla para la fila de jugador (lo crearemos por código para no ensuciar)
 var player_item_style = StyleBoxFlat.new()
 
@@ -114,6 +125,94 @@ var _online_code_label: Label
 var _online_players_box: VBoxContainer
 var _online_start_btn: Button
 var _online_connected := false
+
+# ==============================================================================
+# 🦄 SELECTOR DE AVATAR
+# ==============================================================================
+
+func _build_avatar_picker() -> Control:
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 6)
+
+	var lbl := Label.new()
+	lbl.text = "Elige tu avatar:"
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.add_theme_color_override("font_color", Color(0.85, 0.78, 1.0))
+	root.add_child(lbl)
+
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	root.add_child(row)
+
+	_avatar_btns.clear()
+	for i in range(1, AVATAR_COUNT + 1):
+		var btn := _make_avatar_btn(i)
+		row.add_child(btn)
+		_avatar_btns.append(btn)
+
+	_refresh_avatar_selection()
+	return root
+
+func _make_avatar_btn(avatar_id: int) -> Control:
+	var panel := Panel.new()
+	panel.custom_minimum_size = Vector2(72, 72)
+	panel.set_meta("avatar_id", avatar_id)
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.22, 0.14, 0.36)
+	sb.set_corner_radius_all(36)
+	sb.set_border_width_all(3)
+	sb.border_color = Color(0.55, 0.42, 0.72)
+	panel.add_theme_stylebox_override("panel", sb)
+
+	var path := avatar_path(avatar_id)
+	if ResourceLoader.exists(path):
+		var tex := TextureRect.new()
+		tex.texture = load(path)
+		tex.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(tex)
+	else:
+		var em := Label.new()
+		em.text = "🦄"
+		em.set_anchors_preset(Control.PRESET_FULL_RECT)
+		em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		em.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(em)
+
+	# Capturar click sobre el panel.
+	panel.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_select_avatar(avatar_id)
+	)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	return panel
+
+func _select_avatar(avatar_id: int) -> void:
+	_selected_avatar_id = avatar_id
+	_refresh_avatar_selection()
+
+func _refresh_avatar_selection() -> void:
+	for btn in _avatar_btns:
+		if not is_instance_valid(btn): continue
+		var id: int = btn.get_meta("avatar_id", 0)
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.22, 0.14, 0.36)
+		sb.set_corner_radius_all(36)
+		sb.set_border_width_all(3)
+		if id == _selected_avatar_id:
+			sb.border_color = Color(1, 0.84, 0.3)   # dorado: seleccionado
+			sb.shadow_color = Color(1, 0.84, 0.3, 0.4)
+			sb.shadow_size = 8
+		else:
+			sb.border_color = Color(0.55, 0.42, 0.72) # morado: no seleccionado
+		btn.add_theme_stylebox_override("panel", sb)
 
 # Fondo del lobby: CIELO PASTEL con nubes suaves (como el mockup). Solo usa una
 # imagen propia si existe res://assets/branding/lobby.png (NO el arte de UU).
@@ -339,7 +438,10 @@ func _reorganize_login():
 		if nn: nn.visible = false
 
 	# Orden final: Título, Nombre, Online, Galería, fila Crear/Unirse, IP, estado.
-	var order := [rt_title, name_input, _btn_online, _btn_gallery, local_row, ip_input, status_label]
+	var avatar_picker := _build_avatar_picker()
+	vbox.add_child(avatar_picker)
+
+	var order := [rt_title, name_input, avatar_picker, _btn_online, _btn_gallery, local_row, ip_input, status_label]
 	var idx := 0
 	for node in order:
 		if is_instance_valid(node):
@@ -618,7 +720,7 @@ func _on_create_room():
 	if not _online_connected:
 		_online_status.text = "Aún no conectado al servidor."
 		return
-	OnlineServer.create_room(name_input.text)
+	OnlineServer.create_room(name_input.text, _selected_avatar_id)
 
 func _on_join_room():
 	if not _online_connected:
@@ -628,7 +730,7 @@ func _on_join_room():
 	if code.is_empty():
 		_online_status.text = "Escribe un código de sala."
 		return
-	OnlineServer.join_room(code, name_input.text)
+	OnlineServer.join_room(code, name_input.text, _selected_avatar_id)
 
 func _on_room_joined(code: String, players: Array):
 	_online_status.text = "¡En la sala!"
@@ -647,21 +749,32 @@ func _render_online_players(players: Array):
 	for p in players:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
-		# Círculo de avatar (placeholder 🦄).
+		# Círculo de avatar con imagen real.
 		var circ := Panel.new()
-		circ.custom_minimum_size = Vector2(34, 34)
+		circ.custom_minimum_size = Vector2(40, 40)
 		var csb := StyleBoxFlat.new()
-		csb.bg_color = Color(0.30, 0.22, 0.45)
-		csb.set_corner_radius_all(17); csb.set_border_width_all(2)
-		csb.border_color = Color(0.85, 0.7, 1.0)
+		csb.bg_color = Color(0.22, 0.14, 0.36)
+		csb.set_corner_radius_all(20); csb.set_border_width_all(2)
+		csb.border_color = Color(0.85, 0.7, 1.0) if p["id"] != my_id else Color(1, 0.84, 0.3)
 		circ.add_theme_stylebox_override("panel", csb)
-		var em := Label.new()
-		em.text = "🦄"
-		em.set_anchors_preset(Control.PRESET_FULL_RECT)
-		em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		em.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		circ.add_child(em)
+		var av_id: int = p.get("avatar_id", 1)
+		var av_path := avatar_path(av_id)
+		if ResourceLoader.exists(av_path):
+			var tex := TextureRect.new()
+			tex.texture = load(av_path)
+			tex.set_anchors_preset(Control.PRESET_FULL_RECT)
+			tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			circ.add_child(tex)
+		else:
+			var em := Label.new()
+			em.text = "🦄"
+			em.set_anchors_preset(Control.PRESET_FULL_RECT)
+			em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			em.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			circ.add_child(em)
 		row.add_child(circ)
 		var lbl := Label.new()
 		lbl.text = p["name"] + ("  👑 HOST" if p.get("host", false) else "") + ("  (TÚ)" if p["id"] == my_id else "")
@@ -736,14 +849,11 @@ func _on_host_pressed():
 	if name_input.text.strip_edges().is_empty():
 		status_label.text = "¡Necesitas un nombre!"
 		return
-	
+
 	status_label.text = "Creando sala..."
 	_lock_buttons()
-	
-	# Crear reglas basadas en los inputs (aunque el host las puede cambiar luego)
+	GameManager.local_player_info["avatar_id"] = _selected_avatar_id
 	var rules = GameRules.new()
-	# Aquí podríamos leer los valores iniciales de la UI si quisieras
-	
 	GameManager.host_game(name_input.text, rules)
 	_go_to_lobby(true) # Es Host
 
@@ -751,9 +861,10 @@ func _on_join_pressed():
 	if name_input.text.strip_edges().is_empty():
 		status_label.text = "¡Necesitas un nombre!"
 		return
-		
+
 	status_label.text = "Conectando..."
 	_lock_buttons()
+	GameManager.local_player_info["avatar_id"] = _selected_avatar_id
 	GameManager.join_game(name_input.text, ip_input.text)
 	_go_to_lobby(false) # Es Cliente
 

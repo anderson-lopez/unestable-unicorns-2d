@@ -4,19 +4,19 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sitqp"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
-corner_radius_top_left = 15
-corner_radius_top_right = 15
-corner_radius_bottom_right = 15
-corner_radius_bottom_left = 15
-shadow_size = 5
-shadow_offset = Vector2(2, 2)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_size = 2
+shadow_offset = Vector2(1, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pqoyv"]
 draw_center = false
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
 
 [node name="CardUI" type="PanelContainer" unique_id=907476876]
 custom_minimum_size = Vector2(160, 220)
@@ -46,13 +46,6 @@ theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
-
-[node name="InfoButton" type="Button" parent="MarginContainer" unique_id=363644431]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-text = "?"
 
 [node name="ActionButtons" type="HBoxContainer" parent="MarginContainer" unique_id=1851078508]
 layout_mode = 2

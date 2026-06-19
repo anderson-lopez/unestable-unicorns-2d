@@ -28,34 +28,37 @@ const SFX_FILES := {
 @onready var rivals_container: Control = $RivalsContainer
 @onready var info_panel: CardInfoPanel = $UILayer/CardInfoPanel
 @onready var card_selector: PanelContainer = $UILayer/CardSelector
+@onready var my_score_label: Label = $MyStable/Body/Header/ScoreLabel
+@onready var _my_name_label: Label = $MyStable/Body/Header/NameLabel
+@onready var _my_avatar_image: TextureRect = $MyStable/Body/Header/AvatarCircle/AvatarImage
+@onready var _my_avatar_emoji: Label = $MyStable/Body/Header/AvatarCircle/EmojiLabel
 
-# Capa libre donde se posicionan los rivales alrededor de la mesa
+# Capa de rivales: filas HBox ancladas directamente (sin VBox intermedio)
 var rival_layer: Control
+var _rival_rows: Array = []
 
 # --- VARIABLES LÓGICAS ---
 var rival_stables: Dictionary = {}
 
-# --- HUD construido por código ---
-var hud_layer: CanvasLayer
-var lbl_turn: Label
-var lbl_phase: Label
-var lbl_actions: Label
-var btn_end_turn: Button
-var lbl_deck: Label
-var lbl_timer: Label
+# --- HUD (nodos de HUD.tscn instanciado en GameTable.tscn) ---
+@onready var hud_layer: CanvasLayer = $HUDLayer
+@onready var lbl_turn: Label = $HUDLayer/InfoBox/VBoxContainer/TurnLabel
+@onready var lbl_phase: Label = $HUDLayer/InfoBox/VBoxContainer/PhaseLabel
+@onready var lbl_actions: Label = $HUDLayer/InfoBox/VBoxContainer/ActionsLabel
+@onready var lbl_deck: Label = $HUDLayer/InfoBox/VBoxContainer/DeckLabel
+@onready var lbl_timer: Label = $HUDLayer/InfoBox/VBoxContainer/TimerLabel
+@onready var btn_end_turn: Button = $HUDLayer/ActionsContainer/BtnEndTurn
+@onready var log_panel: PanelContainer = $HUDLayer/LogPanel
+@onready var log_scroll: ScrollContainer = $HUDLayer/LogPanel/LogOuter/LogScroll
+@onready var log_container: VBoxContainer = $HUDLayer/LogPanel/LogOuter/LogScroll/LogContainer
+@onready var _log_toggle_btn: Button = $HUDLayer/LogPanel/LogOuter/TitleRow/ToggleBtn
+var log_collapsed: bool = false
 var _turn_timer_remaining: int = 0
 var _turn_ticker: Timer
 # Tablero de estado para acciones de varios jugadores (quién ya hizo su parte).
 var _action_board: Control = null
 var _action_board_rows: Dictionary = {}
 var winner_panel: PanelContainer
-
-# --- Registro de jugadas (log lateral, desplegable) ---
-var log_panel: PanelContainer
-var log_scroll: ScrollContainer
-var log_container: VBoxContainer
-var log_collapsed: bool = false
-var _log_toggle_btn: Button
 
 # --- Pilas visibles (Mazo / Descarte / Guardería) ---
 var pile_deck_btn: Control
@@ -123,8 +126,8 @@ func _ready():
 	# (Las separaciones del establo ahora se definen en la escena: Body/Header/
 	# ContentRow con UpgradesRow | Sep | UnicornsRow.)
 
-	# Capa libre para posicionar a los rivales ALREDEDOR de la mesa
-	# (arriba / izquierda / derecha). No usa auto-layout.
+	# Capa para los rivales: un HBox en la parte superior que los reparte
+	# automáticamente sin importar cuántos sean (1, 2, 3 o 4).
 	rival_layer = Control.new()
 	rival_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	rival_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -202,21 +205,6 @@ func _build_background():
 				Vector2(0.85, 0.72), Vector2(0.55, 0.10)]:
 			_add_cloud(bg, c)
 
-	# Tapete central (zona de juego) con marco redondeado.
-	var felt := Panel.new()
-	felt.set_anchors_preset(Control.PRESET_FULL_RECT)
-	felt.offset_left = 70; felt.offset_top = 56
-	felt.offset_right = -70; felt.offset_bottom = -56
-	felt.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var fsb := StyleBoxFlat.new()
-	fsb.bg_color = Color(0.09, 0.12, 0.22, 0.80)
-	fsb.set_corner_radius_all(26)
-	fsb.set_border_width_all(4)
-	fsb.border_color = Color(0.45, 0.40, 0.70, 0.55)
-	fsb.shadow_color = Color(0, 0, 0, 0.4)
-	fsb.shadow_size = 18
-	felt.add_theme_stylebox_override("panel", fsb)
-	bg.add_child(felt)
 
 # Nube placeholder: 3 círculos blancos translúcidos solapados.
 func _add_cloud(layer: CanvasLayer, anchor_pos: Vector2):
@@ -240,109 +228,34 @@ func _add_cloud(layer: CanvasLayer, anchor_pos: Vector2):
 # ==============================================================================
 
 func _build_hud():
-	hud_layer = CanvasLayer.new()
-	hud_layer.layer = 5
-	add_child(hud_layer)
-
-	# Panel de info en la ESQUINA SUPERIOR IZQUIERDA (turno / fase / acciones / meta).
-	var info_box := PanelContainer.new()
-	info_box.anchor_left = 0.0; info_box.anchor_right = 0.0
-	info_box.anchor_top = 0.0; info_box.anchor_bottom = 0.0
-	info_box.offset_left = 12; info_box.offset_top = 10
-	info_box.offset_right = 252; info_box.offset_bottom = 136
-	var info_sb := StyleBoxFlat.new()
-	info_sb.bg_color = Color(0, 0, 0, 0.5)
-	info_sb.set_corner_radius_all(6)
-	info_sb.set_content_margin_all(10)
-	info_box.add_theme_stylebox_override("panel", info_sb)
-	hud_layer.add_child(info_box)
-
-	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 4)
-	info_box.add_child(vb)
-
-	lbl_turn = Label.new()
-	lbl_turn.add_theme_font_size_override("font_size", 18)
-	vb.add_child(lbl_turn)
-	lbl_phase = Label.new()
-	lbl_phase.add_theme_font_size_override("font_size", 15)
-	vb.add_child(lbl_phase)
-	lbl_actions = Label.new()
-	lbl_actions.add_theme_font_size_override("font_size", 15)
-	vb.add_child(lbl_actions)
-	lbl_deck = Label.new()
-	lbl_deck.add_theme_font_size_override("font_size", 14)
-	vb.add_child(lbl_deck)
-	lbl_timer = Label.new()
-	lbl_timer.add_theme_font_size_override("font_size", 20)
-	lbl_timer.add_theme_color_override("font_color", Color(1, 0.85, 0.3))
-	lbl_timer.visible = false
-	vb.add_child(lbl_timer)
-
+	_log_toggle_btn.pressed.connect(_toggle_log)
+	$HUDLayer/ActionsContainer/BtnRules.pressed.connect(_show_rules_viewer)
+	btn_end_turn.pressed.connect(_on_end_turn_pressed)
 	_build_right_column()
 	_build_my_avatar()
-	_build_log_panel()
 	_update_hud()
 
-# Cabecera de MI establo (panel con borde dorado): avatar + nombre + marcador
-# X/7 a la izquierda y la etiqueta "TU ESTABLO" a la derecha, como el mockup.
-var my_score_label: Label
+# Rellena los datos dinámicos de la cabecera del establo local.
+# El layout, estilos y nodos estáticos viven en GameTable.tscn.
 func _build_my_avatar():
-	# Borde dorado al panel de mi establo (lo distingue del de los rivales).
-	var psb := StyleBoxFlat.new()
-	psb.bg_color = Color(0.106, 0.075, 0.22, 0.96)
-	psb.set_corner_radius_all(10)
-	psb.set_border_width_all(2)
-	psb.border_color = Color(0.96, 0.77, 0.41, 0.95) # dorado
-	psb.set_content_margin_all(10)
-	my_stable_container.add_theme_stylebox_override("panel", psb)
-
-	# --- Cabecera ---
-	# Círculo de avatar
-	var circ := Panel.new()
-	circ.custom_minimum_size = Vector2(34, 34)
-	var csb := StyleBoxFlat.new()
-	csb.bg_color = Color(0.22, 0.18, 0.34)
-	csb.set_corner_radius_all(17); csb.set_border_width_all(2)
-	csb.border_color = Color(1, 0.85, 0.42)
-	circ.add_theme_stylebox_override("panel", csb)
-	var em := Label.new()
-	em.text = "🦄"
-	em.set_anchors_preset(Control.PRESET_FULL_RECT)
-	em.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	em.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	em.add_theme_font_size_override("font_size", 18)
-	em.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	circ.add_child(em)
-	my_stable_header.add_child(circ)
-	# Nombre
 	var my_id = multiplayer.get_unique_id()
-	var nm := Label.new()
-	nm.text = (GameManager.players[my_id].name if GameManager.players.has(my_id) else "Tú") + "  (TÚ)"
-	nm.add_theme_font_size_override("font_size", 15)
-	nm.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
-	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	my_stable_header.add_child(nm)
-	# Marcador X/7
-	my_score_label = Label.new()
+	var my_data: PlayerData = GameManager.players.get(my_id)
+	_my_name_label.text = (my_data.name if my_data else "Tú") + "  (TÚ)"
 	my_score_label.text = "0/%d" % GameManager.current_rules.unicorns_to_win
-	my_score_label.add_theme_font_size_override("font_size", 15)
-	my_score_label.add_theme_color_override("font_color", Color(1, 0.9, 0.5))
-	my_score_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	my_stable_header.add_child(my_score_label)
-	# Espaciador + etiqueta "TU ESTABLO" a la derecha
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	my_stable_header.add_child(spacer)
-	var tag := Label.new()
-	tag.text = "TU ESTABLO"
-	tag.add_theme_font_size_override("font_size", 11)
-	tag.add_theme_color_override("font_color", Color(0.62, 0.56, 0.78))
-	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	my_stable_header.add_child(tag)
-	# La línea separadora arranca oculta (no hay ventajas/desventajas al inicio).
 	if is_instance_valid(my_stable_sep):
 		my_stable_sep.visible = false
+	if my_data:
+		var path := _avatar_path(my_data.avatar_id)
+		if path != "" and is_instance_valid(_my_avatar_image):
+			_my_avatar_image.texture = load(path)
+			_my_avatar_image.visible = true
+			if is_instance_valid(_my_avatar_emoji): _my_avatar_emoji.visible = false
+
+static func _avatar_path(id: int) -> String:
+	for ext in ["svg", "png"]:
+		var p := "res://assets/textures/avatars/avatar-%d.%s" % [id, ext]
+		if ResourceLoader.exists(p): return p
+	return ""
 
 # Recalcula y muestra los marcadores X/7 (mío + rivales) desde las cartas visibles.
 func _refresh_scores():
@@ -369,20 +282,10 @@ func _count_row_unicorns(row: Node) -> int:
 			if d: total += d.unicorn_count_value()
 	return total
 
-# Pilas al CENTRO (Mazo · Guardería · Descarte) + botones de acción a un lado,
-# acercándonos al tablero de referencia.
+# Pilas al CENTRO (Mazo · Guardería · Descarte). Los contenedores están en HUD.tscn;
+# aquí solo generamos las tarjetas de pila y las insertamos.
 func _build_right_column():
-	# --- Pilas en el CENTRO (un poco arriba del medio) ---
-	var piles := HBoxContainer.new()
-	piles.add_theme_constant_override("separation", 16)
-	piles.alignment = BoxContainer.ALIGNMENT_CENTER
-	# Ancladas ARRIBA (debajo de la banda de rivales), no al centro: así no se
-	# pisan con la banda de MI establo, que va abajo sobre la mano.
-	piles.anchor_left = 0.5; piles.anchor_right = 0.5
-	piles.anchor_top = 0.0; piles.anchor_bottom = 0.0
-	piles.offset_left = -210; piles.offset_right = 210
-	piles.offset_top = 168; piles.offset_bottom = 316
-	hud_layer.add_child(piles)
+	var piles := $HUDLayer/PilesContainer
 
 	pile_deck_btn = _make_pile_card("Mazo", false, "")
 	_lbl_deck_count = pile_deck_btn.find_child("Count", true, false)
@@ -395,28 +298,6 @@ func _build_right_column():
 	pile_discard_btn = _make_pile_card("Descarte", true, "discard")
 	_lbl_discard_count = pile_discard_btn.find_child("Count", true, false)
 	piles.add_child(pile_discard_btn)
-
-	# --- Botones de acción a la DERECHA de las pilas: END TURN + Reglas ---
-	var actions := VBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	actions.anchor_left = 0.5; actions.anchor_right = 0.5
-	actions.anchor_top = 0.0; actions.anchor_bottom = 0.0
-	actions.offset_left = 226; actions.offset_right = 372
-	actions.offset_top = 190; actions.offset_bottom = 298
-	hud_layer.add_child(actions)
-
-	btn_end_turn = Button.new()
-	btn_end_turn.text = "END TURN"
-	btn_end_turn.custom_minimum_size = Vector2(140, 52)
-	btn_end_turn.disabled = true
-	btn_end_turn.pressed.connect(_on_end_turn_pressed)
-	actions.add_child(btn_end_turn)
-
-	var btn_rules := Button.new()
-	btn_rules.text = "📖 Ver Reglas"
-	btn_rules.custom_minimum_size = Vector2(140, 42)
-	btn_rules.pressed.connect(_show_rules_viewer)
-	actions.add_child(btn_rules)
 
 	_refresh_pile_labels()
 
@@ -609,50 +490,6 @@ func _request_pile_view(which: String):
 # 📜 REGISTRO DE JUGADAS (log lateral)
 # ==============================================================================
 
-func _build_log_panel():
-	log_panel = PanelContainer.new()
-	# IZQUIERDA, justo DEBAJO del HUD. Corto (no llega al rival izquierdo del centro).
-	log_panel.anchor_left = 0.0; log_panel.anchor_right = 0.0
-	log_panel.anchor_top = 0.0; log_panel.anchor_bottom = 0.0
-	log_panel.offset_left = 12; log_panel.offset_right = 252
-	log_panel.offset_top = 145; log_panel.offset_bottom = 360
-	log_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0.45)
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(8)
-	log_panel.add_theme_stylebox_override("panel", sb)
-	hud_layer.add_child(log_panel)
-
-	var outer := VBoxContainer.new()
-	outer.add_theme_constant_override("separation", 6)
-	log_panel.add_child(outer)
-
-	# Fila de título con botón para plegar/desplegar.
-	var title_row := HBoxContainer.new()
-	outer.add_child(title_row)
-	var title := Label.new()
-	title.text = "📜 Registro"
-	title.add_theme_font_size_override("font_size", 14)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_row.add_child(title)
-	_log_toggle_btn = Button.new()
-	_log_toggle_btn.text = "▾"
-	_log_toggle_btn.tooltip_text = "Mostrar/ocultar el registro"
-	_log_toggle_btn.custom_minimum_size = Vector2(30, 0)
-	_log_toggle_btn.pressed.connect(_toggle_log)
-	title_row.add_child(_log_toggle_btn)
-
-	log_scroll = ScrollContainer.new()
-	log_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	log_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	log_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outer.add_child(log_scroll)
-
-	log_container = VBoxContainer.new()
-	log_container.add_theme_constant_override("separation", 3)
-	log_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	log_scroll.add_child(log_container)
 
 # Pliega/despliega el registro: al plegar, el panel se encoge a solo el título.
 func _toggle_log():
@@ -1014,78 +851,77 @@ func client_go_to_lobby():
 
 func setup_table():
 	var my_id = multiplayer.get_unique_id()
-	# Lista ordenada de rivales (para asignarles slots alrededor de la mesa)
 	var rival_ids: Array[int] = []
 	for p_id in GameManager.players:
 		if p_id != my_id:
 			rival_ids.append(p_id)
 	rival_ids.sort()
 	var rival_count := rival_ids.size()
+	_build_rival_rows(rival_count)
 	for i in range(rival_count):
-		var p_id = rival_ids[i]
-		_create_rival_zone(p_id, GameManager.players[p_id], i, rival_count)
-	# El servidor dedicado (árbitro) NO es jugador: no tiene "mi zona".
+		_create_rival_zone(rival_ids[i], GameManager.players[rival_ids[i]], i, rival_count)
 	if GameManager.is_dedicated_referee:
 		print("Servidor árbitro: mesa lista (", rival_count, " jugadores).")
 	else:
 		print("Configurando mi zona: ", GameManager.players[my_id].name)
 
-# Escala de carta para las zonas rivales según cuántos haya.
+# Crea las filas HBox ancladas directamente en rival_layer.
+# Layout para 3 rivales (4 jugadores):
+#   Fila 0 (top):         [ Rival1 ][ Rival2 ]
+#   Fila 1 (bottom-right):                    [ Rival3 ]
+#   MyStable (bottom-left): [ Yo ]
+func _build_rival_rows(rival_count: int) -> void:
+	_rival_rows.clear()
+	# Fila superior siempre: ocupa todo el ancho disponible (después del HUD).
+	var row0 := HBoxContainer.new()
+	row0.anchor_left = 0.0; row0.anchor_right = 1.0
+	row0.anchor_top = 0.0; row0.anchor_bottom = 0.0
+	row0.offset_left = 272.0; row0.offset_right = -12.0
+	row0.offset_top = 8.0; row0.offset_bottom = 8.0
+	row0.grow_vertical = Control.GROW_DIRECTION_END
+	row0.add_theme_constant_override("separation", 6)
+	row0.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rival_layer.add_child(row0)
+	_rival_rows.append(row0)
+
+	if rival_count >= 3:
+		# Fila inferior derecha: al lado del establo local (mismo rango vertical).
+		# El área jugable va de x=272 (HUD) a x=screen-12. Su punto medio está en
+		# screen/2 + 130. Usamos ese punto como frontera para que ambas mitades sean
+		# iguales en ancho independientemente de la resolución.
+		var row1 := HBoxContainer.new()
+		row1.anchor_left = 0.5; row1.anchor_right = 1.0
+		row1.anchor_top = 1.0; row1.anchor_bottom = 1.0
+		row1.offset_left = 136.0; row1.offset_right = -12.0   # deja 6 px de gap con MyStable
+		row1.offset_top = -362.0; row1.offset_bottom = -190.0
+		row1.grow_vertical = Control.GROW_DIRECTION_BEGIN      # crece hacia arriba como MyStable
+		row1.add_theme_constant_override("separation", 6)
+		row1.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rival_layer.add_child(row1)
+		_rival_rows.append(row1)
+		# Ajustar MyStable al centro del área jugable (mitad izquierda).
+		my_stable_container.anchor_right = 0.5
+		my_stable_container.offset_right = 130.0   # borde derecho en screen/2+130
+
+# Con 2 filas cada fila tiene 2 rivales → cada zona ocupa ~50% del ancho → escala menor.
 func _rival_card_scale(n: int) -> float:
-	return 1.0 if n <= 3 else 0.8
+	if n <= 1: return 1.0
+	if n == 2: return 0.85
+	return 0.72  # 3-4 rivales: 2 columnas por fila
 
-# Devuelve {fx, y} para el slot del rival: reparte ARRIBA / IZQUIERDA / DERECHA.
-#  - 1 rival  → arriba-centro
-#  - 2 rivales → izquierda y derecha
-#  - 3 rivales → izquierda, arriba-centro, derecha
-# Devuelve la POSICIÓN del rival alrededor de la mesa: "top" / "left" / "right".
-#  - 1 rival  → arriba
-#  - 2 rivales → izquierda y derecha
-#  - 3 rivales → arriba, izquierda, derecha
-func _rival_slot(index: int, total: int) -> String:
-	match total:
-		1:
-			return "top"
-		2:
-			return ["left", "right"][index]
-		_:
-			return ["top", "left", "right"][index]
-
+# Cada rival va a la fila correcta del VBox según su índice.
+# Índices 0,1 → fila 0 (arriba); índices 2,3 → fila 1 (abajo).
 func _create_rival_zone(id: int, data: PlayerData, index: int, rival_count: int = 1):
 	var rival_zone = RIVAL_ZONE_SCENE.instantiate()
-	rival_layer.add_child(rival_zone)
+	rival_zone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rival_zone.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	var row_idx := index / 2  # división entera: 0,1→0; 2,3→1
+	_rival_rows[row_idx].add_child(rival_zone)
 	if rival_zone.has_method("set_card_scale"):
 		rival_zone.set_card_scale(_rival_card_scale(rival_count))
-	rival_zone.setup(data.name)
-	# Cámara Espía: tocar una carta revelada del rival abre su detalle grande.
+	rival_zone.setup(data.name, data.avatar_id)
 	if rival_zone.has_signal("reveal_card_clicked"):
 		rival_zone.reveal_card_clicked.connect(_on_reveal_card_clicked)
-
-	# Posición ALREDEDOR de la mesa: arriba (centro), izquierda o derecha (centradas
-	# verticalmente). El panel crece hacia abajo según su contenido.
-	var pos := _rival_slot(index, rival_count)
-	var half_w := 150.0
-	rival_zone.grow_vertical = Control.GROW_DIRECTION_END
-	rival_zone.offset_top = 0
-	rival_zone.offset_bottom = 0
-	match pos:
-		"top":
-			rival_zone.anchor_left = 0.5; rival_zone.anchor_right = 0.5
-			rival_zone.anchor_top = 0.0; rival_zone.anchor_bottom = 0.0
-			rival_zone.offset_left = -half_w; rival_zone.offset_right = half_w
-			rival_zone.offset_top = 8.0; rival_zone.offset_bottom = 8.0 # pegado al borde superior
-			rival_zone.grow_horizontal = Control.GROW_DIRECTION_BOTH
-		"left":
-			rival_zone.anchor_left = 0.0; rival_zone.anchor_right = 0.0
-			rival_zone.anchor_top = 0.40; rival_zone.anchor_bottom = 0.40
-			rival_zone.offset_left = 12.0; rival_zone.offset_right = 12.0 + 2.0 * half_w
-			rival_zone.grow_horizontal = Control.GROW_DIRECTION_END
-		"right":
-			rival_zone.anchor_left = 1.0; rival_zone.anchor_right = 1.0
-			rival_zone.anchor_top = 0.40; rival_zone.anchor_bottom = 0.40
-			rival_zone.offset_left = -(12.0 + 2.0 * half_w); rival_zone.offset_right = -12.0
-			rival_zone.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-
 	rival_stables[id] = rival_zone
 
 # ==============================================================================
@@ -1525,9 +1361,10 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 		# encimaba filas). Las ventajas/desventajas (fila de arriba) un poco más
 		# chicas aún, para que se vean limpias sobre los unicornios.
 		if is_top:
-			new_card.custom_minimum_size = Vector2(52, 72) # ventajas/desventajas (más chicas)
+			new_card.custom_minimum_size = Vector2(52, 72)
 		else:
-			new_card.custom_minimum_size = Vector2(72, 100) # unicornios
+			new_card.custom_minimum_size = Vector2(72, 100)
+		new_card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		added = true
 	elif rival_stables.has(player_id):
 		rival_stables[player_id].add_card_to_stable(new_card, is_top)
@@ -2126,8 +1963,8 @@ func client_open_neigh_window(card_id: int, playing_player_id: int, secs: float)
 	_refresh_hand_interactivity() # ilumina los Neighs
 
 	var card_data = CardDatabase.get_card_data(card_id)
-	var player_name = GameManager.players[playing_player_id].name
-	_show_neigh_panel(card_data.name_es, player_name, neigh_in_hand, secs)
+	var player_name = GameManager.players[playing_player_id].name if GameManager.players.has(playing_player_id) else "Rival"
+	_show_neigh_panel(card_data.name_es if card_data else "?", player_name, neigh_in_hand, secs)
 
 func _show_neigh_panel(card_name: String, player_name: String, neighs: Array, secs: float):
 	if is_instance_valid(neigh_window_panel): neigh_window_panel.queue_free()
