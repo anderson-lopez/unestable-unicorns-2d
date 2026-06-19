@@ -1359,13 +1359,21 @@ func client_card_entered_stable_visual(player_id: int, card_id: int):
 			my_upgrades_row.add_child(new_card)
 		else:
 			my_unicorns_row.add_child(new_card)
-		# Footprint real más pequeño (sin truco de 'scale' que dejaba huecos y
-		# encimaba filas). Las ventajas/desventajas (fila de arriba) un poco más
-		# chicas aún, para que se vean limpias sobre los unicornios.
-		if is_top:
-			new_card.custom_minimum_size = Vector2(52, 72)
+		# Con 3+ rivales (4 jugadores) el establo queda al lado de Rival3 en el
+		# área inferior. Las cartas se reducen para que el contenido quepa en
+		# los 172px fijos del anchor (10+56+6+90+10=172) y no desborde hacia
+		# arriba tapando las etiquetas de las pilas.
+		var _n_rivals := rival_stables.size()
+		if _n_rivals >= 3:
+			if is_top:
+				new_card.custom_minimum_size = Vector2(50, 65)
+			else:
+				new_card.custom_minimum_size = Vector2(65, 90)
 		else:
-			new_card.custom_minimum_size = Vector2(72, 100)
+			if is_top:
+				new_card.custom_minimum_size = Vector2(52, 72)
+			else:
+				new_card.custom_minimum_size = Vector2(72, 100)
 		new_card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		added = true
 	elif rival_stables.has(player_id):
