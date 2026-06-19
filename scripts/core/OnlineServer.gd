@@ -1,8 +1,8 @@
 extends Node
 # Autoload: SERVIDOR DEDICADO multi-sala (para Render).
 # Maneja salas con código único. Cada peer pertenece a UNA sala.
-# Este archivo es SOLO matchmaking (crear/unirse/listar salas). La lógica de la
-# partida por-sala se conecta en pasos posteriores.
+# Varias salas pueden estar en partida simultáneamente: cada sala tiene su propio
+# RoomState y el servidor usa ONE instancia de GameTable que enruta por sala.
 #
 # Modos:
 #   - DEDICATED (servidor en Render): arranca con --dedicated o variable env.
@@ -23,15 +23,15 @@ const CODE_LEN := 4
 
 # --- Estado SOLO del servidor dedicado ---
 var is_dedicated := false
-# code -> { "host": peer_id, "players": { peer_id: name }, "started": bool }
+# code -> { "host": peer_id, "players": { peer_id: {name,avatar_id} }, "started": bool, "state": RoomState }
 var rooms: Dictionary = {}
 # peer_id -> code  (en qué sala está cada conexión)
 var peer_room: Dictionary = {}
-# Opción 🅰️: UNA partida a la vez. Mientras hay una partida activa, no se crean
-# salas nuevas (así todos los conectados son los de esa partida y los broadcast
-# de RPCs visuales son seguros).
-var game_in_progress := false
-var active_room_code := ""
+
+# Evita cargar la escena de juego más de una vez en el servidor.
+var _server_game_loaded: bool = false
+# Salas pendientes de inicializar (la escena todavía no está cargada).
+var _pending_starts: Array[String] = []
 
 # --- Estado del CLIENTE ---
 var my_room_code: String = ""
@@ -39,7 +39,6 @@ var my_room_players: Array = [] # [{id, name}]
 var server_url: String = ""
 
 func _ready():
-	# Arranque como servidor dedicado si se pide por argumento o variable de entorno.
 	var args := OS.get_cmdline_user_args()
 	if "--dedicated" in OS.get_cmdline_args() or "dedicated" in args or OS.has_environment("UU_DEDICATED"):
 		call_deferred("start_dedicated_server")
@@ -51,7 +50,6 @@ func _ready():
 func start_dedicated_server():
 	is_dedicated = true
 	var port := PORT
-	# Render asigna el puerto en la variable PORT.
 	if OS.has_environment("PORT"):
 		port = int(OS.get_environment("PORT"))
 
@@ -73,14 +71,12 @@ func _on_peer_disconnected(id: int):
 	_remove_peer_from_room(id)
 
 func _generate_code() -> String:
-	# Código único de CODE_LEN caracteres (sin Date/Random prohibidos: usamos randi).
 	for _try in range(50):
 		var code := ""
 		for i in range(CODE_LEN):
 			code += CODE_CHARS[randi() % CODE_CHARS.length()]
 		if not rooms.has(code):
 			return code
-	# Fallback improbable: alarga
 	return _generate_code() + CODE_CHARS[randi() % CODE_CHARS.length()]
 
 func _remove_peer_from_room(id: int):
@@ -90,14 +86,9 @@ func _remove_peer_from_room(id: int):
 	if not rooms.has(code): return
 	rooms[code]["players"].erase(id)
 	if rooms[code]["players"].is_empty():
-		rooms.erase(code) # sala vacía → se elimina
+		rooms.erase(code)
 		print("OnlineServer: sala ", code, " cerrada (vacía)")
-		# Si era la partida activa, el servidor vuelve a aceptar salas.
-		# (No recargamos escena: el próximo _start_game_for_room recarga GameTable.)
-		if code == active_room_code:
-			reset_active_game()
 	else:
-		# Si se fue el host, pasa el host al siguiente.
 		if rooms[code]["host"] == id:
 			rooms[code]["host"] = rooms[code]["players"].keys()[0]
 		_broadcast_room_players(code)
@@ -117,26 +108,8 @@ func _room_players_array(code: String) -> Array:
 		list.append({"id": pid, "name": pdata["name"], "avatar_id": pdata.get("avatar_id", 1), "host": pid == host_id})
 	return list
 
-# --- RPCs servidor (cliente → servidor) ---
-
-@rpc("any_peer", "reliable")
-func req_create_room(player_name: String, avatar_id: int = 1):
-	if not is_dedicated: return
-	var sender := multiplayer.get_remote_sender_id()
-	# Una partida a la vez: si ya hay una sala/partida, no se crean más.
-	if game_in_progress or not rooms.is_empty():
-		rpc_id(sender, "_recv_room_error", "El servidor está ocupado con otra sala. Intenta más tarde o únete con su código.")
-		return
-	var code := _generate_code()
-	# Cada sala lleva su propio RoomState (estado de partida por-sala, Fase 3.3).
-	var state := RoomState.new(code, sender)
-	rooms[code] = {"host": sender, "players": {sender: {"name": player_name, "avatar_id": avatar_id}}, "started": false, "state": state}
-	peer_room[sender] = code
-	print("OnlineServer: sala creada ", code, " por ", sender)
-	rpc_id(sender, "_recv_room_joined", code, _room_players_array(code))
-
-# Helper de enrutado (Fase 3.3): obtiene el RoomState de la sala de un peer.
-func room_state_of(peer_id: int) -> RoomState:
+# Helper: RoomState del peer dado (usado por GameManager._get_rs_for).
+func get_room_state_for_peer(peer_id: int) -> RoomState:
 	if not peer_room.has(peer_id): return null
 	var code: String = peer_room[peer_id]
 	if not rooms.has(code): return null
@@ -145,6 +118,27 @@ func room_state_of(peer_id: int) -> RoomState:
 func room_state_by_code(code: String) -> RoomState:
 	if not rooms.has(code): return null
 	return rooms[code].get("state")
+
+# --- RPCs servidor (cliente → servidor) ---
+
+@rpc("any_peer", "reliable")
+func req_create_room(player_name: String, avatar_id: int = 1):
+	if not is_dedicated: return
+	var sender := multiplayer.get_remote_sender_id()
+	if peer_room.has(sender):
+		rpc_id(sender, "_recv_room_error", "Ya estás en una sala.")
+		return
+	var code := _generate_code()
+	var state := RoomState.new(code, sender)
+	rooms[code] = {
+		"host": sender,
+		"players": {sender: {"name": player_name, "avatar_id": avatar_id}},
+		"started": false,
+		"state": state
+	}
+	peer_room[sender] = code
+	print("OnlineServer: sala creada ", code, " por ", sender)
+	rpc_id(sender, "_recv_room_joined", code, _room_players_array(code))
 
 @rpc("any_peer", "reliable")
 func req_join_room(code: String, player_name: String, avatar_id: int = 1):
@@ -172,73 +166,75 @@ func req_start_room(rules_dict: Dictionary = {}):
 	if not peer_room.has(sender): return
 	var code: String = peer_room[sender]
 	if not rooms.has(code): return
-	if rooms[code]["host"] != sender:
-		return # solo el host inicia
+	if rooms[code]["host"] != sender: return
+	if rooms[code]["started"]:
+		return  # ya iniciada
 	if rooms[code]["players"].size() < MIN_TO_START:
 		rpc_id(sender, "_recv_room_error", "Faltan jugadores (mínimo %d)." % MIN_TO_START)
 		return
-	if game_in_progress:
-		rpc_id(sender, "_recv_room_error", "Ya hay una partida en curso.")
-		return
 	_start_game_for_room(code, rules_dict)
 
-# Arranca la partida de una sala EN EL SERVIDOR DEDICADO (Opción 🅰️):
-#  - Registra a los jugadores de la sala en GameManager (el servidor NO es jugador).
-#  - El servidor carga la mesa para correr la lógica y RETRANSMITIR los RPCs visuales.
-#  - Los clientes de la sala cargan su mesa al recibir _recv_room_started.
 func _start_game_for_room(code: String, rules_dict: Dictionary = {}):
 	if not rooms.has(code): return
-	game_in_progress = true
-	active_room_code = code
 	rooms[code]["started"] = true
 
-	# Cierra la puerta: no entran más peers mientras dure la partida.
-	if multiplayer.multiplayer_peer:
-		multiplayer.multiplayer_peer.refuse_new_connections = true
+	var rs: RoomState = rooms[code]["state"]
 
-	# Reglas de la partida: SIEMPRE partimos de frescas (evita arrastrar estado
-	# viejo del servidor) y aplicamos las que configuró el HOST en la sala online.
-	GameManager.current_rules = GameRules.new()
+	# Reglas
+	rs.rules = GameRules.new()
 	if not rules_dict.is_empty():
-		GameManager.current_rules.from_dictionary(rules_dict)
-	print("OnlineServer: meta = ", GameManager.current_rules.unicorns_to_win, " | tiempo/turno = ", GameManager.current_rules.turn_time_seconds, "s")
+		rs.rules.from_dictionary(rules_dict)
 
-	# Registrar a los jugadores reales en GameManager (el servidor/peer 1 NO).
-	GameManager.players.clear()
-	GameManager.is_dedicated_referee = true
-	GameManager.is_game_active = true
+	# Poblar rs.players con los jugadores reales de la sala
+	rs.players.clear()
 	var roster: Array = []
 	for pid in rooms[code]["players"]:
 		var pdata = rooms[code]["players"][pid]
-		GameManager._register_player(pid, {"name": pdata["name"], "avatar_id": pdata.get("avatar_id", 1)})
+		var pd = PlayerData.new(pid, pdata["name"], pdata.get("avatar_id", 1))
+		rs.players[pid] = pd
 		roster.append({"id": pid, "name": pdata["name"], "avatar_id": pdata.get("avatar_id", 1)})
+	rs.is_active = true
 
-	# Sincronizar el roster COMPLETO a cada cliente de la sala (antes de cargar la
-	# mesa) para que GameManager.players exista igual en todos.
+	print("OnlineServer: partida iniciada en sala ", code, " — meta=", rs.rules.unicorns_to_win, " | tiempo/turno=", rs.rules.turn_time_seconds, "s")
+
+	# Marcar servidor como árbitro dedicado (se activa una sola vez)
+	GameManager.is_dedicated_referee = true
+
+	# Sincronizar roster y reglas a los clientes de esta sala
 	for pid in rooms[code]["players"]:
 		GameManager.rpc_id(pid, "online_sync_roster", roster)
-		# También las reglas (para que el HUD muestre la meta correcta).
-		GameManager.rpc_id(pid, "sync_rules", GameManager.current_rules.to_dictionary())
+		GameManager.rpc_id(pid, "sync_rules", rs.rules.to_dictionary())
 
-	# Avisar a los clientes de la sala para que carguen su mesa (llega después del
-	# roster por ser RPCs fiables y ordenados).
+	# Decirle a los clientes que carguen su mesa
 	for pid in rooms[code]["players"]:
 		rpc_id(pid, "_recv_room_started", code)
 
-	# El servidor también carga la mesa: necesita el nodo /root/GameTable con los
-	# RPCs visuales para retransmitir, y allí su _ready dispara la lógica de inicio.
-	print("OnlineServer: partida iniciada en sala ", code, " (", rooms[code]["players"].size(), " jugadores)")
-	get_tree().change_scene_to_file(GameManager.game_scene_path)
+	# Servidor: iniciar lógica de la sala
+	if _server_game_loaded and GameManager.game_table:
+		# GameTable ya cargado → iniciar directamente
+		GameManager.game_table.call_deferred("_start_for_room", rs)
+	else:
+		# Guardar sala pendiente y cargar la escena (solo la primera vez)
+		_pending_starts.append(code)
+		if not _server_game_loaded:
+			_server_game_loaded = true
+			get_tree().change_scene_to_file(GameManager.game_scene_path)
 
-# Reinicia el estado del servidor al terminar la partida (vuelve a aceptar salas).
-func reset_active_game():
-	game_in_progress = false
-	active_room_code = ""
-	GameManager.is_dedicated_referee = false
-	GameManager.is_game_active = false
-	GameManager.players.clear()
-	if multiplayer.multiplayer_peer:
-		multiplayer.multiplayer_peer.refuse_new_connections = false
+# Llamado por game_table._ready() en el servidor para procesar las salas pendientes.
+func flush_pending_starts():
+	var pending = _pending_starts.duplicate()
+	_pending_starts.clear()
+	for code in pending:
+		var rs = room_state_by_code(code)
+		if rs and rs.is_active and GameManager.game_table:
+			GameManager.game_table._start_for_room(rs)
+
+# Limpia el estado de una sala terminada (llamado desde game_table al final).
+func reset_room(code: String):
+	if rooms.has(code):
+		rooms[code]["started"] = false
+		var rs: RoomState = rooms[code].get("state")
+		if rs: rs.is_active = false
 
 # ==============================================================================
 # 📡 CLIENTE
@@ -260,7 +256,6 @@ func join_room(code: String, player_name: String, avatar_id: int = 1):
 	rpc_id(1, "req_join_room", code, player_name, avatar_id)
 
 func start_room():
-	# El host envía las reglas que configuró (unicornios, tiempo por turno, etc.).
 	rpc_id(1, "req_start_room", GameManager.current_rules.to_dictionary())
 
 # --- RPCs cliente (servidor → cliente) ---

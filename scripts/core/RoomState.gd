@@ -33,6 +33,8 @@ var actions_remaining: int = 1
 var current_phase: int = 0 # GameManager.TurnPhase
 var is_resolving: bool = false
 var extra_turn_queue: Array[int] = []
+# Token que invalida timers de turno obsoletos al cambiar de turno/sala.
+var _turn_timer_token: int = 0
 
 # Descarte por límite de mano (entrada del jugador activo)
 var pending_discard_ids: Array = []
@@ -60,9 +62,11 @@ func reset_for_new_match() -> void:
 	turn_order.clear()
 	current_turn_index = 0
 	active_player_id = 0
+	actions_remaining = 1
 	extra_turn_queue.clear()
 	is_resolving = false
 	current_phase = 0
+	_turn_timer_token = 0
 	pending_discard_ids.clear()
 	pending_discard_done = false
 	for pid in players:

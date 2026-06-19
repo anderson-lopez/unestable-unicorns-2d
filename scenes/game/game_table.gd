@@ -93,6 +93,10 @@ var neigh_window_active: bool = false
 var neigh_window_card_id: int = -1
 var neigh_window_player_id: int = -1
 
+var _drag_card: CardUI = null
+var _drag_card_data: CardData = null
+var _drag_phantom: TextureRect = null
+
 func _ready():
 	if not my_hand_container or not rivals_container or not my_stable_container:
 		printerr("ERROR CRÍTICO: Faltan nodos contenedores en GameTable.")
@@ -141,9 +145,12 @@ func _ready():
 	setup_table()
 
 	if multiplayer.is_server():
-		# Limpiar registry de pasivos al iniciar partida
-		EffectProcessor.reset()
-		_server_start_match_logic()
+		if GameManager.is_dedicated_referee:
+			# Modo online: el servidor procesa las salas pendientes de arranque.
+			OnlineServer.flush_pending_starts()
+		else:
+			# Modo LAN: una sola sala en _lan_rs.
+			_start_for_room(GameManager._lan_rs)
 
 	GameManager.turn_changed.connect(_on_turn_changed)
 	GameManager.phase_changed.connect(_on_phase_changed)
@@ -156,6 +163,33 @@ func _ready():
 	)
 	# Mano en ABANICO: re-acomoda (inclina) las cartas cada vez que cambian.
 	my_hand_container.sort_children.connect(_layout_hand_fan)
+
+# --- Votos de fin de partida por sala: { room_code: { peer_id: choice } } ---
+var _room_votes: Dictionary = {}
+
+# Devuelve el RoomState del peer que emitió el RPC actual (o del host en LAN).
+func _get_rs() -> RoomState:
+	var sender = multiplayer.get_remote_sender_id()
+	if sender == 0:
+		sender = multiplayer.get_unique_id()
+	return GameManager._get_rs_for(sender)
+
+# Envía un RPC de game_table solo a los jugadores de una sala concreta.
+func _rpc_room(rs: RoomState, method: StringName, args: Array = []) -> void:
+	for pid in rs.players:
+		match args.size():
+			0: rpc_id(pid, method)
+			1: rpc_id(pid, method, args[0])
+			2: rpc_id(pid, method, args[0], args[1])
+			3: rpc_id(pid, method, args[0], args[1], args[2])
+			4: rpc_id(pid, method, args[0], args[1], args[2], args[3])
+			_: printerr("_rpc_room: demasiados args para ", method)
+
+# Inicia la lógica de una sala (llamado por OnlineServer o por _ready en LAN).
+func _start_for_room(rs: RoomState) -> void:
+	if not multiplayer.is_server() or not rs: return
+	EffectProcessor.reset(rs)
+	_server_start_match_logic(rs)
 
 # ==============================================================================
 # 🌌 FONDO (placeholder: cielo nocturno + nubes + tapete central)
@@ -479,8 +513,10 @@ func _request_pile_view(which: String):
 	if multiplayer.is_server():
 		# El host tiene los datos localmente → abrir directo (sin RPC, sin broadcast)
 		var ids: Array = []
-		if which == "discard": ids = GameManager.discard_pile.duplicate()
-		elif which == "nursery": ids = GameManager.nursery_deck.duplicate()
+		var lan_rs := GameManager._lan_rs
+		if lan_rs:
+			if which == "discard": ids = lan_rs.discard_pile.duplicate()
+			elif which == "nursery": ids = lan_rs.nursery_deck.duplicate()
 		client_open_pile_view(which, ids)
 	else:
 		# El cliente pide los datos al servidor; este responde SOLO a él
@@ -532,11 +568,9 @@ func _add_log_line(text: String, color: Color = Color.WHITE) -> void:
 func client_log_event(text: String, color: Color = Color.WHITE) -> void:
 	_add_log_line(text, color)
 
-# Atajo server-side para difundir una línea de registro.
-func _server_log(text: String, color: Color = Color.WHITE) -> void:
-	if not multiplayer.is_server():
-		return
-	rpc("client_log_event", text, color)
+func _server_log(rs: RoomState, text: String, color: Color = Color.WHITE) -> void:
+	if not multiplayer.is_server(): return
+	_rpc_room(rs, "client_log_event", [text, color])
 
 func _build_modal_layer():
 	modal_layer = CanvasLayer.new()
@@ -790,53 +824,62 @@ func _show_endgame_panel(winner_id: int, winner_name: String):
 	hud_layer.add_child(winner_panel)
 
 func _cast_endgame_vote(choice: String, _btn: Button, buttons_box: HBoxContainer):
-	# Bloquear ambos botones tras votar
 	for b in buttons_box.get_children():
 		if b is Button: b.disabled = true
 	if multiplayer.is_server():
-		_server_record_vote(multiplayer.get_unique_id(), choice)
+		var rs := GameManager._lan_rs
+		if rs: _server_record_vote(multiplayer.get_unique_id(), choice, rs)
 	else:
 		rpc_id(1, "server_cast_vote", choice)
 
 @rpc("any_peer", "reliable")
 func server_cast_vote(choice: String):
 	if not multiplayer.is_server(): return
-	_server_record_vote(multiplayer.get_remote_sender_id(), choice)
+	var rs := _get_rs()
+	if not rs: return
+	_server_record_vote(multiplayer.get_remote_sender_id(), choice, rs)
 
-var _endgame_votes: Dictionary = {}
-
-func _server_record_vote(voter_id: int, choice: String):
-	if voter_id == 0: voter_id = 1 # host por llamada local
-	_endgame_votes[voter_id] = choice
-	rpc("client_update_vote_tally", _endgame_votes.size(), GameManager.players.size())
-	if _endgame_votes.size() >= GameManager.players.size():
+func _server_record_vote(voter_id: int, choice: String, rs: RoomState):
+	if voter_id == 0: voter_id = 1
+	if not _room_votes.has(rs.code):
+		_room_votes[rs.code] = {}
+	_room_votes[rs.code][voter_id] = choice
+	var votes = _room_votes[rs.code]
+	_rpc_room(rs, "client_update_vote_tally", [votes.size(), rs.players.size()])
+	if votes.size() >= rs.players.size():
 		var all_rematch = true
-		for v in _endgame_votes.values():
+		for v in votes.values():
 			if v != "rematch": all_rematch = false
-		_endgame_votes.clear()
+		_room_votes.erase(rs.code)
 		if all_rematch:
-			_server_restart_match()
+			_server_restart_match(rs)
 		else:
-			rpc("client_go_to_lobby")
+			_rpc_room(rs, "client_go_to_lobby", [])
+			if GameManager.is_dedicated_referee and has_node("/root/OnlineServer"):
+				get_node("/root/OnlineServer").reset_room(rs.code)
 
 @rpc("authority", "call_local", "reliable")
 func client_update_vote_tally(count: int, total: int):
 	if is_instance_valid(_vote_tally_label):
 		_vote_tally_label.text = "Votos: %d/%d" % [count, total]
 
-func _server_restart_match():
-	GameManager.reset_for_new_match()
-	GameManager.rpc("load_game_scene") # recarga GameTable y re-inicia la partida
+func _server_restart_match(rs: RoomState):
+	GameManager.reset_for_new_match(rs)
+	if GameManager.is_dedicated_referee:
+		for pid in rs.players:
+			GameManager.rpc_id(pid, "load_game_scene")
+		await get_tree().create_timer(2.0).timeout
+		if rs.is_active:
+			_start_for_room(rs)
+	else:
+		GameManager.rpc("load_game_scene")
 
 @rpc("authority", "call_local", "reliable")
 func client_go_to_lobby():
-	# Servidor dedicado (árbitro): NO cerrar el peer (mataría el servidor). Solo
-	# resetear su estado para volver a aceptar salas; sigue vivo en Render.
+	# En servidor dedicado, este RPC solo llega a los clientes (server no está en rs.players).
+	# El cleanup de sala se hace en _server_record_vote. Aquí solo el CLIENTE desconecta.
 	if GameManager.is_dedicated_referee:
-		OnlineServer.reset_active_game()
 		return
-	# Desconectar limpio para que el Lobby muestre la pantalla de login
-	# (nombre, IP, unirse) como al principio.
 	GameManager.is_game_active = false
 	GameManager.players.clear()
 	GameManager.online_mode = false
@@ -930,32 +973,31 @@ func _create_rival_zone(id: int, data: PlayerData, index: int, rival_count: int 
 # 🎮 CICLO DE JUEGO (SERVIDOR)
 # ==============================================================================
 
-func _server_start_match_logic():
+func _server_start_match_logic(rs: RoomState):
 	await get_tree().process_frame
 	await get_tree().create_timer(1.0).timeout
-	# Limpiar manos/establos (importante para revanchas)
-	for pid in GameManager.players:
-		GameManager.players[pid].hand.clear()
-		GameManager.players[pid].stable.clear()
-	print("Servidor: Inicializando mazos...")
-	GameManager.initialize_deck()
+	if not rs.is_active: return
+	for pid in rs.players:
+		rs.players[pid].hand.clear()
+		rs.players[pid].stable.clear()
+	print("Servidor: Inicializando mazos [sala:", rs.code, "]...")
+	GameManager.initialize_deck(rs)
 	print("Servidor: Iniciando Fase de Selección de Bebés...")
-	rpc("client_start_baby_selection", GameManager.nursery_deck)
+	_rpc_room(rs, "client_start_baby_selection", [rs.nursery_deck])
 
-func _server_deal_initial_hands():
-	print("Servidor: Todos tienen bebé. Repartiendo manos iniciales...")
-	for p_id in GameManager.players:
-		var drawn_cards = GameManager.draw_cards(5)
-		GameManager.players[p_id].hand = _ids_to_data(drawn_cards)
+func _server_deal_initial_hands(rs: RoomState):
+	print("Servidor: Todos tienen bebé. Repartiendo manos iniciales [sala:", rs.code, "]...")
+	for p_id in rs.players:
+		var drawn_cards = GameManager.draw_cards(rs, 5)
+		rs.players[p_id].hand = _ids_to_data(drawn_cards)
 		rpc_id(p_id, "client_receive_initial_hand", drawn_cards)
-		for other_id in GameManager.players:
+		for other_id in rs.players:
 			if other_id != p_id:
 				rpc_id(other_id, "client_sync_hand_size", p_id, 5)
-	# Sync inicial de contadores de pilas
-	rpc("client_sync_deck_counters", GameManager.deck.size(), GameManager.discard_pile.size(), GameManager.nursery_deck.size())
+	_rpc_room(rs, "client_sync_deck_counters", [rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size()])
 	print("Servidor: Reparto completado. Iniciando primer turno.")
-	_server_log("🎮 ¡Comienza la partida!", Color(1, 0.9, 0.5))
-	GameManager.setup_turn_order()
+	_server_log(rs, "🎮 ¡Comienza la partida!", Color(1, 0.9, 0.5))
+	GameManager.setup_turn_order(rs)
 
 # ==============================================================================
 # 👶 FASE DE SELECCIÓN DE BEBÉS
@@ -976,17 +1018,19 @@ func client_start_baby_selection(available_babies: Array):
 func server_receive_baby_choice(card_id: int):
 	if not multiplayer.is_server(): return
 	var sender_id = multiplayer.get_remote_sender_id()
-	if GameManager.players.has(sender_id):
+	var rs := _get_rs()
+	if not rs: return
+	if rs.players.has(sender_id):
 		var card_data = CardDatabase.get_card_data(card_id)
-		GameManager.players[sender_id].stable.append(card_data)
-		EffectProcessor.passives.on_card_entered_stable(sender_id, card_data)
-		rpc("client_card_entered_stable_visual", sender_id, card_id)
+		rs.players[sender_id].stable.append(card_data)
+		rs.passives.on_card_entered_stable(sender_id, card_data)
+		_rpc_room(rs, "client_card_entered_stable_visual", [sender_id, card_id])
 	var all_ready = true
-	for p_id in GameManager.players:
-		if GameManager.players[p_id].stable.is_empty():
+	for p_id in rs.players:
+		if rs.players[p_id].stable.is_empty():
 			all_ready = false; break
 	if all_ready:
-		_server_deal_initial_hands()
+		_server_deal_initial_hands(rs)
 
 # ==============================================================================
 # 🃏 ACCIONES DE JUEGO (JUGAR / DESCARTAR)
@@ -996,16 +1040,16 @@ func server_receive_baby_choice(card_id: int):
 func server_play_card(card_id: int, target_player_id: int = -1):
 	if not multiplayer.is_server(): return
 	var sender_id = multiplayer.get_remote_sender_id()
+	var rs := _get_rs()
+	if not rs or not rs.is_active: return
 
-	if not GameManager.is_game_active: return
-	if sender_id != GameManager.active_player_id:
+	if sender_id != rs.active_player_id:
 		printerr("Servidor: fuera de turno"); return
-	if GameManager.current_phase != GameManager.TurnPhase.ACTION:
+	if rs.current_phase != GameManager.TurnPhase.ACTION:
 		printerr("Servidor: fuera de fase ACTION"); return
-	if GameManager.actions_remaining <= 0:
+	if rs.actions_remaining <= 0:
 		printerr("Servidor: sin acciones"); return
-	# Lock: si hay un efecto resolviéndose, ignorar (evita doble-jugada / desync)
-	if GameManager.is_resolving:
+	if rs.is_resolving:
 		printerr("Servidor: efecto en curso, jugada ignorada")
 		rpc_id(sender_id, "client_reject_play", card_id, "Espera a que termine el efecto actual")
 		return
@@ -1013,8 +1057,7 @@ func server_play_card(card_id: int, target_player_id: int = -1):
 	var card_data = CardDatabase.get_card_data(card_id)
 	if not card_data: return
 
-	# Validar posesión
-	var p_data: PlayerData = GameManager.players.get(sender_id)
+	var p_data: PlayerData = rs.players.get(sender_id)
 	if not p_data: return
 	var has_card = false
 	for c in p_data.hand:
@@ -1023,79 +1066,65 @@ func server_play_card(card_id: int, target_player_id: int = -1):
 	if not has_card:
 		printerr("Servidor: ", sender_id, " no tiene la carta ", card_id); return
 
-	# Pasivas que bloquean jugar este tipo de carta
-	if card_data.is_upgrade() and not EffectProcessor.passives.can_play_upgrade(sender_id):
+	if card_data.is_upgrade() and not rs.passives.can_play_upgrade(sender_id):
 		print("Servidor: bloqueado por PREVENT_PLAY_UPGRADE"); return
-	if card_data.is_instant() and not EffectProcessor.passives.can_play_instant(sender_id):
+	if card_data.is_instant() and not rs.passives.can_play_instant(sender_id):
 		print("Servidor: bloqueado por PREVENT_PLAY_NEIGH"); return
-	# Queen Bee (2ª ed.): si OTRO jugador tiene la Reina, NADIE más puede meter
-	# básicos en su establo. Rechazamos la jugada y devolvemos la carta a la mano.
 	if card_data.is_basic_unicorn():
-		if EffectProcessor.passives.basic_unicorns_blocked_against(sender_id, GameManager.players.keys()):
+		if rs.passives.basic_unicorns_blocked_against(sender_id, rs.players.keys()):
 			print("Servidor: bloqueado por Reina del Baile (Queen Bee)")
 			rpc_id(sender_id, "client_reject_play", card_id, "El Unicornio Reina bloquea los básicos")
 			return
 
 	print("Servidor: ", sender_id, " JUEGA ", card_data.name_es)
-	_server_log("▶ %s juega %s" % [p_data.name, card_data.name_es], Color(0.85, 1.0, 0.7))
+	_server_log(rs, "▶ %s juega %s" % [p_data.name, card_data.name_es], Color(0.85, 1.0, 0.7))
 
-	# Activar lock de resolución
-	GameManager.is_resolving = true
+	rs.is_resolving = true
 
-	# Quitar de la mano
 	var new_size = _server_remove_card_from_hand(sender_id, card_id)
-	for p in GameManager.players:
+	for p in rs.players:
 		if p != sender_id:
 			rpc_id(p, "client_sync_hand_size", sender_id, new_size)
 
-	# Ventana NEIGH (los Instants no son cancelables — son ellos los que cancelan)
 	if not card_data.is_instant():
-		var cancelled = await NeighManager.open_window(card_id, sender_id)
+		var cancelled = await NeighManager.open_window(card_id, sender_id, rs)
 		if cancelled:
 			print("Servidor: carta ", card_data.name_es, " fue NEIGH'd")
-			_server_log("⚡ %s fue relinchada" % card_data.name_es, Color(1, 0.55, 0.45))
-			GameManager.discard_pile.append(card_id)
-			rpc("client_sync_deck_counters", GameManager.deck.size(), GameManager.discard_pile.size(), GameManager.nursery_deck.size())
-			GameManager.is_resolving = false
-			GameManager.consume_action()
+			_server_log(rs, "⚡ %s fue relinchada" % card_data.name_es, Color(1, 0.55, 0.45))
+			rs.discard_pile.append(card_id)
+			_rpc_room(rs, "client_sync_deck_counters", [rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size()])
+			rs.is_resolving = false
+			GameManager.consume_action(rs)
 			return
 
-	# Determinar destino para Downgrades: el jugador ELIGE a qué rival se la pone.
-	# Con 1 solo rival (2 jugadores) va directo, sin preguntar (es obvio).
 	var dest_player_id: int = sender_id
 	if card_data.is_downgrade():
-		dest_player_id = await _server_choose_downgrade_target(sender_id, target_player_id)
+		dest_player_id = await _server_choose_downgrade_target(sender_id, target_player_id, rs)
 
-	# Resolver efectos
 	if card_data.is_permanent():
-		# Entra al establo
-		if GameManager.players.has(dest_player_id):
-			GameManager.players[dest_player_id].stable.append(card_data)
-		rpc("client_card_entered_stable_visual", dest_player_id, card_id)
-		# on_enter_stable triggers + registro de pasivos
-		await EffectProcessor.resolve_on_enter_stable(card_data, dest_player_id)
+		if rs.players.has(dest_player_id):
+			rs.players[dest_player_id].stable.append(card_data)
+		_rpc_room(rs, "client_card_entered_stable_visual", [dest_player_id, card_id])
+		await EffectProcessor.resolve_on_enter_stable(card_data, dest_player_id, rs)
 	else:
-		# Magic Spell o Instant: efectos on_play, después al descarte
-		await EffectProcessor.resolve_on_play(card_data, sender_id)
-		GameManager.discard_pile.append(card_id)
+		await EffectProcessor.resolve_on_play(card_data, sender_id, rs)
+		rs.discard_pile.append(card_id)
 
-	# Liberar lock antes de chequear victoria/consumir acción
-	GameManager.is_resolving = false
-	rpc("client_sync_deck_counters", GameManager.deck.size(), GameManager.discard_pile.size(), GameManager.nursery_deck.size())
+	rs.is_resolving = false
+	_rpc_room(rs, "client_sync_deck_counters", [rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size()])
 
-	# VICTORIA: comprobar SIEMPRE tras resolver (un efecto pudo robar/revivir un unicornio)
-	if GameManager.check_win_condition():
+	if GameManager.check_win_condition(rs):
 		return
 
-	GameManager.consume_action()
+	GameManager.consume_action(rs)
 
 # Elige a qué rival se le coloca la desventaja.
 #  - 0 rivales: a uno mismo (caso borde).
 #  - 1 rival (2 jugadores): directo, SIN picker (es obvio).
 #  - 2+ rivales: muestra el selector de jugador al que la juega.
 # Si el cliente ya mandó un objetivo válido (requested), se respeta.
-func _server_choose_downgrade_target(sender_id: int, requested: int) -> int:
-	var opponents = GameManager.get_opponents_of(sender_id)
+func _server_choose_downgrade_target(sender_id: int, requested: int, rs: RoomState) -> int:
+	var opponents = rs.opponents_of(sender_id)
 	if opponents.is_empty(): return sender_id
 	if requested != -1 and requested != sender_id and requested in opponents:
 		return requested
@@ -1103,20 +1132,22 @@ func _server_choose_downgrade_target(sender_id: int, requested: int) -> int:
 		return opponents[0]
 	var chosen = await EffectProcessor._request_player_pick(sender_id, opponents)
 	if chosen == -1 or not (chosen in opponents):
-		return opponents[0] # por si cancela: cae al primero (la carta ya se jugó)
+		return opponents[0]
 	return chosen
 
 @rpc("any_peer", "call_local", "reliable")
 func server_discard_card(card_id: int):
 	if not multiplayer.is_server(): return
 	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id != GameManager.active_player_id: return
-	if GameManager.current_phase != GameManager.TurnPhase.ACTION: return
-	if GameManager.is_resolving: return
+	var rs := _get_rs()
+	if not rs: return
+	if sender_id != rs.active_player_id: return
+	if rs.current_phase != GameManager.TurnPhase.ACTION: return
+	if rs.is_resolving: return
 	var new_size = _server_remove_card_from_hand(sender_id, card_id)
-	GameManager.discard_pile.append(card_id)
-	rpc("client_sync_deck_counters", GameManager.deck.size(), GameManager.discard_pile.size(), GameManager.nursery_deck.size())
-	for p in GameManager.players:
+	rs.discard_pile.append(card_id)
+	_rpc_room(rs, "client_sync_deck_counters", [rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size()])
+	for p in rs.players:
 		if p != sender_id:
 			rpc_id(p, "client_sync_hand_size", sender_id, new_size)
 
@@ -1316,16 +1347,15 @@ func client_reveal_rival_hand(player_id: int, card_ids: Array):
 		rival_stables[player_id].reveal_hand(card_ids)
 
 # Servidor: difunde las manos de quienes tengan HAND_VISIBLE (Cámara Espía).
-func server_refresh_visible_hands():
+func server_refresh_visible_hands(rs: RoomState):
 	if not multiplayer.is_server(): return
-	var revealed = EffectProcessor.passives.players_with(GameEnums.Condition.HAND_VISIBLE)
+	var revealed = rs.passives.players_with(GameEnums.Condition.HAND_VISIBLE)
 	for vp_id in revealed:
-		var p = GameManager.players.get(vp_id)
+		var p = rs.players.get(vp_id)
 		if not p: continue
 		var ids: Array = []
 		for c in p.hand: ids.append(c.id)
-		# Enviar a TODOS menos al dueño (él ya ve su mano)
-		for pid in GameManager.players:
+		for pid in rs.players:
 			if pid != vp_id:
 				rpc_id(pid, "client_reveal_rival_hand", vp_id, ids)
 
@@ -1491,12 +1521,12 @@ func _pulse(node: Control):
 func server_request_pile(which: String):
 	if not multiplayer.is_server(): return
 	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id == 0: return # llamada local del host se maneja aparte
+	if sender_id == 0: return
+	var rs := GameManager._get_rs_for(sender_id)
 	var ids: Array = []
-	if which == "discard":
-		ids = GameManager.discard_pile.duplicate()
-	elif which == "nursery":
-		ids = GameManager.nursery_deck.duplicate()
+	if rs:
+		if which == "discard": ids = rs.discard_pile.duplicate()
+		elif which == "nursery": ids = rs.nursery_deck.duplicate()
 	rpc_id(sender_id, "client_open_pile_view", which, ids)
 
 # Sin call_local: solo se ejecuta en el cliente destino del rpc_id (o por llamada directa del host).
@@ -1840,15 +1870,19 @@ func _confirm_discard_to_limit():
 
 func _send_discard_chosen(card_ids: Array):
 	if multiplayer.is_server():
-		GameManager._on_discard_choice(card_ids)
+		var rs := GameManager._lan_rs
+		if rs: GameManager._on_discard_choice(rs, card_ids)
 	else:
 		rpc_id(1, "server_discard_chosen", card_ids)
 
 @rpc("any_peer", "reliable")
 func server_discard_chosen(card_ids: Array):
 	if not multiplayer.is_server(): return
-	if multiplayer.get_remote_sender_id() != GameManager.active_player_id: return
-	GameManager._on_discard_choice(card_ids)
+	var sender_id = multiplayer.get_remote_sender_id()
+	var rs := GameManager._get_rs_for(sender_id)
+	if not rs: return
+	if sender_id != rs.active_player_id: return
+	GameManager._on_discard_choice(rs, card_ids)
 
 func _make_modal_panel(title: String) -> PanelContainer:
 	var panel = PanelContainer.new()
@@ -2037,7 +2071,9 @@ func _show_neigh_panel(card_name: String, player_name: String, neighs: Array, se
 		var captured_nid = nid
 		btn.pressed.connect(func():
 			if multiplayer.is_server():
-				NeighManager.server_receive_neigh(multiplayer.get_unique_id(), captured_nid)
+				var rs_neigh := GameManager._get_rs_for(multiplayer.get_unique_id())
+				if rs_neigh:
+					NeighManager.server_receive_neigh(multiplayer.get_unique_id(), captured_nid, rs_neigh)
 			else:
 				NeighManager.rpc_id(1, "server_receive_neigh_rpc", captured_nid)
 			if is_instance_valid(neigh_window_panel): neigh_window_panel.queue_free()
@@ -2238,6 +2274,9 @@ func add_card_to_hand(card_id: int) -> CardUI:
 	new_card.info_requested.connect(_on_card_info_requested)
 	new_card.play_requested.connect(_on_card_play_requested)
 	new_card.discard_requested.connect(_on_card_discard_requested)
+	new_card.drag_started.connect(_on_card_drag_started)
+	new_card.drag_moved.connect(_on_card_drag_moved)
+	new_card.drag_ended.connect(_on_card_drag_ended)
 	new_card.set_disabled(true)
 	_refresh_hand_interactivity()
 	return new_card
@@ -2276,7 +2315,9 @@ func _on_card_play_requested(card_ui: CardUI):
 	# Permite jugar el Neigh desde la mano como respuesta sin pasar por el modal.
 	if neigh_window_active and card_ui.card_data.is_instant():
 		if multiplayer.is_server():
-			NeighManager.server_receive_neigh(multiplayer.get_unique_id(), card_id)
+			var rs_neigh := GameManager._get_rs_for(multiplayer.get_unique_id())
+			if rs_neigh:
+				NeighManager.server_receive_neigh(multiplayer.get_unique_id(), card_id, rs_neigh)
 		else:
 			NeighManager.rpc_id(1, "server_receive_neigh_rpc", card_id)
 		# Cierra el modal de Neigh si está abierto (visual)
@@ -2346,3 +2387,139 @@ func _on_card_discard_requested(card_ui: CardUI):
 func _clear_debug_cards():
 	for child in my_hand_container.get_children():
 		child.queue_free()
+
+# ==============================================================================
+# DRAG & DROP — jugar cartas arrastrando al establo destino
+# ==============================================================================
+
+func _can_play_now() -> bool:
+	return GameManager.active_player_id == multiplayer.get_unique_id() \
+		and GameManager.current_phase == GameManager.TurnPhase.ACTION \
+		and GameManager.actions_remaining > 0 \
+		and GameManager.is_game_active
+
+func _on_card_drag_started(card_ui: CardUI, global_pos: Vector2):
+	if _drag_card: return
+	if not card_ui.card_data: return
+	var data := card_ui.card_data
+	# Solo permanentes (unicornios, mejoras, degradaciones). Instants/magia: sin cambio.
+	if data.is_instant() or data.type == GameEnums.CardType.MAGIC_SPELL: return
+	if not _can_play_now(): return
+
+	_drag_card = card_ui
+	_drag_card_data = data
+
+	# Crear fantasma visual que sigue al cursor/dedo
+	var tex: Texture2D = null
+	if card_ui.card_texture and card_ui.card_texture.texture:
+		tex = card_ui.card_texture.texture
+	else:
+		tex = _card_texture(data.id)
+	_drag_phantom = TextureRect.new()
+	_drag_phantom.texture = tex
+	_drag_phantom.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_drag_phantom.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_drag_phantom.size = card_ui.size
+	_drag_phantom.pivot_offset = _drag_phantom.size / 2.0
+	_drag_phantom.scale = Vector2(1.15, 1.15)
+	_drag_phantom.z_index = 50
+	anim_layer.add_child(_drag_phantom)
+	_drag_phantom.global_position = global_pos - _drag_phantom.size / 2.0
+
+	# Carta original: transparente (queda como fantasma en la mano)
+	card_ui.modulate.a = 0.3
+
+	_update_drag_highlights(data, global_pos)
+
+func _on_card_drag_moved(_card_ui: CardUI, global_pos: Vector2):
+	if not is_instance_valid(_drag_phantom): return
+	_drag_phantom.global_position = global_pos - _drag_phantom.size / 2.0
+	_update_drag_highlights(_drag_card_data, global_pos)
+
+func _on_card_drag_ended(card_ui: CardUI, global_pos: Vector2):
+	if not _drag_card: return
+	_clear_drag_highlights()
+
+	var target_id := _get_drag_drop_target(global_pos, _drag_card_data)
+
+	if target_id >= 0 and _can_play_now():
+		# Drop válido → jugar la carta dirigida al target
+		_play_sfx("play")
+		var card_id := _drag_card_data.id
+		var phantom := _drag_phantom
+		_drag_phantom = null
+		_drag_card = null
+		_drag_card_data = null
+
+		var target_node: Control = null
+		if target_id == multiplayer.get_unique_id():
+			target_node = my_stable_container
+		else:
+			target_node = rival_stables.get(target_id)
+		var dest := _node_center(target_node) if target_node else global_pos
+
+		if is_instance_valid(phantom):
+			var tw := phantom.create_tween().set_parallel(true) \
+				.set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+			tw.tween_property(phantom, "global_position", dest - phantom.size / 2.0, 0.3)
+			tw.tween_property(phantom, "scale", Vector2(0.4, 0.4), 0.3)
+			tw.tween_property(phantom, "modulate:a", 0.0, 0.25)
+			tw.tween_callback(phantom.queue_free)
+
+		rpc_id(1, "server_play_card", card_id, target_id)
+		card_ui.queue_free()
+	else:
+		# Drop inválido → el fantasma vuelve a la mano
+		var phantom := _drag_phantom
+		_drag_phantom = null
+		_drag_card = null
+		_drag_card_data = null
+		card_ui.modulate.a = 1.0
+		if is_instance_valid(phantom):
+			var snap_pos := card_ui.global_position
+			var tw := phantom.create_tween().set_parallel(true) \
+				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.tween_property(phantom, "global_position", snap_pos, 0.3)
+			tw.tween_property(phantom, "scale", Vector2(1.0, 1.0), 0.25)
+			tw.tween_property(phantom, "modulate:a", 1.0, 0.2)
+			tw.tween_callback(phantom.queue_free)
+
+func _get_drag_drop_target(drop_pos: Vector2, data: CardData) -> int:
+	if not data: return -1
+	var my_id := multiplayer.get_unique_id()
+	var is_downgrade := data.type == GameEnums.CardType.DOWNGRADE
+
+	if not is_downgrade:
+		if my_stable_container.get_global_rect().has_point(drop_pos):
+			return my_id
+	else:
+		for id in rival_stables:
+			var zone := rival_stables[id] as Control
+			if zone and zone.get_global_rect().has_point(drop_pos):
+				return id
+	return -1
+
+func _update_drag_highlights(data: CardData, drag_pos: Vector2):
+	if not data: return
+	var is_downgrade := data.type == GameEnums.CardType.DOWNGRADE
+
+	var over_own := my_stable_container.get_global_rect().has_point(drag_pos)
+	if not is_downgrade:
+		my_stable_container.modulate = Color(0.55, 1.3, 0.55) if over_own else Color(0.82, 1.08, 0.82)
+	else:
+		my_stable_container.modulate = Color(1.0, 0.72, 0.72)
+
+	for id in rival_stables:
+		var zone := rival_stables[id] as Control
+		if not zone: continue
+		var over_rival := zone.get_global_rect().has_point(drag_pos)
+		if is_downgrade:
+			zone.modulate = Color(0.55, 1.3, 0.55) if over_rival else Color(0.82, 1.08, 0.82)
+		else:
+			zone.modulate = Color(1.0, 0.72, 0.72)
+
+func _clear_drag_highlights():
+	my_stable_container.modulate = Color.WHITE
+	for id in rival_stables:
+		if is_instance_valid(rival_stables[id]):
+			rival_stables[id].modulate = Color.WHITE

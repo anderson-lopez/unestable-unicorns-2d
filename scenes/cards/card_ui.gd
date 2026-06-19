@@ -11,6 +11,9 @@ signal play_requested(card_ui)
 signal discard_requested(card_ui)
 signal card_hovered(card_ui)
 signal card_exited(card_ui)
+signal drag_started(card_ui: CardUI, global_pos: Vector2)
+signal drag_moved(card_ui: CardUI, global_pos: Vector2)
+signal drag_ended(card_ui: CardUI, global_pos: Vector2)
 
 # --- REFERENCIAS A NODOS ---
 @onready var card_texture: TextureRect = $CardTexture
@@ -29,6 +32,12 @@ var is_disabled: bool = false
 var is_open: bool = false
 # En móvil/táctil usamos TAP para abrir; en escritorio, hover.
 var _is_touch: bool = false
+const DRAG_THRESHOLD: float = 16.0
+const TAP_MAX_SECS: float = 0.30
+var _pressing: bool = false
+var _press_global_pos: Vector2 = Vector2.ZERO
+var _press_time: float = 0.0
+var _dragging: bool = false
 
 func _ready():
 	_is_touch = OS.has_feature("mobile") or DisplayServer.is_touchscreen_available()
@@ -64,12 +73,23 @@ func _ready():
 # Tap REAL (dedo) sobre la carta → abre/cierra. En escritorio NO se usa
 # (no llegan eventos táctiles reales): allí manda el hover del mouse.
 func _on_detector_input(event: InputEvent):
-	if event is InputEventScreenTouch and event.pressed:
-		_toggle_open()
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_pressing = true
+			_dragging = false
+			_press_global_pos = event.global_position
+			_press_time = Time.get_ticks_msec() / 1000.0
+		# Release ya fue manejado en _input (se dispara primero). Solo aceptamos
+		# para evitar que el click se propague a elementos debajo de la carta.
 		hover_detector.accept_event()
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if card_data:
-			info_requested.emit(card_data)
+		return
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_pressing = true
+			_dragging = false
+			_press_global_pos = event.position
+			_press_time = Time.get_ticks_msec() / 1000.0
+		# Release manejado en _input.
 		hover_detector.accept_event()
 
 func _toggle_open():
@@ -114,6 +134,7 @@ func _on_mouse_entered():
 	# El hover SIEMPRE abre la carta. En escritorio = mouse real; en móvil el
 	# motor emula el mouse desde el toque (emulate_mouse_from_touch), así que
 	# tocar una carta también dispara este "entered" y la abre.
+	if _dragging: return
 	_open()
 
 func _on_mouse_exited():
@@ -124,6 +145,56 @@ func _on_mouse_exited():
 	if active_card == self:
 		_force_close()
 		active_card = null
+
+func _input(event: InputEvent):
+	if not _pressing: return
+	if event is InputEventMouseMotion:
+		var pos: Vector2 = (event as InputEventMouseMotion).global_position
+		if _dragging:
+			drag_moved.emit(self, pos)
+			get_viewport().set_input_as_handled()
+		elif pos.distance_to(_press_global_pos) > DRAG_THRESHOLD:
+			_dragging = true
+			if is_open: _force_close()
+			if active_card == self: active_card = null
+			drag_started.emit(self, pos)
+			get_viewport().set_input_as_handled()
+	elif event is InputEventScreenDrag:
+		var pos: Vector2 = (event as InputEventScreenDrag).position
+		if _dragging:
+			drag_moved.emit(self, pos)
+			get_viewport().set_input_as_handled()
+		elif pos.distance_to(_press_global_pos) > DRAG_THRESHOLD:
+			_dragging = true
+			if is_open: _force_close()
+			if active_card == self: active_card = null
+			drag_started.emit(self, pos)
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var pos: Vector2 = (event as InputEventMouseButton).global_position
+		if _dragging:
+			_dragging = false
+			_pressing = false
+			drag_ended.emit(self, pos)
+			get_viewport().set_input_as_handled()
+		elif _pressing:
+			_pressing = false
+			# _input dispara antes que gui_input, así que emitimos aquí el detalle.
+			var elapsed := Time.get_ticks_msec() / 1000.0 - _press_time
+			if elapsed < TAP_MAX_SECS and not _is_touch and card_data:
+				info_requested.emit(card_data)
+	elif event is InputEventScreenTouch and not event.pressed:
+		var pos: Vector2 = (event as InputEventScreenTouch).position
+		if _dragging:
+			_dragging = false
+			_pressing = false
+			drag_ended.emit(self, pos)
+			get_viewport().set_input_as_handled()
+		elif _pressing:
+			_pressing = false
+			var elapsed := Time.get_ticks_msec() / 1000.0 - _press_time
+			if elapsed < TAP_MAX_SECS:
+				_toggle_open()
 
 # Cierra la carta suavemente.
 func _force_close():

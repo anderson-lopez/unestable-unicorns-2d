@@ -23,7 +23,7 @@ var current_rules: GameRules = GameRules.new()
 var is_game_active: bool = false
 var game_scene_path: String = "res://scenes/game/GameTable.tscn"
 
-# Mazos y Turnos
+# Mazos y Turnos (usados en modo LAN; en modo online los valores viven en RoomState)
 var deck: Array[int] = []
 var discard_pile: Array[int] = []
 var nursery_deck: Array[int] = []
@@ -35,11 +35,8 @@ var actions_remaining: int = 1
 enum TurnPhase { START, DRAW, ACTION, END }
 var current_phase: TurnPhase = TurnPhase.START
 
-# Lock: true mientras un efecto se está resolviendo (esperando inputs de UI).
-# Evita que el jugador juegue otra carta a la mitad de una resolución (desync).
 var is_resolving: bool = false
 
-# Descarte por límite de mano: el jugador activo elige qué soltar al pasar de 7.
 var _pending_discard_ids: Array = []
 var _pending_discard_done: bool = false
 
@@ -47,19 +44,15 @@ var _pending_discard_done: bool = false
 var game_table: Node = null
 
 # --- ONLINE (servidor dedicado / Render) ---
-# online_mode: el cliente se conectó por OnlineServer (salas con código). En este
-#   modo NO se hace el auto-registro local; los jugadores entran por la sala.
 var online_mode: bool = false
-# is_dedicated_referee: true SOLO en el servidor dedicado mientras corre una partida.
-#   El servidor NO es jugador (no está en `players`); solo arbitra y retransmite RPCs.
 var is_dedicated_referee: bool = false
 
-# Cola de turnos extra (Change of Luck etc.)
 var extra_turn_queue: Array[int] = []
-
-# Temporizador de turno (servidor). El token invalida timers viejos al cambiar de
-# turno/fase, para que un timer atrasado no corte un turno que ya cambió.
+# (LAN) Token de timer de turno; en online cada RoomState tiene el suyo.
 var _turn_timer_token: int = 0
+
+# RoomState del juego LAN (creado en host_game para unificar el código server-side).
+var _lan_rs: RoomState = null
 
 # Configuración de Red
 const PORT = 7777
@@ -77,254 +70,267 @@ func _ready():
 # 🔄 SISTEMA DE TURNOS Y MAZOS
 # ==============================================================================
 
-func initialize_deck():
-	deck.clear()
-	nursery_deck.clear()
-	discard_pile.clear()
+func initialize_deck(rs: RoomState):
+	rs.deck.clear()
+	rs.nursery_deck.clear()
+	rs.discard_pile.clear()
 
-	# Multiplicador del mazo: pone N copias de CADA carta (unicornios incluidos) para
-	# conservar las proporciones del juego y dar cartas de sobra con muchos jugadores.
-	# Los bebés (guardería) quedan en 1 copia (no se gastan al elegir).
-	var mult: int = clampi(current_rules.deck_multiplier, 1, 5)
+	var mult: int = clampi(rs.rules.deck_multiplier, 1, 5)
 
 	for card_id in CardDatabase.database:
 		var data = CardDatabase.database[card_id]
 		if data.type == GameEnums.CardType.REFERENCE:
-			continue # Cartas de referencia no van al mazo
+			continue
 		if data.is_nursery:
-			nursery_deck.append(card_id) # bebés: siempre 1 copia (guardería)
+			rs.nursery_deck.append(card_id)
 			continue
 		for _i in range(mult):
-			deck.append(card_id)
+			rs.deck.append(card_id)
 
-	deck.shuffle()
+	rs.deck.shuffle()
 
 	print("Servidor: Mazos listos (mazo x", mult, ").")
-	print(" - Robo: ", deck.size(), " cartas.")
-	print(" - Guardería: ", nursery_deck.size(), " bebés disponibles.")
+	print(" - Robo: ", rs.deck.size(), " cartas.")
+	print(" - Guardería: ", rs.nursery_deck.size(), " bebés disponibles.")
 
-func setup_turn_order():
-	turn_order.assign(players.keys())
-	turn_order.sort()
-	current_turn_index = 0
+func setup_turn_order(rs: RoomState):
+	rs.turn_order.assign(rs.players.keys())
+	rs.turn_order.sort()
+	rs.current_turn_index = 0
 
-	if not turn_order.is_empty():
-		_server_start_turn(turn_order[0])
+	if not rs.turn_order.is_empty():
+		_server_start_turn(rs.turn_order[0], rs)
 
 # --- FLUJO DEL TURNO (server-authoritative) ---
 
-func _server_start_turn(player_id: int):
+func _server_start_turn(player_id: int, rs: RoomState):
 	if not multiplayer.is_server(): return
 
-	# Si el jugador no existe (se desconectó), pasar al siguiente
-	if not players.has(player_id):
+	if not rs.players.has(player_id):
 		print("Servidor: jugador ", player_id, " ya no existe, saltando turno")
-		turn_order.erase(player_id)
-		extra_turn_queue.erase(player_id)
-		if turn_order.is_empty():
+		rs.turn_order.erase(player_id)
+		rs.extra_turn_queue.erase(player_id)
+		if rs.turn_order.is_empty():
 			print("Servidor: no quedan jugadores"); return
-		current_turn_index = current_turn_index % turn_order.size()
-		_server_start_turn(turn_order[current_turn_index])
+		rs.current_turn_index = rs.current_turn_index % rs.turn_order.size()
+		_server_start_turn(rs.turn_order[rs.current_turn_index], rs)
 		return
 
-	active_player_id = player_id
-	actions_remaining = 1
+	rs.active_player_id = player_id
+	rs.actions_remaining = 1
+	rs.current_phase = TurnPhase.START
 
-	print("Servidor: --- TURNO de ", players[player_id].name, " ---")
+	print("Servidor: --- TURNO de ", rs.players[player_id].name, " [sala:", rs.code, "] ---")
 
-	# Fase START
-	rpc("sync_turn_state", player_id, TurnPhase.START, actions_remaining)
-	# Cámara Espía: refrescar manos visibles al inicio de cada turno
+	_rpc_room(rs, "sync_turn_state", [player_id, TurnPhase.START, rs.actions_remaining])
 	if game_table:
-		game_table.server_refresh_visible_hands()
-	# Dispara efectos on_turn_start del establo (recurrentes)
-	await EffectProcessor.resolve_on_turn_start(player_id)
+		game_table.server_refresh_visible_hands(rs)
+	await EffectProcessor.resolve_on_turn_start(player_id, rs)
 
-	if not is_game_active: return
+	if not rs.is_active: return
 	await get_tree().create_timer(0.4).timeout
-	if not is_game_active: return
-	_server_advance_to_draw_phase()
+	if not rs.is_active: return
+	_server_advance_to_draw_phase(rs)
 
-# Encola un turno extra (Change of Luck): después del END del turno actual,
-# en vez de pasar al siguiente, el mismo jugador juega otra vez.
-func queue_extra_turn(player_id: int) -> void:
+func queue_extra_turn(rs: RoomState, player_id: int) -> void:
 	if not multiplayer.is_server(): return
-	extra_turn_queue.append(player_id)
+	rs.extra_turn_queue.append(player_id)
 
-func _server_advance_to_draw_phase():
+func _server_advance_to_draw_phase(rs: RoomState):
 	if not multiplayer.is_server(): return
-	rpc("sync_turn_state", active_player_id, TurnPhase.DRAW, actions_remaining)
+	rs.current_phase = TurnPhase.DRAW
+	_rpc_room(rs, "sync_turn_state", [rs.active_player_id, TurnPhase.DRAW, rs.actions_remaining])
 
-	# Robo automático de 1 carta
-	var drawn_ids = draw_cards(1)
+	var drawn_ids = draw_cards(rs, 1)
 	if not drawn_ids.is_empty():
 		var card_id = drawn_ids[0]
-		if players.has(active_player_id):
+		if rs.players.has(rs.active_player_id):
 			var card_data = CardDatabase.get_card_data(card_id)
-			players[active_player_id].hand.append(card_data)
-			# Enviar al dueño
+			rs.players[rs.active_player_id].hand.append(card_data)
 			if game_table:
-				game_table.rpc_id(active_player_id, "client_receive_drawn_batch", [card_id])
-				var new_size = players[active_player_id].hand.size()
-				for p in players:
-					if p != active_player_id:
-						game_table.rpc_id(p, "client_sync_hand_size", active_player_id, new_size)
-				game_table.rpc("client_sync_deck_counters", deck.size(), discard_pile.size(), nursery_deck.size())
+				game_table.rpc_id(rs.active_player_id, "client_receive_drawn_batch", [card_id])
+				var new_size = rs.players[rs.active_player_id].hand.size()
+				for p in rs.players:
+					if p != rs.active_player_id:
+						game_table.rpc_id(p, "client_sync_hand_size", rs.active_player_id, new_size)
+				_table_rpc_room(rs, "client_sync_deck_counters", [rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size()])
 
 	await get_tree().create_timer(0.3).timeout
-	if not is_game_active: return
-	_server_advance_to_action_phase()
+	if not rs.is_active: return
+	_server_advance_to_action_phase(rs)
 
-func _server_advance_to_action_phase():
+func _server_advance_to_action_phase(rs: RoomState):
 	if not multiplayer.is_server(): return
-	rpc("sync_turn_state", active_player_id, TurnPhase.ACTION, actions_remaining)
-	_start_turn_timer()
+	rs.current_phase = TurnPhase.ACTION
+	_rpc_room(rs, "sync_turn_state", [rs.active_player_id, TurnPhase.ACTION, rs.actions_remaining])
+	_start_turn_timer(rs)
 
 # Arranca el temporizador del turno (si está configurado). El servidor manda los
 # segundos a los clientes (para la cuenta atrás visible) y, al agotarse, pasa el
 # turno automáticamente. 0 = infinito (sin límite).
-func _start_turn_timer():
+func _start_turn_timer(rs: RoomState):
 	if not multiplayer.is_server(): return
-	_turn_timer_token += 1
-	var secs: int = current_rules.turn_time_seconds
+	rs._turn_timer_token += 1
+	var secs: int = rs.rules.turn_time_seconds
 	if game_table:
-		game_table.rpc("client_set_turn_timer", secs, active_player_id)
+		_table_rpc_room(rs, "client_set_turn_timer", [secs, rs.active_player_id])
 	if secs > 0:
-		_run_turn_timer(_turn_timer_token, secs)
+		_run_turn_timer(rs, rs._turn_timer_token, secs)
 
-func _run_turn_timer(token: int, secs: int) -> void:
+func _run_turn_timer(rs: RoomState, token: int, secs: int) -> void:
 	await get_tree().create_timer(float(secs)).timeout
-	if token != _turn_timer_token or not is_game_active: return
-	# No cortar a mitad de un efecto: esperar a que se resuelva.
-	while is_resolving:
+	if token != rs._turn_timer_token or not rs.is_active: return
+	while rs.is_resolving:
 		await get_tree().create_timer(0.5).timeout
-		if token != _turn_timer_token or not is_game_active: return
-	if token == _turn_timer_token and is_game_active and current_phase == TurnPhase.ACTION:
+		if token != rs._turn_timer_token or not rs.is_active: return
+	if token == rs._turn_timer_token and rs.is_active and rs.current_phase == TurnPhase.ACTION:
 		if game_table:
-			game_table.rpc("client_log_event", "⏱ Tiempo agotado — el turno pasa automáticamente", Color(1, 0.7, 0.4))
-		_server_advance_to_end_phase()
+			_table_rpc_room(rs, "client_log_event", ["⏱ Tiempo agotado — el turno pasa automáticamente", Color(1, 0.7, 0.4)])
+		_server_advance_to_end_phase(rs)
+
+# Envía un RPC a los peers de la sala usando métodos definidos en GameManager.
+func _rpc_room(rs: RoomState, method: StringName, args: Array = []) -> void:
+	for pid in rs.players:
+		match args.size():
+			0: rpc_id(pid, method)
+			1: rpc_id(pid, method, args[0])
+			2: rpc_id(pid, method, args[0], args[1])
+			3: rpc_id(pid, method, args[0], args[1], args[2])
+			4: rpc_id(pid, method, args[0], args[1], args[2], args[3])
+			_: printerr("_rpc_room: demasiados args para ", method)
+
+# Envía un RPC a los peers de la sala usando métodos definidos en game_table.
+func _table_rpc_room(rs: RoomState, method: StringName, args: Array = []) -> void:
+	if not game_table: return
+	for pid in rs.players:
+		match args.size():
+			0: game_table.rpc_id(pid, method)
+			1: game_table.rpc_id(pid, method, args[0])
+			2: game_table.rpc_id(pid, method, args[0], args[1])
+			3: game_table.rpc_id(pid, method, args[0], args[1], args[2])
+			4: game_table.rpc_id(pid, method, args[0], args[1], args[2], args[3])
+			_: printerr("_table_rpc_room: demasiados args para ", method)
+
+# Devuelve el RoomState del peer dado. LAN → _lan_rs; online → consulta OnlineServer.
+func _get_rs_for(peer_id: int) -> RoomState:
+	if _lan_rs != null:
+		return _lan_rs
+	if is_dedicated_referee and has_node("/root/OnlineServer"):
+		return get_node("/root/OnlineServer").get_room_state_for_peer(peer_id)
+	return null
 
 @rpc("any_peer", "call_local", "reliable")
 func request_end_turn():
 	if not multiplayer.is_server(): return
 	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id != active_player_id:
+	var rs := _get_rs_for(sender_id)
+	if not rs: return
+	if sender_id != rs.active_player_id:
 		printerr("Servidor: ", sender_id, " intenta terminar turno ajeno")
 		return
-	if current_phase != TurnPhase.ACTION:
+	if rs.current_phase != TurnPhase.ACTION:
 		printerr("Servidor: Solicitud de Fin de Turno fuera de fase ACTION")
 		return
-	if is_resolving:
+	if rs.is_resolving:
 		printerr("Servidor: no puedes terminar turno con un efecto en curso")
 		return
-	_server_advance_to_end_phase()
+	_server_advance_to_end_phase(rs)
 
-func _server_advance_to_end_phase():
+func _server_advance_to_end_phase(rs: RoomState):
 	if not multiplayer.is_server(): return
-	# Invalida el temporizador del turno actual y lo oculta en los clientes.
-	_turn_timer_token += 1
+	rs._turn_timer_token += 1
+	rs.current_phase = TurnPhase.END
 	if game_table:
-		game_table.rpc("client_set_turn_timer", 0, active_player_id)
-	rpc("sync_turn_state", active_player_id, TurnPhase.END, 0)
+		_table_rpc_room(rs, "client_set_turn_timer", [0, rs.active_player_id])
+	_rpc_room(rs, "sync_turn_state", [rs.active_player_id, TurnPhase.END, 0])
 
-	# Aplicar límite de mano: el jugador ELIGE qué descartar (antes era FIFO).
-	var player: PlayerData = players.get(active_player_id)
+	var player: PlayerData = rs.players.get(rs.active_player_id)
 	if player:
-		var limit = current_rules.hand_limit
+		var limit = rs.rules.hand_limit
 		var excess = player.hand.size() - limit
 		if excess > 0:
-			await _resolve_hand_limit_discard(player, excess)
-		if not is_game_active: return
-		var new_size = player.hand.size() if players.has(active_player_id) else 0
+			await _resolve_hand_limit_discard(rs, player, excess)
+		if not rs.is_active: return
+		var new_size = player.hand.size() if rs.players.has(rs.active_player_id) else 0
 		if game_table:
-			for p in players:
-				if p != active_player_id:
-					game_table.rpc_id(p, "client_sync_hand_size", active_player_id, new_size)
-			game_table.rpc("client_sync_deck_counters", deck.size(), discard_pile.size(), nursery_deck.size())
+			for p in rs.players:
+				if p != rs.active_player_id:
+					game_table.rpc_id(p, "client_sync_hand_size", rs.active_player_id, new_size)
+			_table_rpc_room(rs, "client_sync_deck_counters", [rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size()])
 
-	if not is_game_active: return
+	if not rs.is_active: return
 	await get_tree().create_timer(0.4).timeout
-	if not is_game_active: return
-	_server_next_turn()
+	if not rs.is_active: return
+	_server_next_turn(rs)
 
 # Pide al jugador activo que elija qué cartas descartar para volver al límite.
 # Si no hay UI (tests) o no responde a tiempo, completa por FIFO (las primeras).
-func _resolve_hand_limit_discard(player: PlayerData, excess: int) -> void:
+func _resolve_hand_limit_discard(rs: RoomState, player: PlayerData, excess: int) -> void:
 	if not multiplayer.is_server(): return
-	var chooser_id := active_player_id
+	var chooser_id := rs.active_player_id
 	if game_table:
-		_pending_discard_ids = []
-		_pending_discard_done = false
+		rs.pending_discard_ids = []
+		rs.pending_discard_done = false
 		game_table.rpc_id(chooser_id, "client_open_discard_to_limit", excess)
 		var elapsed := 0.0
-		while not _pending_discard_done and elapsed < 30.0:
+		while not rs.pending_discard_done and elapsed < 30.0:
 			await get_tree().create_timer(0.25).timeout
 			elapsed += 0.25
-			if not players.has(chooser_id):
-				return # se desconectó: no insistir
-	if not players.has(chooser_id):
+			if not rs.players.has(chooser_id):
+				return
+	if not rs.players.has(chooser_id):
 		return
-	# Validar que las elegidas estén realmente en su mano (sin duplicados).
 	var valid: Array = []
 	if game_table:
-		for cid in _pending_discard_ids:
-			if cid in valid:
-				continue
+		for cid in rs.pending_discard_ids:
+			if cid in valid: continue
 			for c in player.hand:
 				if c.id == cid:
 					valid.append(cid); break
-	# Completar por FIFO si eligió de menos o no respondió.
 	if valid.size() < excess:
 		for c in player.hand:
-			if c.id in valid:
-				continue
+			if c.id in valid: continue
 			valid.append(c.id)
-			if valid.size() >= excess:
-				break
+			if valid.size() >= excess: break
 	valid = valid.slice(0, excess)
-	# Aplicar el descarte.
 	for cid in valid:
 		for i in range(player.hand.size()):
 			if player.hand[i].id == cid:
 				player.hand.remove_at(i)
-				discard_pile.append(cid)
+				rs.discard_pile.append(cid)
 				if game_table:
 					game_table.rpc_id(chooser_id, "client_force_discard", cid)
 				break
 
-# Recibe la elección de descarte del jugador activo (llamado desde game_table).
-func _on_discard_choice(card_ids: Array) -> void:
-	if not multiplayer.is_server(): return
-	_pending_discard_ids = card_ids
-	_pending_discard_done = true
+# Recibe la elección de descarte del jugador activo (llamado desde game_table con rs).
+func _on_discard_choice(rs: RoomState, card_ids: Array) -> void:
+	rs.pending_discard_ids = card_ids
+	rs.pending_discard_done = true
 
-func _server_next_turn():
+func _server_next_turn(rs: RoomState):
 	if not multiplayer.is_server(): return
-	if turn_order.is_empty(): return
+	if rs.turn_order.is_empty(): return
 
-	# ¿Hay un turno extra encolado?
-	if not extra_turn_queue.is_empty():
-		var extra_player = extra_turn_queue.pop_front()
-		print("Servidor: Turno EXTRA para ", players[extra_player].name)
-		_server_start_turn(extra_player)
+	if not rs.extra_turn_queue.is_empty():
+		var extra_player = rs.extra_turn_queue.pop_front()
+		print("Servidor: Turno EXTRA para ", rs.players[extra_player].name)
+		_server_start_turn(extra_player, rs)
 		return
 
-	current_turn_index = (current_turn_index + 1) % turn_order.size()
-	_server_start_turn(turn_order[current_turn_index])
+	rs.current_turn_index = (rs.current_turn_index + 1) % rs.turn_order.size()
+	_server_start_turn(rs.turn_order[rs.current_turn_index], rs)
 
-# Llamado por server_play_card en game_table cuando se consume una acción
-func consume_action() -> void:
+func consume_action(rs: RoomState) -> void:
 	if not multiplayer.is_server(): return
-	actions_remaining = max(0, actions_remaining - 1)
-	rpc("sync_actions_remaining", actions_remaining)
-	if actions_remaining == 0 and current_phase == TurnPhase.ACTION:
-		_server_advance_to_end_phase()
+	rs.actions_remaining = max(0, rs.actions_remaining - 1)
+	_rpc_room(rs, "sync_actions_remaining", [rs.actions_remaining])
+	if rs.actions_remaining == 0 and rs.current_phase == TurnPhase.ACTION:
+		_server_advance_to_end_phase(rs)
 
-# Suma acciones extra (Double Dutch en Fase 2)
-func grant_extra_action(amount: int = 1) -> void:
+func grant_extra_action(rs: RoomState, amount: int = 1) -> void:
 	if not multiplayer.is_server(): return
-	actions_remaining += amount
-	rpc("sync_actions_remaining", actions_remaining)
+	rs.actions_remaining += amount
+	_rpc_room(rs, "sync_actions_remaining", [rs.actions_remaining])
 
 @rpc("authority", "call_local", "reliable")
 func sync_turn_state(player_id: int, phase: int, actions: int):
@@ -340,59 +346,46 @@ func sync_actions_remaining(actions: int):
 	actions_remaining = actions
 	actions_changed.emit(actions)
 
-# Reinicia el estado para una nueva partida (revancha) manteniendo a los jugadores.
-func reset_for_new_match():
+func reset_for_new_match(rs: RoomState):
 	if not multiplayer.is_server(): return
-	deck.clear()
-	discard_pile.clear()
-	nursery_deck.clear()
-	turn_order.clear()
-	current_turn_index = 0
-	active_player_id = 0
-	extra_turn_queue.clear()
-	is_resolving = false
-	current_phase = TurnPhase.START
-	for pid in players:
-		players[pid].hand.clear()
-		players[pid].stable.clear()
-	is_game_active = true
+	rs.reset_for_new_match()
 
 # --- Mazo / Descarte ---
 
-func draw_cards(amount: int) -> Array[int]:
+func draw_cards(rs: RoomState, amount: int) -> Array[int]:
 	var drawn: Array[int] = []
 	for i in range(amount):
-		if deck.is_empty():
-			_refill_deck_from_discard()
-			if deck.is_empty(): break
-		drawn.append(deck.pop_back())
+		if rs.deck.is_empty():
+			_refill_deck_from_discard(rs)
+			if rs.deck.is_empty(): break
+		drawn.append(rs.deck.pop_back())
 	return drawn
 
-func _refill_deck_from_discard():
-	if discard_pile.is_empty(): return
+func _refill_deck_from_discard(rs: RoomState):
+	if rs.discard_pile.is_empty(): return
 	print("Servidor: Rebarajando descarte...")
-	deck.append_array(discard_pile)
-	discard_pile.clear()
-	deck.shuffle()
+	rs.deck.append_array(rs.discard_pile)
+	rs.discard_pile.clear()
+	rs.deck.shuffle()
 
 # ==============================================================================
 # 🏆 CONDICIÓN DE VICTORIA
 # ==============================================================================
 
-func check_win_condition() -> bool:
+func check_win_condition(rs: RoomState) -> bool:
 	if not multiplayer.is_server(): return false
-	if not is_game_active: return false
+	if not rs.is_active: return false
 
-	for p_id in players:
-		# Pandamonio: tus unicornios cuentan como pandas → NO cuentan para ganar
-		if EffectProcessor.passives.unicorns_are_pandas(p_id):
+	for p_id in rs.players:
+		if rs.passives.unicorns_are_pandas(p_id):
 			continue
 		var unicorn_count = 0
-		for card in players[p_id].stable:
+		for card in rs.players[p_id].stable:
 			unicorn_count += card.unicorn_count_value()
-		if unicorn_count >= current_rules.unicorns_to_win:
-			print("check_win: ", players[p_id].name, " tiene ", unicorn_count, " unicornios >= meta ", current_rules.unicorns_to_win, " -> GANA")
-			rpc("announce_winner", p_id, players[p_id].name)
+		if unicorn_count >= rs.rules.unicorns_to_win:
+			print("check_win: ", rs.players[p_id].name, " tiene ", unicorn_count, " unicornios >= meta ", rs.rules.unicorns_to_win, " -> GANA")
+			rs.is_active = false
+			_rpc_room(rs, "announce_winner", [p_id, rs.players[p_id].name])
 			return true
 	return false
 
@@ -577,6 +570,8 @@ func _register_player(id: int, info: Dictionary):
 	print("Jugador registrado: ", info["name"], " [ID: ", id, "] [avatar: ", new_player.avatar_id, "]")
 
 func _on_peer_disconnected(id: int):
+	var rs: RoomState = _get_rs_for(id) if multiplayer.is_server() else null
+
 	var pname := "Un jugador"
 	if players.has(id):
 		pname = players[id].name
@@ -584,55 +579,43 @@ func _on_peer_disconnected(id: int):
 		players.erase(id)
 		player_disconnected.emit(id)
 
-	# A partir de aquí, solo el servidor decide qué pasa con la partida.
-	if not multiplayer.is_server():
-		return
-	if not is_game_active:
-		return
+	if not multiplayer.is_server(): return
+	if rs == null or not rs.is_active: return
 
-	# Avisar a todos en la mesa y quitar la zona visual del jugador que se fue.
+	rs.players.erase(id)
+
 	if game_table:
-		game_table.rpc("client_toast", "⚠ %s se desconectó" % pname)
-		game_table.rpc("client_log_event", "⚠ %s se desconectó" % pname, Color(1, 0.6, 0.3))
-		game_table.rpc("client_remove_player_zone", id)
+		_table_rpc_room(rs, "client_toast", ["⚠ %s se desconectó" % pname])
+		_table_rpc_room(rs, "client_log_event", ["⚠ %s se desconectó" % pname, Color(1, 0.6, 0.3)])
+		_table_rpc_room(rs, "client_remove_player_zone", [id])
 
-	# Si estábamos esperando una respuesta de UI de ALGUIEN (picker / pago de coste),
-	# desbloqueamos para que la resolución no quede colgada para siempre.
-	if is_resolving:
+	if rs.is_resolving:
 		EffectProcessor.target_picked.emit(-1, -1)
 		EffectProcessor.cost_paid.emit(false, [])
-		is_resolving = false
+		rs.is_resolving = false
 
-	# ¿Quedan suficientes jugadores para seguir?
-	if players.size() <= 1:
-		_end_match_last_player_standing()
+	if rs.players.size() <= 1:
+		_end_match_last_player_standing(rs)
 		return
 
-	# Sacar al jugador del orden de turnos.
-	var was_active := active_player_id == id
-	turn_order.erase(id)
-	extra_turn_queue.erase(id)
-	if turn_order.is_empty():
-		return
-	# Si era SU turno, arrancamos el del siguiente en la rueda.
+	var was_active := rs.active_player_id == id
+	rs.turn_order.erase(id)
+	rs.extra_turn_queue.erase(id)
+	if rs.turn_order.is_empty(): return
 	if was_active:
-		current_turn_index = current_turn_index % turn_order.size()
-		_server_start_turn(turn_order[current_turn_index])
+		rs.current_turn_index = rs.current_turn_index % rs.turn_order.size()
+		_server_start_turn(rs.turn_order[rs.current_turn_index], rs)
 
-# Si solo queda un jugador conectado, gana por abandono de los demás.
-func _end_match_last_player_standing():
+func _end_match_last_player_standing(rs: RoomState):
 	if not multiplayer.is_server(): return
-	if players.is_empty(): return
-	var last_id: int = players.keys()[0]
-	print("Servidor: solo queda ", players[last_id].name, " → gana por abandono")
-	rpc("announce_winner", last_id, players[last_id].name + " (por abandono)")
+	if rs.players.is_empty(): return
+	var last_id: int = rs.players.keys()[0]
+	print("Servidor: solo queda ", rs.players[last_id].name, " → gana por abandono")
+	rs.is_active = false
+	_rpc_room(rs, "announce_winner", [last_id, rs.players[last_id].name + " (por abandono)"])
 
-func get_opponents_of(player_id: int) -> Array[int]:
-	var result: Array[int] = []
-	for p in players:
-		if p != player_id:
-			result.append(p)
-	return result
+func get_opponents_of(rs: RoomState, player_id: int) -> Array[int]:
+	return rs.opponents_of(player_id)
 
 # ==============================================================================
 # 🏁 INICIO DEL JUEGO
@@ -643,7 +626,13 @@ func start_game():
 
 	if players.size() < 2:
 		print("Servidor: se necesitan al menos 2 jugadores para empezar")
-		return # red de seguridad; el aviso al usuario lo da el lobby
+		return
+
+	_lan_rs = RoomState.new("lan", 1)
+	_lan_rs.rules = current_rules
+	for p_id in players:
+		_lan_rs.players[p_id] = players[p_id]
+	_lan_rs.is_active = true
 
 	multiplayer.multiplayer_peer.refuse_new_connections = true
 	is_game_active = true
