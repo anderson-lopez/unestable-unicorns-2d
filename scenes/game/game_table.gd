@@ -914,8 +914,10 @@ func _rival_card_scale(n: int) -> float:
 func _create_rival_zone(id: int, data: PlayerData, index: int, rival_count: int = 1):
 	var rival_zone = RIVAL_ZONE_SCENE.instantiate()
 	rival_zone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rival_zone.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	var row_idx := index / 2  # división entera: 0,1→0; 2,3→1
+	# En la fila inferior (row1) la altura está fijada por anchors (=MyStable).
+	# SIZE_EXPAND_FILL hace que el rival rellene esa altura en lugar de encogerse.
+	rival_zone.size_flags_vertical = Control.SIZE_EXPAND_FILL if row_idx >= 1 else Control.SIZE_SHRINK_BEGIN
 	_rival_rows[row_idx].add_child(rival_zone)
 	if rival_zone.has_method("set_card_scale"):
 		rival_zone.set_card_scale(_rival_card_scale(rival_count))
