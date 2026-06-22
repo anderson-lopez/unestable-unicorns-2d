@@ -43,6 +43,9 @@ var pending_discard_done: bool = false
 # Pasivos activos en esta sala
 var passives: PassiveRegistry = PassiveRegistry.new()
 
+# Cartas protegidas hasta el inicio del próximo turno (IDs de carta)
+var protected_card_ids: Array[int] = []
+
 func _init(room_code: String = "", host: int = 0) -> void:
 	code = room_code
 	host_id = host
@@ -73,4 +76,5 @@ func reset_for_new_match() -> void:
 		players[pid].hand.clear()
 		players[pid].stable.clear()
 	passives.clear()
+	protected_card_ids.clear()
 	is_active = true

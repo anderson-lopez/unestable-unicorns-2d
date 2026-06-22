@@ -704,6 +704,7 @@ func _on_online_rules_changed():
 	GameManager.current_rules.turn_time_seconds = TURN_TIME_VALUES[clampi(o_opt_time.selected, 0, TURN_TIME_VALUES.size() - 1)]
 	if is_instance_valid(o_check_babies):
 		GameManager.current_rules.babies_immune = o_check_babies.button_pressed
+	OnlineServer.update_rules(GameManager.current_rules.to_dictionary())
 
 # Habilita las opciones solo para el host.
 func _set_online_rules_editable(is_host: bool):
@@ -978,7 +979,7 @@ func _refresh_player_list(_data = null): # El argumento _data es opcional por la
 func _on_rules_changed():
 	if not multiplayer.is_server(): return
 	_update_rules_from_ui()
-	# Aquí podrías enviar un RPC para actualizar la UI de los clientes en tiempo real
+	GameManager.update_rules_broadcast()
 
 func _update_rules_from_ui():
 	GameManager.current_rules.unicorns_to_win = int(spin_unicorns.value)
@@ -986,8 +987,6 @@ func _update_rules_from_ui():
 	GameManager.current_rules.double_dutch_enabled = check_double.button_pressed
 	if is_instance_valid(spin_multiplier):
 		GameManager.current_rules.deck_multiplier = int(spin_multiplier.value)
-	# Nota: Falta implementar la sincronización en tiempo real de reglas hacia clientes
-	# Por ahora se envían al conectar.
 
 # --- INICIO ---
 

@@ -163,7 +163,7 @@ func _execute_action(
 		GameEnums.Action.RETURN_TO_HAND:
 			return await _act_return_to_hand(amount, scope, filter, acting_player_id, source_card, rs)
 		GameEnums.Action.RETURN_TO_NURSERY:
-			return true
+			return await _act_return_to_nursery(amount, scope, filter, acting_player_id, source_card, rs)
 		GameEnums.Action.REVIVE:
 			return await _act_revive(amount, zone, filter, acting_player_id, rs)
 		GameEnums.Action.SUMMON:
@@ -175,8 +175,9 @@ func _execute_action(
 			_act_shuffle_deck(filter, acting_player_id, rs)
 			return true
 		GameEnums.Action.PROTECT:
-			return true
+			return await _act_protect(amount, scope, filter, acting_player_id, source_card, rs)
 		GameEnums.Action.CANCEL:
+			_log(rs, "❌ CANCEL no implementado aún", Color(1, 0.5, 0.3))
 			return true
 		GameEnums.Action.SKIP_TURN:
 			GameManager._server_advance_to_end_phase(rs)
@@ -394,6 +395,35 @@ func _act_return_to_hand(amount: int, scope: GameEnums.Scope, filter: GameEnums.
 			_table_rpc_id(owner_id, "client_receive_drawn_batch", [card_id])
 			for pid in rs.players:
 				_table_rpc_id(pid, "client_sync_hand_size", owner_id, p.hand.size())
+		did_any = true
+	return did_any
+
+func _act_return_to_nursery(amount: int, scope: GameEnums.Scope, filter: GameEnums.Filter, acting_player_id: int, source_card: CardData, rs: RoomState) -> bool:
+	var did_any = false
+	for i in max(1, amount):
+		var pick = await _request_stable_target(acting_player_id, scope, filter, false, source_card, rs)
+		if pick.is_empty(): return did_any
+		var owner_id = pick["owner_id"]
+		var card_id = pick["card_id"]
+		var card_data = await _extract_from_stable(owner_id, card_id, rs)
+		if not card_data: continue
+		rs.nursery_deck.append(card_id)
+		_table_rpc(rs, &"client_sync_deck_counters", rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size())
+		_log(rs, "🏠 %s regresó %s a la Guardería" % [_player_name(rs, acting_player_id), card_data.name_es], Color(0.7, 1.0, 0.8))
+		did_any = true
+	return did_any
+
+func _act_protect(amount: int, scope: GameEnums.Scope, filter: GameEnums.Filter, acting_player_id: int, source_card: CardData, rs: RoomState) -> bool:
+	var did_any = false
+	for i in max(1, amount):
+		var pick = await _request_stable_target(acting_player_id, scope, filter, false, source_card, rs)
+		if pick.is_empty(): return did_any
+		var card_id = pick["card_id"]
+		if not card_id in rs.protected_card_ids:
+			rs.protected_card_ids.append(card_id)
+		var card_data = CardDatabase.get_card_data(card_id)
+		var name_str = card_data.name_es if card_data else str(card_id)
+		_log(rs, "🛡️ %s protegió %s hasta el próximo turno" % [_player_name(rs, acting_player_id), name_str], Color(0.4, 0.8, 1.0))
 		did_any = true
 	return did_any
 
@@ -752,6 +782,8 @@ func _request_stable_target(acting_player_id: int, scope: GameEnums.Scope, filte
 				continue
 			if source_is_magic and rs.passives.unicorn_immune_to_magic(owner):
 				continue
+		if cand["card_id"] in rs.protected_card_ids and (exclude_self_immunity or owner != acting_player_id):
+			continue
 		clean.append(cand)
 	candidates = clean
 	if candidates.is_empty():

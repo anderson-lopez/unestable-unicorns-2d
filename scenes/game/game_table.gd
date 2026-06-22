@@ -1081,7 +1081,7 @@ func server_play_card(card_id: int, target_player_id: int = -1):
 
 	rs.is_resolving = true
 
-	var new_size = _server_remove_card_from_hand(sender_id, card_id)
+	var new_size = _server_remove_card_from_hand(sender_id, card_id, rs)
 	for p in rs.players:
 		if p != sender_id:
 			rpc_id(p, "client_sync_hand_size", sender_id, new_size)
@@ -1144,7 +1144,7 @@ func server_discard_card(card_id: int):
 	if sender_id != rs.active_player_id: return
 	if rs.current_phase != GameManager.TurnPhase.ACTION: return
 	if rs.is_resolving: return
-	var new_size = _server_remove_card_from_hand(sender_id, card_id)
+	var new_size = _server_remove_card_from_hand(sender_id, card_id, rs)
 	rs.discard_pile.append(card_id)
 	_rpc_room(rs, "client_sync_deck_counters", [rs.deck.size(), rs.discard_pile.size(), rs.nursery_deck.size()])
 	for p in rs.players:
@@ -2281,9 +2281,9 @@ func add_card_to_hand(card_id: int) -> CardUI:
 	_refresh_hand_interactivity()
 	return new_card
 
-func _server_remove_card_from_hand(player_id: int, card_id: int) -> int:
-	if not GameManager.players.has(player_id): return -1
-	var p_data = GameManager.players[player_id]
+func _server_remove_card_from_hand(player_id: int, card_id: int, rs: RoomState) -> int:
+	if not rs.players.has(player_id): return -1
+	var p_data: PlayerData = rs.players[player_id]
 	var idx = -1
 	for i in range(p_data.hand.size()):
 		if p_data.hand[i].id == card_id:

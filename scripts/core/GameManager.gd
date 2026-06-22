@@ -119,6 +119,7 @@ func _server_start_turn(player_id: int, rs: RoomState):
 	rs.active_player_id = player_id
 	rs.actions_remaining = 1
 	rs.current_phase = TurnPhase.START
+	rs.protected_card_ids.clear()
 
 	print("Servidor: --- TURNO de ", rs.players[player_id].name, " [sala:", rs.code, "] ---")
 
@@ -349,6 +350,7 @@ func sync_actions_remaining(actions: int):
 func reset_for_new_match(rs: RoomState):
 	if not multiplayer.is_server(): return
 	rs.reset_for_new_match()
+	NeighManager.reset()
 
 # --- Mazo / Descarte ---
 
@@ -405,6 +407,9 @@ func host_game(player_name: String, rules: GameRules):
 	local_player_info["name"] = player_name
 	current_rules = rules
 
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer = null
+
 	# Red por WebSocket (funciona en escritorio, móvil y web; y permite el
 	# servidor en la nube tipo Render).
 	var peer = WebSocketMultiplayerPeer.new()
@@ -436,6 +441,9 @@ func _make_ws_url(addr: String) -> String:
 
 func join_game(player_name: String, ip: String):
 	local_player_info["name"] = player_name
+
+	if multiplayer.multiplayer_peer:
+		multiplayer.multiplayer_peer = null
 
 	var url := _make_ws_url(ip)
 

@@ -258,6 +258,22 @@ func join_room(code: String, player_name: String, avatar_id: int = 1):
 func start_room():
 	rpc_id(1, "req_start_room", GameManager.current_rules.to_dictionary())
 
+# Host llama esto para que el servidor difunda las reglas a toda la sala en vivo.
+func update_rules(rules_dict: Dictionary):
+	rpc_id(1, "req_update_rules", rules_dict)
+
+@rpc("any_peer", "reliable")
+func req_update_rules(rules_dict: Dictionary):
+	if not is_dedicated: return
+	var sender := multiplayer.get_remote_sender_id()
+	if not peer_room.has(sender): return
+	var code: String = peer_room[sender]
+	if not rooms.has(code): return
+	if rooms[code]["host"] != sender: return
+	if rooms[code]["started"]: return
+	for pid in rooms[code]["players"]:
+		GameManager.rpc_id(pid, "sync_rules", rules_dict)
+
 # --- RPCs cliente (servidor → cliente) ---
 
 @rpc("authority", "reliable")

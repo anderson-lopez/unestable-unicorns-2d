@@ -35,6 +35,15 @@ var responses: Dictionary = {}
 var eligible_ids: Array[int] = []
 var passed_ids: Dictionary = {}
 
+func reset() -> void:
+	pending_card_id = -1
+	pending_player_id = -1
+	pending_super = false
+	window_open = false
+	responses.clear()
+	eligible_ids.clear()
+	passed_ids.clear()
+
 # Abre ventana. Devuelve true si la carta original FUE cancelada.
 func open_window(card_id: int, playing_player_id: int, rs: RoomState) -> bool:
 	if not multiplayer.is_server(): return false
